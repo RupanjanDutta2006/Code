@@ -53,10 +53,24 @@ export const ProgramDetailPage: React.FC = () => {
       if (!id) return;
       try {
         const res = await api.get<Program>(`/api/programs/${id}`);
-        setProgram(res.data);
-        setSourceCode(res.data.source_code);
+        if (res.data && res.data.source_code) {
+          setProgram(res.data);
+          setSourceCode(res.data.source_code);
+        } else {
+          const { getLocalProgramById } = await import('../services/defaultPrograms');
+          const local = getLocalProgramById(Number(id));
+          if (local) {
+            setProgram(local);
+            setSourceCode(local.source_code);
+          }
+        }
       } catch (err) {
-        console.error('Failed to load program:', err);
+        const { getLocalProgramById } = await import('../services/defaultPrograms');
+        const local = getLocalProgramById(Number(id));
+        if (local) {
+          setProgram(local);
+          setSourceCode(local.source_code);
+        }
       } finally {
         setLoading(false);
       }
@@ -309,6 +323,7 @@ export const ProgramDetailPage: React.FC = () => {
               isRunning={running}
               language={program.language}
               sourceCode={sourceCode}
+              customInput={customInput}
               onClear={() => setResult(null)}
             />
           </div>

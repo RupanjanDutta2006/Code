@@ -36,23 +36,83 @@ const LANGUAGES = [
 
 const DEFAULT_DEMO_CODE: Record<string, string> = {
   python: `# Welcome to CodeVault Pro!
-a = int(input("Enter first number: "))
-b = int(input("Enter second number: "))
-print(f"Sum = {a + b}")`,
+a = 10
+b = 20
+print(f"CodeVault Pro Python Engine: {a} + {b} = {a + b}")`,
   cpp: `#include <iostream>
 using namespace std;
 
 int main() {
-    cout << "Enter a number: ";
-    int x;
-    if (cin >> x) {
-        cout << "Square = " << (x * x) << endl;
+    int x = 15, y = 25;
+    cout << "CodeVault Pro C++ Engine: Sum = " << (x + y) << endl;
+    return 0;
+}`,
+  c: `#include <stdio.h>
+
+int main() {
+    printf("CodeVault Pro C Engine: Online Compiler Active!\\n");
+    for (int i = 1; i <= 3; i++) {
+        printf("Running iteration: %d\\n", i);
     }
     return 0;
+}`,
+  java: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("CodeVault Pro Java Runner Active!");
+        int num = 42;
+        System.out.println("Answer = " + num);
+    }
+}`,
+  javascript: `// JavaScript (Node.js)
+console.log("CodeVault Pro JavaScript Engine Active!");
+const items = [10, 20, 30, 40, 50];
+const total = items.reduce((acc, curr) => acc + curr, 0);
+console.log("Array total sum:", total);`,
+  typescript: `// TypeScript
+interface Student {
+  name: string;
+  score: number;
+}
+
+const student: Student = { name: "Rupanjan", score: 100 };
+console.log(\`Student \${student.name} achieved: \${student.score}/100\`);`,
+  go: `package main
+import "fmt"
+
+func main() {
+    fmt.Println("CodeVault Pro Go Engine Active!")
+    fmt.Printf("Status: %s\\n", "Ready to compile and run")
+}`,
+  rust: `fn main() {
+    println!("CodeVault Pro Rust Compiler Active!");
+    let numbers = [1, 2, 3, 4, 5];
+    let sum: i32 = numbers.iter().sum();
+    println!("Sum of numbers: {}", sum);
+}`,
+  kotlin: `fun main() {
+    println("CodeVault Pro Kotlin Engine Active!")
+    val languages = listOf("Python", "C++", "Java", "Kotlin", "Rust")
+    println("Supported: " + languages.joinToString(", "))
 }`,
   sql: `CREATE TABLE languages (name TEXT, speed TEXT);
 INSERT INTO languages VALUES ('C++', 'Ultra Fast'), ('Python', 'Super Productive'), ('Rust', 'Memory Safe');
 SELECT * FROM languages;`,
+  html: `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: white; text-align: center; padding: 30px; }
+    .card { background: #1e293b; padding: 25px; border-radius: 16px; display: inline-block; border: 1px solid #334155; }
+    h1 { color: #38bdf8; margin-top: 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🚀 CodeVault Pro Live Preview</h1>
+    <p>Interactive HTML/CSS/JS rendering in real-time!</p>
+  </div>
+</body>
+</html>`,
 };
 
 export const HomePage: React.FC = () => {
@@ -215,6 +275,7 @@ export const HomePage: React.FC = () => {
                 isRunning={running}
                 language={selectedLang}
                 sourceCode={demoCode}
+                customInput={customInput}
                 onClear={() => setResult(null)}
               />
             </div>

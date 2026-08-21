@@ -46,9 +46,21 @@ export const ProgramsPage: React.FC = () => {
       if (selectedCategory) params.append('category', selectedCategory);
 
       const res = await api.get<Program[]>(`/api/programs?${params.toString()}`);
-      setPrograms(res.data);
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        setPrograms(res.data);
+      } else {
+        const { getLocalPrograms } = await import('../services/defaultPrograms');
+        let local = getLocalPrograms();
+        if (selectedLang) local = local.filter((p) => p.language.toLowerCase() === selectedLang.toLowerCase());
+        if (searchQuery) local = local.filter((p) => p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.description?.toLowerCase().includes(searchQuery.toLowerCase()));
+        setPrograms(local);
+      }
     } catch (err) {
-      console.error('Failed to load programs:', err);
+      const { getLocalPrograms } = await import('../services/defaultPrograms');
+      let local = getLocalPrograms();
+      if (selectedLang) local = local.filter((p) => p.language.toLowerCase() === selectedLang.toLowerCase());
+      if (searchQuery) local = local.filter((p) => p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.description?.toLowerCase().includes(searchQuery.toLowerCase()));
+      setPrograms(local);
     } finally {
       setLoading(false);
     }

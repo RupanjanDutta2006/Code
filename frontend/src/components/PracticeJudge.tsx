@@ -8,11 +8,12 @@ import {
   Play, 
   ChevronDown, 
   ChevronUp, 
-  Trophy,
-  Loader2,
-  ListChecks
+  Trophy, 
+  Loader2, 
+  ListChecks 
 } from 'lucide-react';
-import { api, TestCase, JudgeSubmitResult } from '../services/api';
+import { api, TestCase, JudgeSubmitResult, JudgeCaseResult } from '../services/api';
+import { executeUniversal } from '../services/compilerEngine';
 
 interface PracticeJudgeProps {
   programId: number;
@@ -35,23 +36,96 @@ export const PracticeJudge: React.FC<PracticeJudgeProps> = ({
   const [result, setResult] = useState<JudgeSubmitResult | null>(null);
   const [expandedCase, setExpandedCase] = useState<number | null>(null);
 
+  const runLocalJudge = async (): Promise<JudgeSubmitResult> => {
+    const caseResults: JudgeCaseResult[] = [];
+    let passedCount = 0;
+
+    for (let i = 0; i < testCases.length; i++) {
+      const tc = testCases[i];
+      const resp = await executeUniversal({
+        language,
+        sourceCode,
+        customInput: tc.input_data,
+      });
+
+      const actualTrimmed = (resp.output || '').trim().replace(/\r\n/g, '\n');
+      const expectedTrimmed = (tc.expected_output || '').trim().replace(/\r\n/g, '\n');
+
+      let status: JudgeCaseResult['status'] = 'Failed';
+      let errorMsg = resp.error;
+
+      if (resp.status === 'error' && resp.error) {
+        status = 'Runtime Error';
+      } else if (actualTrimmed === expectedTrimmed) {
+        status = 'Passed';
+        passedCount++;
+      } else {
+        status = 'Failed';
+      }
+
+      caseResults.push({
+        case_index: i + 1,
+        is_sample: tc.is_sample,
+        input_data: tc.input_data,
+        expected_output: tc.expected_output,
+        actual_output: resp.output,
+        status,
+        execution_time_ms: resp.execution_time_ms,
+        error_message: errorMsg,
+      });
+    }
+
+    const totalCount = testCases.length;
+    const verdict: JudgeSubmitResult['verdict'] = 
+      totalCount === 0 ? 'Accepted' :
+      passedCount === totalCount ? 'Accepted' :
+      caseResults.some(r => r.status === 'Runtime Error') ? 'Runtime Error' : 'Wrong Answer';
+
+    return {
+      program_id: programId,
+      passed_count: passedCount,
+      total_count: totalCount,
+      verdict,
+      results: caseResults,
+      created_at: new Date().toISOString(),
+    };
+  };
+
   const handleSubmit = async () => {
+    if (!sourceCode.trim()) return;
     setSubmitting(true);
     setResult(null);
+
     try {
-      const res = await api.post<JudgeSubmitResult>(`/api/programs/${programId}/submit`, {
-        program_id: programId,
-        source_code: sourceCode,
-        language,
-        classroom_id: classroomId,
-      });
-      setResult(res.data);
+      const customBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+      let judgeResult: JudgeSubmitResult;
+
+      if (isLocalDev || customBaseUrl) {
+        try {
+          const res = await api.post<JudgeSubmitResult>(`/api/programs/${programId}/submit`, {
+            program_id: programId,
+            source_code: sourceCode,
+            language,
+            classroom_id: classroomId,
+          });
+          judgeResult = res.data;
+        } catch (e) {
+          // Fallback to Universal Judge
+          judgeResult = await runLocalJudge();
+        }
+      } else {
+        judgeResult = await runLocalJudge();
+      }
+
+      setResult(judgeResult);
       if (onSubmissionComplete) {
-        onSubmissionComplete(res.data);
+        onSubmissionComplete(judgeResult);
       }
 
       // Celebrate 100% pass!
-      if (res.data.passed_count === res.data.total_count && res.data.total_count > 0) {
+      if (judgeResult.passed_count === judgeResult.total_count && judgeResult.total_count > 0) {
         confetti({
           particleCount: 80,
           spread: 70,
@@ -64,8 +138,6 @@ export const PracticeJudge: React.FC<PracticeJudgeProps> = ({
       setSubmitting(false);
     }
   };
-
-  const sampleCount = testCases.filter((tc) => tc.is_sample).length;
 
   return (
     <div className="w-full rounded-xl border border-dark-700 bg-dark-900 overflow-hidden shadow-lg p-5">

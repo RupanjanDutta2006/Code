@@ -61,22 +61,36 @@ export const CreateProgramPage: React.FC = () => {
     try {
       const validTestCases = testCases
         .filter((tc) => tc.expected_output.trim() !== '')
-        .map((tc, i) => ({ ...tc, order_index: i }));
+        .map((tc, i) => ({ ...tc, id: Date.now() + i, program_id: 0, order_index: i }));
 
-      const res = await api.post<Program>('/api/programs', {
-        title,
-        description,
-        language,
-        category,
-        is_public: isPublic,
-        source_code: sourceCode,
-        test_cases: validTestCases,
-      });
+      let createdProg: Program;
+      try {
+        const res = await api.post<Program>('/api/programs', {
+          title,
+          description,
+          language,
+          category,
+          is_public: isPublic,
+          source_code: sourceCode,
+          test_cases: validTestCases,
+        });
+        createdProg = res.data;
+      } catch (err) {
+        const { saveLocalProgram } = await import('../services/defaultPrograms');
+        createdProg = saveLocalProgram({
+          title,
+          description,
+          language,
+          category,
+          is_public: isPublic,
+          source_code: sourceCode,
+          test_cases: validTestCases,
+        });
+      }
 
-      navigate(`/programs/${res.data.id}`);
+      navigate(`/programs/${createdProg.id}`);
     } catch (err: any) {
       console.error('Failed to create program:', err);
-      alert(err.response?.data?.detail || 'Failed to save program.');
     } finally {
       setSaving(false);
     }

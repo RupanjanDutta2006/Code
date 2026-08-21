@@ -161,13 +161,32 @@ export const PlaygroundPage: React.FC = () => {
     }
   };
 
-  const handleSharedRun = () => {
+  const handleSharedRun = async () => {
     setRunning(true);
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({
         type: 'run_code',
         custom_input: customInput,
       }));
+    } else {
+      try {
+        const { executeUniversal } = await import('../services/compilerEngine');
+        const resp = await executeUniversal({
+          language,
+          sourceCode: code,
+          customInput,
+        });
+        setResult(resp);
+      } catch (err: any) {
+        setResult({
+          status: 'error',
+          output: '',
+          error: err.message || 'Execution failed',
+          execution_time_ms: 0,
+        });
+      } finally {
+        setRunning(false);
+      }
     }
   };
 
@@ -302,6 +321,7 @@ export const PlaygroundPage: React.FC = () => {
               isRunning={running}
               language={language}
               sourceCode={code}
+              customInput={customInput}
               onClear={() => setResult(null)}
             />
           </div>
