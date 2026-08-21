@@ -18,8 +18,8 @@ echo [2/3] Committing changes...
 %GIT_EXE% commit -m "%MSG%"
 
 echo.
-echo [3/3] Pushing to https://github.com/RupanjanDutta2006/Code-Vault-Pro...
-%GIT_EXE% push origin main
+echo [3/3] Pushing to https://github.com/RupanjanDutta2006/Code...
+%GIT_EXE% push -u origin main
 
 echo.
 echo ========================================
