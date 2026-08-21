@@ -15,14 +15,18 @@ import {
   X,
   WifiOff,
   Sparkles,
-  Users
+  Users,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useOffline } from '../context/OfflineContext';
+import { useTheme } from '../context/ThemeContext';
 
 export const Navbar: React.FC = () => {
   const { user, logout, isTeacher, isCreator } = useAuth();
   const { isOnline, queuedRuns } = useOffline();
+  const { theme, isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -30,7 +34,7 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-dark-900/90 backdrop-blur-md border-b border-dark-700/80 px-4 sm:px-6 py-3">
+    <nav className="sticky top-0 z-50 bg-white/90 dark:bg-dark-900/90 backdrop-blur-md border-b border-slate-200 dark:border-dark-700/80 px-4 sm:px-6 py-3 transition-colors duration-200">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* Brand Logo */}
@@ -39,16 +43,16 @@ export const Navbar: React.FC = () => {
             <Code2 className="w-5 h-5" />
           </div>
           <div>
-            <span className="font-bold text-lg tracking-tight text-white flex items-center gap-1.5">
-              CodeVault <span className="text-xs px-1.5 py-0.5 rounded-full bg-brand-500/20 text-brand-400 font-semibold border border-brand-500/30">PRO</span>
+            <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+              CodeVault <span className="text-xs px-1.5 py-0.5 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 font-semibold border border-brand-500/20 dark:border-brand-500/30">PRO</span>
             </span>
-            <span className="text-[10px] text-dark-400 block -mt-1 font-medium">Student Code Library & Runner</span>
+            <span className="text-[10px] text-slate-500 dark:text-dark-400 block -mt-1 font-medium">Student Code Library & Compiler</span>
           </div>
         </Link>
 
         {/* Offline Badge */}
         {!isOnline && (
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium">
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-medium">
             <WifiOff className="w-3.5 h-3.5" />
             <span>Offline Mode {queuedRuns.length > 0 && `(${queuedRuns.length} queued)`}</span>
           </div>
@@ -59,7 +63,9 @@ export const Navbar: React.FC = () => {
           <Link
             to="/"
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              isActive('/') ? 'text-white bg-dark-800' : 'text-dark-300 hover:text-white hover:bg-dark-800/60'
+              isActive('/') 
+                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
             }`}
           >
             Home
@@ -70,16 +76,20 @@ export const Navbar: React.FC = () => {
               <Link
                 to="/my-programs"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/my-programs') ? 'text-white bg-dark-800' : 'text-dark-300 hover:text-white hover:bg-dark-800/60'
+                  isActive('/my-programs') 
+                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
                 }`}
               >
-                <BookOpen className="w-4 h-4 text-brand-400" />
+                <BookOpen className="w-4 h-4 text-brand-500 dark:text-brand-400" />
                 My Programs
               </Link>
               <Link
                 to="/import"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/import') ? 'text-white bg-dark-800' : 'text-dark-300 hover:text-white hover:bg-dark-800/60'
+                  isActive('/import') 
+                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
                 }`}
               >
                 <FolderPlus className="w-4 h-4 text-accent-cyan" />
@@ -88,7 +98,9 @@ export const Navbar: React.FC = () => {
               <Link
                 to="/create"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/create') ? 'text-white bg-dark-800' : 'text-dark-300 hover:text-white hover:bg-dark-800/60'
+                  isActive('/create') 
+                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
                 }`}
               >
                 <PlusCircle className="w-4 h-4 text-accent-emerald" />
@@ -97,7 +109,9 @@ export const Navbar: React.FC = () => {
               <Link
                 to="/classrooms"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/classrooms') ? 'text-white bg-dark-800' : 'text-dark-300 hover:text-white hover:bg-dark-800/60'
+                  isActive('/classrooms') 
+                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
                 }`}
               >
                 <GraduationCap className="w-4 h-4 text-accent-amber" />
@@ -109,16 +123,20 @@ export const Navbar: React.FC = () => {
               <Link
                 to="/programs"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/programs') ? 'text-white bg-dark-800' : 'text-dark-300 hover:text-white hover:bg-dark-800/60'
+                  isActive('/programs') 
+                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
                 }`}
               >
-                <Layers className="w-4 h-4 text-brand-400" />
+                <Layers className="w-4 h-4 text-brand-500 dark:text-brand-400" />
                 Programs
               </Link>
               <Link
                 to="/classrooms"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/classrooms') ? 'text-white bg-dark-800' : 'text-dark-300 hover:text-white hover:bg-dark-800/60'
+                  isActive('/classrooms') 
+                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
                 }`}
               >
                 <GraduationCap className="w-4 h-4 text-accent-amber" />
@@ -130,7 +148,9 @@ export const Navbar: React.FC = () => {
           <Link
             to="/playground"
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              isActive('/playground') ? 'text-white bg-dark-800' : 'text-dark-300 hover:text-white hover:bg-dark-800/60'
+              isActive('/playground') 
+                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
             }`}
           >
             <Users className="w-4 h-4 text-accent-violet" />
@@ -140,33 +160,44 @@ export const Navbar: React.FC = () => {
           <Link
             to="/about"
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              isActive('/about') ? 'text-white bg-dark-800' : 'text-dark-300 hover:text-white hover:bg-dark-800/60'
+              isActive('/about') 
+                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
             }`}
           >
             About
           </Link>
         </div>
 
-        {/* User Auth Action Buttons */}
+        {/* User Auth Action Buttons & Theme Switcher */}
         <div className="hidden lg:flex items-center gap-3">
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl border border-slate-200 dark:border-dark-700 bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-yellow-400 hover:scale-105 transition-all shadow-sm"
+            title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+          >
+            {isDark ? <Sun className="w-4 h-4 fill-yellow-400/20 text-yellow-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+          </button>
+
           {user ? (
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 pl-3 py-1 pr-2 rounded-xl bg-dark-800/80 border border-dark-700">
-                <div className="w-7 h-7 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-xs">
+              <div className="flex items-center gap-2 pl-3 py-1 pr-2 rounded-xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-dark-700">
+                <div className="w-7 h-7 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xs">
                   {user.username.substring(0, 2).toUpperCase()}
                 </div>
                 <div className="text-left">
-                  <div className="text-xs font-semibold text-white leading-tight">
+                  <div className="text-xs font-semibold text-slate-900 dark:text-white leading-tight">
                     {user.full_name || user.username}
                   </div>
-                  <div className="text-[10px] text-dark-400 uppercase font-medium">
+                  <div className="text-[10px] text-slate-500 dark:text-dark-400 uppercase font-medium">
                     {user.role}
                   </div>
                 </div>
               </div>
               <button
                 onClick={logout}
-                className="p-2 rounded-lg text-dark-400 hover:text-accent-rose hover:bg-dark-800 transition-colors"
+                className="p-2 rounded-lg text-slate-500 dark:text-dark-400 hover:text-rose-600 dark:hover:text-accent-rose hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
                 title="Log out"
               >
                 <LogOut className="w-4 h-4" />
@@ -176,9 +207,9 @@ export const Navbar: React.FC = () => {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="px-4 py-2 rounded-xl bg-dark-800 hover:bg-dark-750 text-white text-sm font-medium border border-dark-700 transition-all flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-800 dark:text-white text-sm font-medium border border-slate-200 dark:border-dark-700 transition-all flex items-center gap-1.5"
               >
-                <LogIn className="w-4 h-4 text-dark-300" />
+                <LogIn className="w-4 h-4 text-slate-500 dark:text-dark-300" />
                 Login
               </Link>
               <Link
@@ -191,107 +222,102 @@ export const Navbar: React.FC = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden p-2 rounded-lg text-dark-300 hover:text-white hover:bg-dark-800 transition-colors"
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* Mobile Menu & Theme Button */}
+        <div className="flex lg:hidden items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg border border-slate-200 dark:border-dark-700 bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-yellow-400 transition-colors"
+            title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+          >
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5 text-indigo-600" />}
+          </button>
+          
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
-      {/* Mobile Dropdown Menu */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden pt-3 pb-2 border-t border-dark-700/60 mt-3 space-y-1 animate-slide-up">
+        <div className="lg:hidden mt-3 pt-3 border-t border-slate-200 dark:border-dark-800 space-y-2 animate-slide-up">
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-base font-medium text-dark-200 hover:bg-dark-800"
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
           >
             Home
           </Link>
-          {isCreator ? (
-            <>
-              <Link
-                to="/my-programs"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-dark-200 hover:bg-dark-800"
-              >
-                My Programs
-              </Link>
-              <Link
-                to="/import"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-dark-200 hover:bg-dark-800"
-              >
-                Import Folder
-              </Link>
-              <Link
-                to="/create"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-dark-200 hover:bg-dark-800"
-              >
-                Create Program
-              </Link>
-              <Link
-                to="/classrooms"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-dark-200 hover:bg-dark-800"
-              >
-                My Classes
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/programs"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-dark-200 hover:bg-dark-800"
-              >
-                Programs
-              </Link>
-              <Link
-                to="/classrooms"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-dark-200 hover:bg-dark-800"
-              >
-                My Class
-              </Link>
-            </>
-          )}
+          <Link
+            to="/programs"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
+          >
+            Programs Library
+          </Link>
           <Link
             to="/playground"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-base font-medium text-dark-200 hover:bg-dark-800"
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
           >
-            Collaborative Playground
+            Live Playground
+          </Link>
+          <Link
+            to="/classrooms"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
+          >
+            Classrooms
+          </Link>
+          <Link
+            to="/create"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
+          >
+            + Create Program
           </Link>
           <Link
             to="/about"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-base font-medium text-dark-200 hover:bg-dark-800"
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
           >
-            About
+            About & Docs
           </Link>
-          <div className="pt-2 border-t border-dark-700">
+
+          <div className="pt-2 border-t border-slate-200 dark:border-dark-800">
             {user ? (
-              <button
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-left px-3 py-2 rounded-lg text-base font-medium text-accent-rose hover:bg-dark-800"
-              >
-                Logout ({user.username})
-              </button>
+              <div className="flex items-center justify-between px-3 py-2">
+                <div>
+                  <span className="text-xs font-semibold text-slate-900 dark:text-white block">{user.full_name || user.username}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-dark-400 uppercase">{user.role}</span>
+                </div>
+                <button
+                  onClick={() => { logout(); setMobileMenuOpen(false); }}
+                  className="px-3 py-1 rounded-lg text-xs text-rose-600 dark:text-accent-rose bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 font-medium"
+                >
+                  Log out
+                </button>
+              </div>
             ) : (
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-brand-400 hover:bg-dark-800"
-              >
-                Login / Register
-              </Link>
+              <div className="grid grid-cols-2 gap-2 p-2">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-center py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-800 dark:text-white text-xs font-medium border border-slate-200 dark:border-dark-700"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/login?tab=register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-center py-2 rounded-xl bg-brand-600 text-white text-xs font-medium"
+                >
+                  Sign Up
+                </Link>
+              </div>
             )}
           </div>
         </div>

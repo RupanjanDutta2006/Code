@@ -1,5 +1,6 @@
 import React from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
+import { useTheme } from '../context/ThemeContext';
 
 interface CodeEditorProps {
   code: string;
@@ -14,9 +15,12 @@ const MONACO_LANG_MAP: Record<string, string> = {
   python: 'python',
   c: 'c',
   cpp: 'cpp',
+  'c++': 'cpp',
   java: 'java',
   javascript: 'javascript',
+  js: 'javascript',
   typescript: 'typescript',
+  ts: 'typescript',
   go: 'go',
   rust: 'rust',
   kotlin: 'kotlin',
@@ -32,6 +36,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   height = '500px',
   onRun,
 }) => {
+  const { isDark } = useTheme();
   const monacoLang = MONACO_LANG_MAP[language.toLowerCase()] || 'plaintext';
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
@@ -44,12 +49,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   };
 
   return (
-    <div className="w-full h-full rounded-xl overflow-hidden border border-dark-700 bg-[#1e1e1e] shadow-xl relative group">
+    <div className="w-full h-full rounded-xl overflow-hidden border border-slate-300 dark:border-dark-700 bg-white dark:bg-[#1e1e1e] shadow-xl relative group transition-colors">
       <Editor
         height={height}
         language={monacoLang}
         value={code}
-        theme="vs-dark"
+        theme={isDark ? 'vs-dark' : 'vs'}
         onChange={(val) => onChange && onChange(val || '')}
         onMount={handleEditorDidMount}
         options={{
