@@ -16,6 +16,7 @@ import { CodeEditor } from '../components/CodeEditor';
 import { OutputTerminal } from '../components/OutputTerminal';
 import { api, ExecuteResult } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { executeUniversal } from '../services/compilerEngine';
 
 interface Peer {
   id: string;
@@ -170,7 +171,6 @@ export const PlaygroundPage: React.FC = () => {
       }));
     } else {
       try {
-        const { executeUniversal } = await import('../services/compilerEngine');
         const resp = await executeUniversal({
           language,
           sourceCode: code,
