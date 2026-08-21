@@ -28,8 +28,9 @@ async def websocket_execute(websocket: WebSocket):
 
                 language = msg.get("language", "python")
                 source_code = msg.get("source_code", "")
+                custom_input = msg.get("custom_input", "") or msg.get("stdin", "")
                 
-                session = InteractiveSession(websocket, language, source_code)
+                session = InteractiveSession(websocket, language, source_code, custom_input=custom_input)
                 await session.start()
 
             elif action == "stdin" or action == "input":

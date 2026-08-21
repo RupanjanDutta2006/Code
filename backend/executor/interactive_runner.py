@@ -15,10 +15,11 @@ SANDBOX_ROOT = DATA_DIR / "sandboxes"
 SANDBOX_ROOT.mkdir(exist_ok=True)
 
 class InteractiveSession:
-    def __init__(self, websocket: WebSocket, language: str, source_code: str):
+    def __init__(self, websocket: WebSocket, language: str, source_code: str, custom_input: str = ""):
         self.websocket = websocket
         self.language = language.lower().strip()
         self.source_code = source_code
+        self.custom_input = custom_input
         self.session_id = str(uuid.uuid4())
         self.work_dir = SANDBOX_ROOT / f"inter_{self.session_id}"
         self.process: Optional[subprocess.Popen] = None
@@ -157,6 +158,15 @@ class InteractiveSession:
                 env=env
             )
             self.is_running = True
+
+            # Write initial STDIN if provided
+            if self.custom_input and self.process.stdin:
+                try:
+                    data_to_send = self.custom_input if self.custom_input.endswith("\n") else self.custom_input + "\n"
+                    self.process.stdin.write(data_to_send.encode("utf-8"))
+                    self.process.stdin.flush()
+                except Exception as e:
+                    print(f"Error writing initial STDIN: {e}")
 
             # Start stdout reader task
             loop = asyncio.get_running_loop()

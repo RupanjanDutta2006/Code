@@ -7,14 +7,14 @@ import {
   CheckCircle, 
   Eye, 
   Square, 
-  Trash2,
-  Loader2,
+  Trash2, 
+  Loader2 
 } from 'lucide-react';
 import { ExecuteResult } from '../services/api';
 import { executeUniversal, getCommandDisplay } from '../services/compilerEngine';
 
 export interface OutputTerminalHandle {
-  startInteractive: () => void;
+  startInteractive: (inputOverride?: string, codeOverride?: string, langOverride?: string) => void;
   clear: () => void;
 }
 
@@ -50,6 +50,23 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   const terminalBodyRef = useRef<HTMLDivElement>(null);
   const inputInputRef = useRef<HTMLInputElement>(null);
 
+  // Synchronization refs to prevent any stale closures
+  const sourceCodeRef = useRef(sourceCode);
+  const languageRef = useRef(language);
+  const customInputRef = useRef(customInput);
+
+  useEffect(() => {
+    sourceCodeRef.current = sourceCode;
+  }, [sourceCode]);
+
+  useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
+
+  useEffect(() => {
+    customInputRef.current = customInput;
+  }, [customInput]);
+
   const isHtml = language.toLowerCase() === 'html';
 
   useEffect(() => {
@@ -58,7 +75,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     }
   }, [language]);
 
-  // Internal auto-scroll ONLY within the terminal body (never scrolls outer page)
+  // Auto-scroll inside terminal body
   useEffect(() => {
     if (terminalBodyRef.current) {
       terminalBodyRef.current.scrollTop = terminalBodyRef.current.scrollHeight;
@@ -76,18 +93,23 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       }
       setExitInfo({
         status: result.status,
+        code: result.status === 'success' ? 0 : 1,
         time: result.execution_time_ms,
       });
       setIsProcessActive(false);
     }
   }, [result]);
 
-  const runCloudEngineFallback = async (inputToSend?: string) => {
+  const runCloudEngineFallback = async (inputToSend?: string, codeToSend?: string, langToSend?: string) => {
+    const effectiveCode = codeToSend !== undefined ? codeToSend : sourceCodeRef.current;
+    const effectiveLang = langToSend !== undefined ? langToSend : languageRef.current;
+    const effectiveInput = inputToSend !== undefined ? inputToSend : customInputRef.current;
+
     try {
       const resp = await executeUniversal({
-        language,
-        sourceCode,
-        customInput: inputToSend !== undefined ? inputToSend : (customInput || currentInput),
+        language: effectiveLang,
+        sourceCode: effectiveCode,
+        customInput: effectiveInput,
       });
 
       let outputText = '';
@@ -124,33 +146,35 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     }
   };
 
-  const handleStartInteractive = () => {
-    if (!sourceCode.trim()) return;
+  const handleStartInteractive = (inputOverride?: string, codeOverride?: string, langOverride?: string) => {
+    const activeCode = codeOverride !== undefined ? codeOverride : sourceCodeRef.current;
+    const activeLang = langOverride !== undefined ? langOverride : languageRef.current;
+    const activeInput = inputOverride !== undefined ? inputOverride : customInputRef.current;
 
-    if (isHtml) {
+    if (!activeCode.trim()) return;
+
+    if (activeLang.toLowerCase() === 'html') {
       setActiveTab('preview');
-      setTerminalHistory(`PS CodeVault> ${getCommandDisplay(language)}\n[HTML Live Preview Rendered Successfully]\nPS CodeVault> `);
+      setTerminalHistory(`PS CodeVault> ${getCommandDisplay(activeLang)}\n[HTML Live Preview Rendered Successfully]\nPS CodeVault> `);
       setExitInfo({ status: 'success', code: 0, time: 10 });
       return;
     }
 
-    const prefix = getCommandDisplay(language);
+    const prefix = getCommandDisplay(activeLang);
     setTerminalHistory(`PS CodeVault> ${prefix}\n`);
     setCurrentInput('');
     setExitInfo(null);
     setIsProcessActive(true);
 
     const customBaseUrl = import.meta.env.VITE_API_BASE_URL;
-    // Check if we are running in local backend mode or on cloud (Vercel/Static)
     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     if (!isLocalDev && !customBaseUrl) {
-      // Directly use Universal Engine on Vercel / Remote
-      runCloudEngineFallback();
+      runCloudEngineFallback(activeInput, activeCode, activeLang);
       return;
     }
 
-    // Try WebSocket for interactive I/O with quick fallback
+    // Try WebSocket for local interactive I/O with fallback
     let wsConnected = false;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = customBaseUrl ? customBaseUrl.replace(/^https?:\/\//, '') : window.location.host;
@@ -167,7 +191,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       const wsTimer = setTimeout(() => {
         if (!wsConnected) {
           try { ws.close(); } catch (e) {}
-          runCloudEngineFallback();
+          runCloudEngineFallback(activeInput, activeCode, activeLang);
         }
       }, 600);
 
@@ -176,8 +200,10 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
         clearTimeout(wsTimer);
         ws.send(JSON.stringify({
           action: 'run',
-          language,
-          source_code: sourceCode,
+          language: activeLang,
+          source_code: activeCode,
+          custom_input: activeInput,
+          stdin: activeInput,
         }));
         setTimeout(() => {
           inputInputRef.current?.focus({ preventScroll: true });
@@ -212,7 +238,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
 
       ws.onclose = () => {
         if (!wsConnected) {
-          runCloudEngineFallback();
+          runCloudEngineFallback(activeInput, activeCode, activeLang);
         } else {
           setIsProcessActive(false);
         }
@@ -221,11 +247,11 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       ws.onerror = () => {
         if (!wsConnected) {
           clearTimeout(wsTimer);
-          runCloudEngineFallback();
+          runCloudEngineFallback(activeInput, activeCode, activeLang);
         }
       };
     } catch (err) {
-      runCloudEngineFallback();
+      runCloudEngineFallback(activeInput, activeCode, activeLang);
     }
   };
 
@@ -244,7 +270,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       // Re-run with custom stdin input
       setTerminalHistory((prev) => prev + inputVal + '\n[Processing input...]\n');
       setIsProcessActive(true);
-      runCloudEngineFallback(inputVal);
+      runCloudEngineFallback((customInputRef.current ? customInputRef.current + '\n' : '') + inputVal);
     }
   };
 
@@ -277,14 +303,16 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   };
 
   useImperativeHandle(ref, () => ({
-    startInteractive: handleStartInteractive,
+    startInteractive: (inputOverride?: string, codeOverride?: string, langOverride?: string) => {
+      handleStartInteractive(inputOverride, codeOverride, langOverride);
+    },
     clear: handleClearTerminal,
   }));
 
   return (
-    <div className="flex flex-col h-full bg-dark-900 border border-dark-700/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+    <div className="flex flex-col h-full bg-dark-900 border border-slate-300 dark:border-dark-700/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md transition-colors">
       {/* Terminal Title Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-dark-950/80 border-b border-dark-800 select-none">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-100 dark:bg-dark-950/80 border-b border-slate-200 dark:border-dark-800 select-none">
         {/* Left: Window Dots & Tabs */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
@@ -298,8 +326,8 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
               onClick={() => setActiveTab('terminal')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium transition-all ${
                 activeTab === 'terminal'
-                  ? 'bg-dark-800 text-brand-400 border border-brand-500/20 shadow-sm'
-                  : 'text-dark-400 hover:text-dark-200'
+                  ? 'bg-slate-200 dark:bg-dark-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-dark-400 hover:text-slate-900 dark:hover:text-dark-200'
               }`}
             >
               <TerminalIcon className="w-3.5 h-3.5" />
@@ -311,8 +339,8 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
                 onClick={() => setActiveTab('preview')}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium transition-all ${
                   activeTab === 'preview'
-                    ? 'bg-dark-800 text-brand-400 border border-brand-500/20 shadow-sm'
-                    : 'text-dark-400 hover:text-dark-200'
+                    ? 'bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30'
+                    : 'text-slate-500 dark:text-dark-400 hover:text-slate-900 dark:hover:text-dark-200'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -322,111 +350,117 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
           </div>
         </div>
 
-        {/* Right: Status Badges & Controls */}
+        {/* Right: Actions & Status */}
         <div className="flex items-center gap-2">
-          {isProcessActive ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium">
+          {/* Status Badge */}
+          {isProcessActive && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-500/30 text-[11px] font-mono text-brand-500 dark:text-brand-400 animate-pulse">
               <Loader2 className="w-3 h-3 animate-spin" />
-              <span>Running...</span>
-              <button
-                onClick={handleStopProcess}
-                className="ml-1 p-0.5 rounded hover:bg-emerald-500/20 text-emerald-300"
-                title="Stop process (^C)"
-              >
-                <Square className="w-2.5 h-2.5 fill-current" />
-              </button>
-            </div>
-          ) : exitInfo ? (
-            <div className="flex items-center gap-2">
-              {exitInfo.status === 'success' || exitInfo.code === 0 ? (
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-mono">
-                  <CheckCircle className="w-3 h-3" />
-                  <span>Success</span>
-                  {exitInfo.time !== undefined && (
-                    <span className="text-dark-400 text-[10px]">({exitInfo.time}ms)</span>
-                  )}
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-[11px] font-mono">
-                  <AlertCircle className="w-3 h-3" />
-                  <span>Exit {exitInfo.code ?? 1}</span>
-                  {exitInfo.time !== undefined && (
-                    <span className="text-dark-400 text-[10px]">({exitInfo.time}ms)</span>
-                  )}
-                </span>
-              )}
-            </div>
-          ) : null}
+              <span>Running</span>
+            </span>
+          )}
 
-          {/* Action Buttons */}
+          {exitInfo && (
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium ${
+                exitInfo.code === 0
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-accent-emerald border border-emerald-500/20'
+                  : 'bg-rose-500/10 text-rose-600 dark:text-accent-rose border border-rose-500/20'
+              }`}
+            >
+              {exitInfo.code === 0 ? (
+                <CheckCircle className="w-3 h-3" />
+              ) : (
+                <AlertCircle className="w-3 h-3" />
+              )}
+              <span>
+                Exit {exitInfo.code ?? (exitInfo.status === 'success' ? 0 : 1)}
+                {exitInfo.time !== undefined && ` (${exitInfo.time}ms)`}
+              </span>
+            </span>
+          )}
+
+          {/* Copy Output Button */}
           <button
             onClick={handleCopy}
-            className="p-1.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
-            title="Copy Terminal Output"
+            className="p-1.5 rounded-lg text-slate-500 dark:text-dark-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-dark-800 transition-colors"
+            title="Copy output"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
+
+          {/* Clear Terminal Button */}
           <button
             onClick={handleClearTerminal}
-            className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-dark-800 transition-colors"
-            title="Clear Terminal"
+            className="p-1.5 rounded-lg text-slate-500 dark:text-dark-400 hover:text-rose-500 hover:bg-slate-200 dark:hover:bg-dark-800 transition-colors"
+            title="Clear terminal"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
+
+          {/* Terminate Process Button */}
+          {isProcessActive && (
+            <button
+              onClick={handleStopProcess}
+              className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/20 transition-colors"
+              title="Terminate Process (Ctrl+C)"
+            >
+              <Square className="w-3.5 h-3.5 fill-rose-500" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Terminal View Body */}
-      <div 
-        ref={terminalBodyRef}
-        className="flex-1 p-4 overflow-auto font-mono text-[13px] leading-relaxed bg-[#0d1117] text-dark-100 flex flex-col justify-between min-h-[220px]"
-      >
-        {isHtml && activeTab === 'preview' ? (
+      {/* Main Content Area: Terminal or HTML Live Preview */}
+      {activeTab === 'preview' ? (
+        <div className="flex-1 w-full bg-white relative">
           <iframe
             srcDoc={sourceCode}
-            title="HTML Preview Sandbox"
-            sandbox="allow-scripts"
-            className="w-full h-full min-h-[300px] bg-white rounded-lg border border-dark-700"
+            title="HTML Live Preview"
+            sandbox="allow-scripts allow-modals"
+            className="w-full h-full border-0"
           />
-        ) : (
-          <div className="space-y-1">
-            {/* Welcoming prompt when terminal is empty */}
-            {!terminalHistory && !isProcessActive && (
-              <div className="text-dark-400 space-y-1.5">
-                <div>
-                  <span className="text-brand-400">PS CodeVault&gt;</span> Click <span className="text-white font-semibold">&quot;Run Code&quot;</span> to execute.
-                </div>
-                <div className="text-xs text-dark-500">
-                  ⚡ 11 Languages Supported (Python, C, C++, Java, JS, TS, Go, Rust, Kotlin, SQL, HTML).
-                </div>
-              </div>
-            )}
+        </div>
+      ) : (
+        <div
+          ref={terminalBodyRef}
+          className="flex-1 p-4 bg-[#0d1117] text-[#e6edf3] font-mono text-xs overflow-y-auto space-y-1.5 leading-relaxed selection:bg-brand-500 selection:text-white"
+          style={{ fontFamily: "'Fira Code', 'JetBrains Mono', Consolas, monospace" }}
+        >
+          {/* Default Welcome Prompt */}
+          {!terminalHistory && !isProcessActive && (
+            <div className="text-[#8b949e] space-y-1 select-none">
+              <p>PS CodeVault Pro Terminal [Version 2.0.0]</p>
+              <p>Ready. Click <span className="text-brand-400 font-semibold">"Run Code"</span> to compile & execute.</p>
+              <p className="text-[11px] text-[#484f58]">Output and interactive execution will stream here.</p>
+            </div>
+          )}
 
-            {/* Printed Output History */}
-            {terminalHistory && (
-              <pre className="whitespace-pre-wrap font-mono text-dark-100 selection:bg-brand-500/30">
-                {terminalHistory}
-              </pre>
-            )}
+          {/* Render Full Terminal Text */}
+          {terminalHistory && (
+            <pre className="whitespace-pre-wrap break-all font-mono leading-relaxed">
+              {terminalHistory}
+            </pre>
+          )}
 
-            {/* Live Interactive Input Line */}
-            {isProcessActive && (
-              <form onSubmit={handleSendInput} className="flex items-center gap-1 font-mono text-sm pt-0.5">
-                <span className="text-emerald-400 font-bold shrink-0">&gt;</span>
-                <input
-                  ref={inputInputRef}
-                  type="text"
-                  value={currentInput}
-                  onChange={(e) => setCurrentInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Type input here and press Enter..."
-                  className="w-full bg-transparent border-none outline-none text-white font-mono placeholder-dark-600 selection:bg-brand-500"
-                />
-              </form>
-            )}
-          </div>
-        )}
-      </div>
+          {/* Interactive Stdin Input Field */}
+          {isProcessActive && (
+            <form onSubmit={handleSendInput} className="flex items-center gap-2 pt-1">
+              <span className="text-emerald-400 font-bold">&gt;</span>
+              <input
+                ref={inputInputRef}
+                type="text"
+                value={currentInput}
+                onChange={(e) => setCurrentInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Enter input here and press Enter..."
+                className="flex-1 bg-transparent border-none outline-none text-[#e6edf3] font-mono text-xs placeholder-[#484f58] p-0"
+                autoFocus
+              />
+            </form>
+          )}
+        </div>
+      )}
     </div>
   );
 });

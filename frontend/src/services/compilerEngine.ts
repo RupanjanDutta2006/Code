@@ -1,13 +1,14 @@
 /**
  * CodeVault Pro - Universal Cloud & Client Compiler Engine
  * Powers instant code execution for 11 languages on Vercel, Mobile, and Desktop
- * with zero server setup required.
+ * with full multi-line STDIN piping and zero server setup required.
  */
 
 export interface ExecutionRequest {
   language: string;
   sourceCode: string;
   customInput?: string;
+  stdin?: string;
   programId?: number;
 }
 
@@ -53,22 +54,22 @@ export const LANGUAGE_CONFIGS: Record<string, LanguageConfig> = {
     commandDisplay: 'javac Main.java && java Main',
   },
   javascript: {
-    compiler: 'nodejs-20.17.0',
+    compiler: 'client-js',
     fileName: 'solution.js',
     commandDisplay: 'node solution.js',
   },
   js: {
-    compiler: 'nodejs-20.17.0',
+    compiler: 'client-js',
     fileName: 'solution.js',
     commandDisplay: 'node solution.js',
   },
   typescript: {
-    compiler: 'typescript-5.6.2',
+    compiler: 'client-js',
     fileName: 'solution.ts',
     commandDisplay: 'ts-node solution.ts',
   },
   ts: {
-    compiler: 'typescript-5.6.2',
+    compiler: 'client-js',
     fileName: 'solution.ts',
     commandDisplay: 'ts-node solution.ts',
   },
@@ -119,11 +120,12 @@ export function getCommandDisplay(lang: string): string {
 }
 
 /**
- * Execute code universally across any platform
+ * Execute code universally across any platform with real STDIN piping
  */
 export async function executeUniversal(req: ExecutionRequest): Promise<ExecutionResponse> {
   const normLang = normalizeLanguage(req.language);
   const startTime = performance.now();
+  const rawStdin = req.stdin !== undefined ? req.stdin : (req.customInput || '');
 
   // 1. Special Handling for HTML: Render in-browser preview
   if (normLang === 'html') {
@@ -135,7 +137,13 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
     };
   }
 
-  // 2. Try remote custom backend first if configured with VITE_API_BASE_URL
+  // 2. Special Handling for JavaScript & TypeScript: In-browser high-speed sandbox with STDIN simulation
+  if (normLang === 'javascript' || normLang === 'js' || normLang === 'typescript' || normLang === 'ts') {
+    const elapsed = Math.round(performance.now() - startTime);
+    return executeBrowserJS(req.sourceCode, rawStdin, elapsed);
+  }
+
+  // 3. Try remote custom backend first if configured with VITE_API_BASE_URL
   const customBaseUrl = import.meta.env.VITE_API_BASE_URL;
   if (customBaseUrl && customBaseUrl.trim() !== '') {
     try {
@@ -145,7 +153,8 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
         body: JSON.stringify({
           language: normLang,
           source_code: req.sourceCode,
-          custom_input: req.customInput || '',
+          custom_input: rawStdin,
+          stdin: rawStdin,
           program_id: req.programId,
         }),
       });
@@ -165,14 +174,14 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
     }
   }
 
-  // 3. Universal High-Performance Engine (Wandbox Execution API)
+  // 4. Universal High-Performance Engine (Wandbox Execution API)
   const config = LANGUAGE_CONFIGS[normLang] || LANGUAGE_CONFIGS.python;
 
   let codeToRun = req.sourceCode;
 
-  // Formatting adjustments for specific languages
+  // Language-specific source transformations
   if (normLang === 'java') {
-    // Replace "public class" with "class" for single file Java runner
+    // Replace "public class" with "class" for single-file Java compiler
     codeToRun = codeToRun.replace(/public\s+class\s+/g, 'class ');
   } else if (normLang === 'sql') {
     // Wrap SQL query in Python sqlite3 runner for reliable formatted execution
@@ -199,7 +208,7 @@ con.commit()`;
     const payload: any = {
       compiler: config.compiler,
       code: codeToRun,
-      stdin: req.customInput || '',
+      stdin: rawStdin,
     };
 
     const response = await fetch('https://wandbox.org/api/compile.json', {
@@ -213,10 +222,6 @@ con.commit()`;
     const elapsed = Math.round(performance.now() - startTime);
 
     if (!response.ok) {
-      // Fallback for JavaScript in browser
-      if (normLang === 'javascript' || normLang === 'js') {
-        return executeBrowserJS(req.sourceCode, elapsed);
-      }
       throw new Error(`Execution server responded with status: ${response.status}`);
     }
 
@@ -235,16 +240,10 @@ con.commit()`;
     };
   } catch (err: any) {
     const elapsed = Math.round(performance.now() - startTime);
-
-    // Fallback for JS in browser
-    if (normLang === 'javascript' || normLang === 'js') {
-      return executeBrowserJS(req.sourceCode, elapsed);
-    }
-
     return {
       status: 'error',
       output: '',
-      error: `Execution Error: ${err.message || 'Unable to connect to execution server. Please check your internet connection.'}`,
+      error: `Execution Error: ${err.message || 'Unable to connect to execution server.'}`,
       execution_time_ms: elapsed,
       exit_code: 1,
     };
@@ -252,13 +251,21 @@ con.commit()`;
 }
 
 /**
- * In-browser sandbox fallback for JavaScript
+ * In-browser sandbox for JavaScript & TypeScript with full STDIN support
  */
-function executeBrowserJS(sourceCode: string, elapsed: number): ExecutionResponse {
+function executeBrowserJS(sourceCode: string, customInput: string, elapsed: number): ExecutionResponse {
   let logs: string[] = [];
   const originalLog = console.log;
   const originalError = console.error;
   const originalWarn = console.warn;
+
+  const lines = (customInput || '').split(/\r?\n/);
+  let lineIdx = 0;
+  const readline = () => (lineIdx < lines.length ? lines[lineIdx++] : '');
+  const prompt = (msg?: string) => {
+    if (msg) logs.push(String(msg));
+    return readline();
+  };
 
   try {
     console.log = (...args) => {
@@ -271,9 +278,14 @@ function executeBrowserJS(sourceCode: string, elapsed: number): ExecutionRespons
       logs.push('[Warn] ' + args.map(String).join(' '));
     };
 
-    // Safe isolated execution
-    const fn = new Function(sourceCode);
-    const res = fn();
+    // Strip basic TypeScript types if present
+    const cleanCode = sourceCode
+      .replace(/:\s*(number|string|boolean|any|void|unknown|never|Record<[^>]+>|Array<[^>]+>|string\[\]|number\[\])/g, '')
+      .replace(/interface\s+\w+\s*\{[^}]*\}/g, '')
+      .replace(/type\s+\w+\s*=[^;]+;/g, '');
+
+    const fn = new Function('readline', 'prompt', 'customInput', 'input', cleanCode);
+    const res = fn(readline, prompt, customInput, readline);
     if (res !== undefined && logs.length === 0) {
       logs.push(String(res));
     }

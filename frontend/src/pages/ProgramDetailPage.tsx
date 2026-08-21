@@ -97,7 +97,7 @@ export const ProgramDetailPage: React.FC = () => {
     }
 
     if (terminalRef.current) {
-      terminalRef.current.startInteractive();
+      terminalRef.current.startInteractive(customInput, sourceCode, program.language);
       // Record analytics run event asynchronously
       api.post('/api/analytics/events', {
         event_type: 'run',
