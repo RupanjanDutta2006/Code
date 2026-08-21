@@ -21,94 +21,79 @@ export interface ExecutionResponse {
 }
 
 interface LanguageConfig {
-  pistonLang: string;
-  version: string;
+  compiler: string;
   fileName: string;
   commandDisplay: string;
 }
 
 export const LANGUAGE_CONFIGS: Record<string, LanguageConfig> = {
   python: {
-    pistonLang: 'python',
-    version: '3.10.0',
+    compiler: 'cpython-3.13.8',
     fileName: 'solution.py',
     commandDisplay: 'python -u solution.py',
   },
   c: {
-    pistonLang: 'c',
-    version: '10.2.0',
+    compiler: 'gcc-13.2.0-c',
     fileName: 'solution.c',
     commandDisplay: 'gcc solution.c -O2 -o solution && ./solution',
   },
   cpp: {
-    pistonLang: 'c++',
-    version: '10.2.0',
+    compiler: 'gcc-13.2.0',
     fileName: 'solution.cpp',
     commandDisplay: 'g++ solution.cpp -O2 -std=c++17 -o solution && ./solution',
   },
   'c++': {
-    pistonLang: 'c++',
-    version: '10.2.0',
+    compiler: 'gcc-13.2.0',
     fileName: 'solution.cpp',
     commandDisplay: 'g++ solution.cpp -O2 -std=c++17 -o solution && ./solution',
   },
   java: {
-    pistonLang: 'java',
-    version: '15.0.2',
+    compiler: 'openjdk-jdk-22+36',
     fileName: 'Main.java',
     commandDisplay: 'javac Main.java && java Main',
   },
   javascript: {
-    pistonLang: 'javascript',
-    version: '18.15.0',
+    compiler: 'nodejs-20.17.0',
     fileName: 'solution.js',
     commandDisplay: 'node solution.js',
   },
   js: {
-    pistonLang: 'javascript',
-    version: '18.15.0',
+    compiler: 'nodejs-20.17.0',
     fileName: 'solution.js',
     commandDisplay: 'node solution.js',
   },
   typescript: {
-    pistonLang: 'typescript',
-    version: '5.0.3',
+    compiler: 'typescript-5.6.2',
     fileName: 'solution.ts',
     commandDisplay: 'ts-node solution.ts',
   },
   ts: {
-    pistonLang: 'typescript',
-    version: '5.0.3',
+    compiler: 'typescript-5.6.2',
     fileName: 'solution.ts',
     commandDisplay: 'ts-node solution.ts',
   },
   go: {
-    pistonLang: 'go',
-    version: '1.16.2',
+    compiler: 'go-1.23.2',
     fileName: 'main.go',
     commandDisplay: 'go run main.go',
   },
   rust: {
-    pistonLang: 'rust',
-    version: '1.68.2',
+    compiler: 'rust-1.82.0',
     fileName: 'main.rs',
     commandDisplay: 'rustc main.rs -O -o main && ./main',
   },
   kotlin: {
-    pistonLang: 'kotlin',
-    version: '1.8.20',
-    fileName: 'Solution.kt',
-    commandDisplay: 'kotlinc Solution.kt -include-runtime -d Solution.jar && java -jar Solution.jar',
+    compiler: 'openjdk-jdk-22+36',
+    fileName: 'Main.java',
+    commandDisplay: 'kotlinc Solution.kt -include-runtime && java -jar Solution.jar',
   },
   sql: {
-    pistonLang: 'sqlite3',
-    version: '3.36.0',
+    compiler: 'cpython-3.13.8',
     fileName: 'query.sql',
     commandDisplay: 'sqlite3 < query.sql',
   },
   html: {
-    pistonLang: 'html',
-    version: '5.0',
+    compiler: 'html',
     fileName: 'index.html',
     commandDisplay: 'Live Web Preview',
   },
@@ -180,47 +165,56 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
     }
   }
 
-  // 3. Universal High-Performance Engine (Piston Multi-language)
+  // 3. Universal High-Performance Engine (Wandbox Execution API)
   const config = LANGUAGE_CONFIGS[normLang] || LANGUAGE_CONFIGS.python;
 
-  // Prepare source code adjustments if needed (e.g. Java class name checks)
-  let preparedSource = req.sourceCode;
-  let preparedFilename = config.fileName;
+  let codeToRun = req.sourceCode;
 
+  // Formatting adjustments for specific languages
   if (normLang === 'java') {
-    const classMatch = req.sourceCode.match(/public\s+class\s+([A-Za-z0-9_]+)/);
-    if (classMatch && classMatch[1]) {
-      preparedFilename = `${classMatch[1]}.java`;
-    }
+    // Replace "public class" with "class" for single file Java runner
+    codeToRun = codeToRun.replace(/public\s+class\s+/g, 'class ');
+  } else if (normLang === 'sql') {
+    // Wrap SQL query in Python sqlite3 runner for reliable formatted execution
+    const escapedSql = JSON.stringify(codeToRun);
+    codeToRun = `import sqlite3
+con = sqlite3.connect(':memory:')
+cur = con.cursor()
+sql = ${escapedSql}
+for stmt in sql.strip().split(';'):
+    if stmt.strip():
+        res = cur.execute(stmt)
+        if stmt.strip().upper().startswith('SELECT'):
+            rows = res.fetchall()
+            headers = [d[0] for d in cur.description] if cur.description else []
+            if headers:
+                print(' | '.join(headers))
+                print('-' * (len(' | '.join(headers)) + 4))
+            for row in rows:
+                print(' | '.join(str(c) for c in row))
+con.commit()`;
   }
 
   try {
-    const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+    const payload: any = {
+      compiler: config.compiler,
+      code: codeToRun,
+      stdin: req.customInput || '',
+    };
+
+    const response = await fetch('https://wandbox.org/api/compile.json', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        language: config.pistonLang,
-        version: config.version,
-        files: [
-          {
-            name: preparedFilename,
-            content: preparedSource,
-          },
-        ],
-        stdin: req.customInput || '',
-        args: [],
-        compile_timeout: 10000,
-        run_timeout: 6000,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const elapsed = Math.round(performance.now() - startTime);
 
     if (!response.ok) {
-      // Fallback for JS/TS in browser if API is unreachable
-      if (normLang === 'javascript') {
+      // Fallback for JavaScript in browser
+      if (normLang === 'javascript' || normLang === 'js') {
         return executeBrowserJS(req.sourceCode, elapsed);
       }
       throw new Error(`Execution server responded with status: ${response.status}`);
@@ -228,32 +222,22 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
 
     const data = await response.json();
 
-    if (data.compile && data.compile.code !== 0) {
-      return {
-        status: 'error',
-        output: '',
-        error: data.compile.output || data.compile.stderr || 'Compilation error occurred.',
-        execution_time_ms: elapsed,
-        exit_code: data.compile.code ?? 1,
-      };
-    }
-
-    const run = data.run || {};
-    const stdout = run.stdout || '';
-    const stderr = run.stderr || '';
-    const code = run.code ?? 0;
+    const stdout = data.program_output || data.compiler_output || '';
+    const stderr = data.program_error || data.compiler_error || '';
+    const exitCode = typeof data.status === 'number' ? data.status : (stderr && !stdout ? 1 : 0);
 
     return {
-      status: code === 0 && !stderr ? 'success' : stderr && !stdout ? 'error' : 'success',
+      status: exitCode === 0 ? 'success' : 'error',
       output: stdout,
       error: stderr || undefined,
       execution_time_ms: elapsed,
-      exit_code: code,
+      exit_code: exitCode,
     };
   } catch (err: any) {
     const elapsed = Math.round(performance.now() - startTime);
+
     // Fallback for JS in browser
-    if (normLang === 'javascript') {
+    if (normLang === 'javascript' || normLang === 'js') {
       return executeBrowserJS(req.sourceCode, elapsed);
     }
 
