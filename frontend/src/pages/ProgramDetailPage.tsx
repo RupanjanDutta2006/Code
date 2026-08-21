@@ -97,7 +97,7 @@ export const ProgramDetailPage: React.FC = () => {
     }
 
     if (terminalRef.current) {
-      terminalRef.current.startInteractive(customInput, sourceCode, program.language);
+      terminalRef.current.startInteractive(sourceCode, program.language);
       // Record analytics run event asynchronously
       api.post('/api/analytics/events', {
         event_type: 'run',
@@ -273,28 +273,13 @@ export const ProgramDetailPage: React.FC = () => {
             </span>
           </div>
 
-          <div className="h-[460px]">
+          <div className="h-[530px]">
             <CodeEditor
               code={sourceCode}
               language={program.language}
               onChange={setSourceCode}
-              height="460px"
+              height="530px"
               onRun={handleRunCode}
-            />
-          </div>
-
-          {/* Custom Input */}
-          <div className="rounded-xl border border-dark-700 bg-dark-900 p-3.5 space-y-2">
-            <label className="text-xs font-medium text-dark-300 flex items-center justify-between font-mono">
-              <span>Input (STDIN)</span>
-              <span className="text-[11px] text-dark-500 font-normal">Optional data passed to program</span>
-            </label>
-            <textarea
-              rows={2}
-              value={customInput}
-              onChange={(e) => setCustomInput(e.target.value)}
-              placeholder="e.g. 5&#10;10 20 30 40 50&#10;30"
-              className="w-full bg-dark-950 border border-dark-700 rounded-lg p-2 text-xs font-mono text-white placeholder-dark-500 outline-none focus:border-brand-500 resize-y"
             />
           </div>
         </div>
@@ -323,7 +308,6 @@ export const ProgramDetailPage: React.FC = () => {
               isRunning={running}
               language={program.language}
               sourceCode={sourceCode}
-              customInput={customInput}
               onClear={() => setResult(null)}
             />
           </div>

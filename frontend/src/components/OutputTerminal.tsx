@@ -14,7 +14,7 @@ import { ExecuteResult } from '../services/api';
 import { executeUniversal, getCommandDisplay } from '../services/compilerEngine';
 
 export interface OutputTerminalHandle {
-  startInteractive: (inputOverride?: string, codeOverride?: string, langOverride?: string) => void;
+  startInteractive: (codeOverride?: string, langOverride?: string) => void;
   clear: () => void;
 }
 
@@ -23,8 +23,37 @@ interface OutputTerminalProps {
   isRunning?: boolean;
   language: string;
   sourceCode?: string;
-  customInput?: string;
   onClear?: () => void;
+}
+
+/**
+ * Weaves user inputs into the raw program output to produce a real IDE terminal transcript.
+ */
+function formatInteractiveOutput(rawOutput: string, inputs: string[]): string {
+  if (!rawOutput && inputs.length === 0) return '';
+  if (inputs.length === 0) return rawOutput;
+
+  let remainingOutput = rawOutput;
+  let formatted = '';
+
+  for (let i = 0; i < inputs.length; i++) {
+    const inp = inputs[i];
+    // Match up to the first prompt boundary (: ? > or newline)
+    const match = remainingOutput.match(/(.*?(?::|\?|>|\$|\n|$))\s*/s);
+    if (match && match[1] && match[1].trim().length > 0) {
+      const promptPart = match[1];
+      formatted += promptPart.trimEnd() + ' ' + inp + '\n';
+      remainingOutput = remainingOutput.slice(match[0].length);
+    } else {
+      formatted += inp + '\n';
+    }
+  }
+
+  if (remainingOutput.trim()) {
+    formatted += remainingOutput;
+  }
+
+  return formatted.trimEnd();
 }
 
 export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalProps>(({
@@ -32,7 +61,6 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   isRunning = false,
   language,
   sourceCode = '',
-  customInput = '',
   onClear,
 }, ref) => {
   const [copied, setCopied] = useState(false);
@@ -50,10 +78,10 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   const terminalBodyRef = useRef<HTMLDivElement>(null);
   const inputInputRef = useRef<HTMLInputElement>(null);
 
-  // Synchronization refs to prevent any stale closures
+  // Session inputs accumulator for true interactive in-terminal input
+  const sessionInputsRef = useRef<string[]>([]);
   const sourceCodeRef = useRef(sourceCode);
   const languageRef = useRef(language);
-  const customInputRef = useRef(customInput);
 
   useEffect(() => {
     sourceCodeRef.current = sourceCode;
@@ -62,10 +90,6 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   useEffect(() => {
     languageRef.current = language;
   }, [language]);
-
-  useEffect(() => {
-    customInputRef.current = customInput;
-  }, [customInput]);
 
   const isHtml = language.toLowerCase() === 'html';
 
@@ -81,6 +105,13 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       terminalBodyRef.current.scrollTop = terminalBodyRef.current.scrollHeight;
     }
   }, [terminalHistory, isProcessActive]);
+
+  // Auto-focus interactive input when process is active
+  useEffect(() => {
+    if (isProcessActive && inputInputRef.current) {
+      inputInputRef.current.focus({ preventScroll: true });
+    }
+  }, [isProcessActive, terminalHistory]);
 
   // Sync external result from batch runner if provided
   useEffect(() => {
@@ -100,56 +131,74 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     }
   }, [result]);
 
-  const runCloudEngineFallback = async (inputToSend?: string, codeToSend?: string, langToSend?: string) => {
+  const executeWithInputs = async (inputs: string[], codeToSend?: string, langToSend?: string) => {
     const effectiveCode = codeToSend !== undefined ? codeToSend : sourceCodeRef.current;
     const effectiveLang = langToSend !== undefined ? langToSend : languageRef.current;
-    const effectiveInput = inputToSend !== undefined ? inputToSend : customInputRef.current;
+    const inputPayload = inputs.join('\n');
 
     try {
       const resp = await executeUniversal({
         language: effectiveLang,
         sourceCode: effectiveCode,
-        customInput: effectiveInput,
+        customInput: inputPayload,
+        stdin: inputPayload,
       });
 
-      let outputText = '';
-      if (resp.output) {
-        outputText += resp.output;
-      }
-      if (resp.error) {
-        outputText += (outputText ? '\n' : '') + resp.error;
+      const prefix = `PS CodeVault> ${getCommandDisplay(effectiveLang)}\n`;
+
+      // Case 1: Program is waiting for input (e.g. Python input(), Java Scanner, C scanf)
+      if (resp.status === 'error' && resp.error && (resp.error.includes('EOFError') || resp.error.includes('NoSuchElementException'))) {
+        const formatted = formatInteractiveOutput(resp.output || '', inputs);
+        setTerminalHistory(prefix + formatted + (formatted && !formatted.endsWith(' ') ? ' ' : ''));
+        setIsProcessActive(true);
+        setExitInfo(null);
+        setTimeout(() => inputInputRef.current?.focus({ preventScroll: true }), 50);
+        return;
       }
 
-      setTerminalHistory((prev) => {
-        const separator = prev.endsWith('\n') ? '' : '\n';
-        return (
-          prev +
-          separator +
-          outputText +
-          `\n\n[Process completed with exit code ${resp.exit_code ?? 0} in ${resp.execution_time_ms}ms]\nPS CodeVault> `
+      // Case 2: Clean success
+      if (resp.status === 'success') {
+        const formatted = formatInteractiveOutput(resp.output || '', inputs);
+        setTerminalHistory(
+          prefix +
+          formatted +
+          `\n\n[Process completed with exit code 0 in ${resp.execution_time_ms}ms]\nPS CodeVault> `
         );
-      });
+        setExitInfo({
+          status: 'success',
+          code: 0,
+          time: resp.execution_time_ms,
+        });
+        setIsProcessActive(false);
+        return;
+      }
 
+      // Case 3: Genuine runtime or compilation error
+      const formatted = formatInteractiveOutput(resp.output || '', inputs);
+      let errorText = formatted ? formatted + '\n' : '';
+      if (resp.error) errorText += resp.error;
+
+      setTerminalHistory(
+        prefix +
+        errorText +
+        `\n\n[Process completed with exit code ${resp.exit_code ?? 1} in ${resp.execution_time_ms}ms]\nPS CodeVault> `
+      );
       setExitInfo({
-        status: resp.status,
-        code: resp.exit_code,
+        status: 'error',
+        code: resp.exit_code ?? 1,
         time: resp.execution_time_ms,
       });
+      setIsProcessActive(false);
     } catch (err: any) {
-      setTerminalHistory((prev) => {
-        const separator = prev.endsWith('\n') ? '' : '\n';
-        return prev + separator + `[Execution Error: ${err.message || 'Server error'}]\nPS CodeVault> `;
-      });
+      setTerminalHistory((prev) => prev + `\n[Execution Error: ${err.message || 'Unknown error'}]\nPS CodeVault> `);
       setExitInfo({ status: 'error', code: 1, time: 0 });
-    } finally {
       setIsProcessActive(false);
     }
   };
 
-  const handleStartInteractive = (inputOverride?: string, codeOverride?: string, langOverride?: string) => {
+  const handleStartInteractive = (codeOverride?: string, langOverride?: string) => {
     const activeCode = codeOverride !== undefined ? codeOverride : sourceCodeRef.current;
     const activeLang = langOverride !== undefined ? langOverride : languageRef.current;
-    const activeInput = inputOverride !== undefined ? inputOverride : customInputRef.current;
 
     if (!activeCode.trim()) return;
 
@@ -160,8 +209,8 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       return;
     }
 
-    const prefix = getCommandDisplay(activeLang);
-    setTerminalHistory(`PS CodeVault> ${prefix}\n`);
+    // Reset interactive session inputs
+    sessionInputsRef.current = [];
     setCurrentInput('');
     setExitInfo(null);
     setIsProcessActive(true);
@@ -170,7 +219,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     if (!isLocalDev && !customBaseUrl) {
-      runCloudEngineFallback(activeInput, activeCode, activeLang);
+      executeWithInputs([], activeCode, activeLang);
       return;
     }
 
@@ -191,19 +240,19 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       const wsTimer = setTimeout(() => {
         if (!wsConnected) {
           try { ws.close(); } catch (e) {}
-          runCloudEngineFallback(activeInput, activeCode, activeLang);
+          executeWithInputs([], activeCode, activeLang);
         }
-      }, 600);
+      }, 500);
 
       ws.onopen = () => {
         wsConnected = true;
         clearTimeout(wsTimer);
+        const prefix = getCommandDisplay(activeLang);
+        setTerminalHistory(`PS CodeVault> ${prefix}\n`);
         ws.send(JSON.stringify({
           action: 'run',
           language: activeLang,
           source_code: activeCode,
-          custom_input: activeInput,
-          stdin: activeInput,
         }));
         setTimeout(() => {
           inputInputRef.current?.focus({ preventScroll: true });
@@ -238,7 +287,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
 
       ws.onclose = () => {
         if (!wsConnected) {
-          runCloudEngineFallback(activeInput, activeCode, activeLang);
+          executeWithInputs([], activeCode, activeLang);
         } else {
           setIsProcessActive(false);
         }
@@ -247,17 +296,18 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       ws.onerror = () => {
         if (!wsConnected) {
           clearTimeout(wsTimer);
-          runCloudEngineFallback(activeInput, activeCode, activeLang);
+          executeWithInputs([], activeCode, activeLang);
         }
       };
     } catch (err) {
-      runCloudEngineFallback(activeInput, activeCode, activeLang);
+      executeWithInputs([], activeCode, activeLang);
     }
   };
 
   const handleSendInput = (e: React.FormEvent) => {
     e.preventDefault();
     const inputVal = currentInput;
+    if (!inputVal && inputVal !== '') return;
     setCurrentInput('');
 
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -267,10 +317,9 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       }));
       setTerminalHistory((prev) => prev + inputVal + '\n');
     } else {
-      // Re-run with custom stdin input
-      setTerminalHistory((prev) => prev + inputVal + '\n[Processing input...]\n');
-      setIsProcessActive(true);
-      runCloudEngineFallback((customInputRef.current ? customInputRef.current + '\n' : '') + inputVal);
+      // Append input to session and feed to runner
+      sessionInputsRef.current.push(inputVal);
+      executeWithInputs(sessionInputsRef.current);
     }
   };
 
@@ -292,6 +341,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   const handleClearTerminal = () => {
     setTerminalHistory('');
     setCurrentInput('');
+    sessionInputsRef.current = [];
     setExitInfo(null);
     if (onClear) onClear();
   };
@@ -303,8 +353,8 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   };
 
   useImperativeHandle(ref, () => ({
-    startInteractive: (inputOverride?: string, codeOverride?: string, langOverride?: string) => {
-      handleStartInteractive(inputOverride, codeOverride, langOverride);
+    startInteractive: (codeOverride?: string, langOverride?: string) => {
+      handleStartInteractive(codeOverride, langOverride);
     },
     clear: handleClearTerminal,
   }));
@@ -356,7 +406,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
           {isProcessActive && (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-500/30 text-[11px] font-mono text-brand-500 dark:text-brand-400 animate-pulse">
               <Loader2 className="w-3 h-3 animate-spin" />
-              <span>Running</span>
+              <span>Interactive</span>
             </span>
           )}
 
@@ -424,7 +474,8 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       ) : (
         <div
           ref={terminalBodyRef}
-          className="flex-1 p-4 bg-[#0d1117] text-[#e6edf3] font-mono text-xs overflow-y-auto space-y-1.5 leading-relaxed selection:bg-brand-500 selection:text-white"
+          onClick={() => isProcessActive && inputInputRef.current?.focus()}
+          className="flex-1 p-4 bg-[#0d1117] text-[#e6edf3] font-mono text-xs overflow-y-auto space-y-1.5 leading-relaxed selection:bg-brand-500 selection:text-white cursor-text"
           style={{ fontFamily: "'Fira Code', 'JetBrains Mono', Consolas, monospace" }}
         >
           {/* Default Welcome Prompt */}
@@ -432,29 +483,28 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
             <div className="text-[#8b949e] space-y-1 select-none">
               <p>PS CodeVault Pro Terminal [Version 2.0.0]</p>
               <p>Ready. Click <span className="text-brand-400 font-semibold">"Run Code"</span> to compile & execute.</p>
-              <p className="text-[11px] text-[#484f58]">Output and interactive execution will stream here.</p>
+              <p className="text-[11px] text-[#484f58]">Interactive input prompts appear directly inside the terminal window.</p>
             </div>
           )}
 
           {/* Render Full Terminal Text */}
           {terminalHistory && (
-            <pre className="whitespace-pre-wrap break-all font-mono leading-relaxed">
+            <pre className="whitespace-pre-wrap break-all font-mono leading-relaxed inline">
               {terminalHistory}
             </pre>
           )}
 
-          {/* Interactive Stdin Input Field */}
+          {/* Interactive In-Terminal Input Field */}
           {isProcessActive && (
-            <form onSubmit={handleSendInput} className="flex items-center gap-2 pt-1">
-              <span className="text-emerald-400 font-bold">&gt;</span>
+            <form onSubmit={handleSendInput} className="inline-flex items-center gap-1 ml-1 align-middle">
               <input
                 ref={inputInputRef}
                 type="text"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Enter input here and press Enter..."
-                className="flex-1 bg-transparent border-none outline-none text-[#e6edf3] font-mono text-xs placeholder-[#484f58] p-0"
+                placeholder="type input here & Enter ↵"
+                className="bg-[#161b22] text-[#58a6ff] border border-[#30363d] focus:border-brand-500 rounded px-2 py-0.5 outline-none font-mono text-xs placeholder-[#484f58] w-48 transition-all"
                 autoFocus
               />
             </form>

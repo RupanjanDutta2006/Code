@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from fastapi import APIRouter, HTTPException
 from backend.schemas import AIExplainRequest, AISuggestFixRequest, AIResponse
 from backend.services.ai_service import AIService

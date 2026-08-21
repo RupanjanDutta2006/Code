@@ -273,28 +273,13 @@ export const PlaygroundPage: React.FC = () => {
             </span>
           </div>
 
-          <div className="h-[460px]">
+          <div className="h-[530px]">
             <CodeEditor
               code={code}
               language={language}
               onChange={handleCodeChange}
-              height="460px"
+              height="530px"
               onRun={handleSharedRun}
-            />
-          </div>
-
-          {/* Custom Input */}
-          <div className="rounded-xl border border-dark-700 bg-dark-900 p-3.5 space-y-2">
-            <label className="text-xs font-medium text-dark-300 flex items-center justify-between font-mono">
-              <span>Input (STDIN)</span>
-              <span className="text-[11px] text-dark-500 font-normal">Passed to shared execution</span>
-            </label>
-            <textarea
-              rows={2}
-              value={customInput}
-              onChange={(e) => setCustomInput(e.target.value)}
-              placeholder="Shared input data for running program..."
-              className="w-full bg-dark-950 border border-dark-700 rounded-lg p-2 text-xs font-mono text-white placeholder-dark-500 outline-none focus:border-brand-500 resize-y"
             />
           </div>
         </div>
@@ -321,7 +306,6 @@ export const PlaygroundPage: React.FC = () => {
               isRunning={running}
               language={language}
               sourceCode={code}
-              customInput={customInput}
               onClear={() => setResult(null)}
             />
           </div>

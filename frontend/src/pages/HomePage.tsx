@@ -122,8 +122,6 @@ export const HomePage: React.FC = () => {
   const [demoCode, setDemoCode] = useState(DEFAULT_DEMO_CODE['python']);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<ExecuteResult | null>(null);
-  const [customInput, setCustomInput] = useState('');
-  const [showInputBox, setShowInputBox] = useState(false);
   const terminalRef = useRef<OutputTerminalHandle>(null);
 
   const handleLangChange = (lang: string) => {
@@ -134,7 +132,7 @@ export const HomePage: React.FC = () => {
 
   const handleQuickRun = () => {
     if (terminalRef.current) {
-      terminalRef.current.startInteractive(customInput, demoCode, selectedLang);
+      terminalRef.current.startInteractive(demoCode, selectedLang);
     }
   };
 
@@ -192,36 +190,23 @@ export const HomePage: React.FC = () => {
 
       {/* Interactive Quick Runner Demo */}
       <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-2xl border border-dark-700 bg-dark-900/80 p-6 shadow-2xl backdrop-blur-xl space-y-4">
+        <div className="rounded-2xl border border-slate-200 dark:border-dark-700 bg-white/80 dark:bg-dark-900/80 p-6 shadow-2xl backdrop-blur-xl space-y-4 transition-colors">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-brand-400" />
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Terminal className="w-5 h-5 text-brand-500 dark:text-brand-400" />
                 Try Running Code Right Here
               </h2>
-              <p className="text-xs text-dark-400">
-                Choose a language, enter optional inputs, and run code securely in our sandboxed runner.
+              <p className="text-xs text-slate-500 dark:text-dark-400">
+                Choose a language, click Run Code, and type inputs directly in the terminal just like a real IDE.
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setShowInputBox(!showInputBox)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors flex items-center gap-1.5 ${
-                  showInputBox || customInput
-                    ? 'bg-brand-500/20 border-brand-500/40 text-brand-300'
-                    : 'bg-dark-800 border-dark-700 text-dark-300 hover:text-white'
-                }`}
-              >
-                <span>Input (STDIN)</span>
-                {customInput && <span className="w-2 h-2 rounded-full bg-brand-400"></span>}
-              </button>
-
               <select
                 value={selectedLang}
                 onChange={(e) => handleLangChange(e.target.value)}
-                className="bg-dark-800 border border-dark-700 text-dark-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-brand-500 font-mono"
+                className="bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-slate-800 dark:text-dark-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-brand-500 font-mono transition-colors"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l.id} value={l.id}>
@@ -233,7 +218,7 @@ export const HomePage: React.FC = () => {
               <button
                 onClick={handleQuickRun}
                 disabled={running}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 <Play className="w-3.5 h-3.5 fill-white" />
                 {running ? 'Running...' : 'Run Code'}
@@ -241,41 +226,23 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Collapsible/Toggleable STDIN Input Area */}
-          {(showInputBox || customInput) && (
-            <div className="p-3 bg-dark-950 border border-dark-700 rounded-xl space-y-1.5 animate-slide-up">
-              <div className="flex items-center justify-between text-xs text-dark-300 font-mono">
-                <span className="font-semibold text-brand-400">Input (STDIN):</span>
-                <span className="text-[11px] text-dark-500">Passed to input() / scanf / cin line by line</span>
-              </div>
-              <textarea
-                rows={2}
-                value={customInput}
-                onChange={(e) => setCustomInput(e.target.value)}
-                placeholder="Enter input values here (e.g.&#10;10&#10;20)"
-                className="w-full bg-dark-900 border border-dark-750 rounded-lg p-2 text-xs font-mono text-white placeholder-dark-600 outline-none focus:border-brand-500 resize-y"
-              />
-            </div>
-          )}
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="h-[340px]">
+            <div className="h-[380px]">
               <CodeEditor
                 code={demoCode}
                 language={selectedLang}
                 onChange={setDemoCode}
-                height="340px"
+                height="380px"
                 onRun={handleQuickRun}
               />
             </div>
-            <div className="h-[340px]">
+            <div className="h-[380px]">
               <OutputTerminal
                 ref={terminalRef}
                 result={result}
                 isRunning={running}
                 language={selectedLang}
                 sourceCode={demoCode}
-                customInput={customInput}
                 onClear={() => setResult(null)}
               />
             </div>
