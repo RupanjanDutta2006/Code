@@ -37,7 +37,6 @@ data/*.sqlite3
 # OS & IDE metadata
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
-*.swp
-*.swo
+# Backups & nested folders
+Code_Vault_V1/
+scratch/
