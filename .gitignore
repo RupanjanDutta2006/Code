@@ -1,0 +1,43 @@
+# Python virtual environment & caches
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Node.js & Frontend dependencies/build
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.npm
+*.tsbuildinfo
+.vite/
+
+# Execution Sandbox & Runtime Data
+data/sandboxes/
+data/codevault.db
+data/codevault.db-journal
+data/*.db
+data/*.sqlite3
+*.db
+*.sqlite3
+
+# Environment variables & local secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# OS & IDE metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
