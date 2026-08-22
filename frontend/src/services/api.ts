@@ -22,6 +22,9 @@ export interface User {
   email: string;
   role: 'USER' | 'CREATOR' | 'TEACHER';
   full_name?: string;
+  avatar_url?: string;
+  phone_number?: string;
+  provider?: 'google' | 'github' | 'phone' | 'password' | 'demo';
   created_at: string;
 }
 

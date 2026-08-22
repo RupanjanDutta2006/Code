@@ -15,6 +15,15 @@ class UserLogin(BaseModel):
     username_or_email: str
     password: str
 
+class FirebaseAuthRequest(BaseModel):
+    uid: str
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    full_name: Optional[str] = None
+    photo_url: Optional[str] = None
+    provider: Optional[str] = "firebase"
+    role: Optional[UserRole] = UserRole.USER
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

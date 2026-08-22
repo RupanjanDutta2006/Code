@@ -182,16 +182,29 @@ export const Navbar: React.FC = () => {
 
           {user ? (
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 pl-3 py-1 pr-2 rounded-xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-dark-700">
-                <div className="w-7 h-7 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xs">
-                  {user.username.substring(0, 2).toUpperCase()}
-                </div>
+              <div className="flex items-center gap-2.5 pl-2 py-1 pr-2.5 rounded-xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-dark-700">
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.full_name || user.username}
+                    className="w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-dark-600 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xs">
+                    {user.username.substring(0, 2).toUpperCase()}
+                  </div>
+                )}
                 <div className="text-left">
-                  <div className="text-xs font-semibold text-slate-900 dark:text-white leading-tight">
-                    {user.full_name || user.username}
+                  <div className="text-xs font-semibold text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
+                    <span>{user.full_name || user.username}</span>
+                    {user.provider && (
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-dark-700 text-slate-600 dark:text-dark-300 font-mono font-normal uppercase">
+                        {user.provider}
+                      </span>
+                    )}
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-dark-400 uppercase font-medium">
-                    {user.role}
+                    {user.role} {user.phone_number ? `• ${user.phone_number}` : ''}
                   </div>
                 </div>
               </div>
@@ -290,9 +303,26 @@ export const Navbar: React.FC = () => {
           <div className="pt-2 border-t border-slate-200 dark:border-dark-800">
             {user ? (
               <div className="flex items-center justify-between px-3 py-2">
-                <div>
-                  <span className="text-xs font-semibold text-slate-900 dark:text-white block">{user.full_name || user.username}</span>
-                  <span className="text-[10px] text-slate-500 dark:text-dark-400 uppercase">{user.role}</span>
+                <div className="flex items-center gap-2.5">
+                  {user.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user.full_name || user.username}
+                      className="w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-dark-600 shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xs">
+                      {user.username.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-xs font-semibold text-slate-900 dark:text-white block">
+                      {user.full_name || user.username}
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-dark-400 uppercase">
+                      {user.role} {user.provider ? `(${user.provider})` : ''}
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={() => { logout(); setMobileMenuOpen(false); }}
