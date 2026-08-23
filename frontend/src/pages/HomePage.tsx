@@ -133,6 +133,7 @@ export const HomePage: React.FC = () => {
   };
 
   const handleQuickRun = () => {
+    if (running) return;
     if (terminalRef.current) {
       setRunning(true);
       terminalRef.current.startInteractive(demoCode, selectedLang);
