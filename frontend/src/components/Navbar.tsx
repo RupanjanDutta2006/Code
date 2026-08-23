@@ -132,9 +132,9 @@ export const Navbar: React.FC = () => {
                 Programs
               </Link>
               <Link
-                to="/classrooms"
+                to="/my-class"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/classrooms') 
+                  isActive('/my-class') 
                     ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
                     : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
                 }`}
@@ -302,11 +302,11 @@ export const Navbar: React.FC = () => {
             Live Playground
           </Link>
           <Link
-            to="/classrooms"
+            to="/my-class"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
           >
-            Classrooms
+            My Class (Interactive)
           </Link>
           <Link
             to="/create"
