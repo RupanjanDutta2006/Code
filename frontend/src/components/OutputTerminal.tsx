@@ -314,6 +314,15 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     setActiveTab('terminal');
 
     const customWsUrl = import.meta.env.VITE_WS_URL;
+
+    // Fast-Path: In cloud production (e.g. Vercel), execute directly via cloud runner API
+    if (!customWsUrl) {
+      const prefix = `PS CodeVault> ${getCommandDisplay(activeLang)}\n`;
+      setTerminalHistory(prefix + '[Compiling & running in cloud sandbox...]\n');
+      executeFallback([], activeCode, activeLang);
+      return;
+    }
+
     const customApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
     let wsUrl = '';
 
