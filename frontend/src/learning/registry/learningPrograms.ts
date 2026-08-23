@@ -4,12 +4,16 @@ import { selectionSortProgram } from '../programs/sorting/selectionSort';
 import { insertionSortProgram } from '../programs/sorting/insertionSort';
 import { binarySearchProgram } from '../programs/searching/binarySearch';
 import { linearSearchProgram } from '../programs/searching/linearSearch';
+import { arrayReverseProgram } from '../programs/arrays/arrayReverse';
 import { reverseLinkedListProgram } from '../programs/linkedList/reverseLinkedList';
+import { middleLinkedListProgram } from '../programs/linkedList/middleLinkedList';
 import { stackPushPopProgram } from '../programs/stackQueue/stackPushPop';
 import { queueEnqueueDequeueProgram } from '../programs/stackQueue/queueEnqueueDequeue';
 import { treeTraversalsProgram } from '../programs/trees/treeTraversals';
 import { bfsProgram } from '../programs/graphs/bfs';
+import { dfsProgram } from '../programs/graphs/dfs';
 import { factorialProgram } from '../programs/recursion/factorial';
+import { fibonacciProgram } from '../programs/recursion/fibonacci';
 
 export const ALL_LEARNING_PROGRAMS: LearningProgram[] = [
   // 1. Sorting
@@ -17,12 +21,14 @@ export const ALL_LEARNING_PROGRAMS: LearningProgram[] = [
   selectionSortProgram,
   insertionSortProgram,
 
-  // 2. Searching
+  // 2. Searching & Arrays
   binarySearchProgram,
   linearSearchProgram,
+  arrayReverseProgram,
 
   // 3. Linked Lists
   reverseLinkedListProgram,
+  middleLinkedListProgram,
 
   // 4. Stacks & Queues
   stackPushPopProgram,
@@ -33,9 +39,11 @@ export const ALL_LEARNING_PROGRAMS: LearningProgram[] = [
 
   // 6. Graphs
   bfsProgram,
+  dfsProgram,
 
   // 7. Recursion
   factorialProgram,
+  fibonacciProgram,
 ];
 
 export const CATEGORY_LABELS: Record<AlgorithmCategory | 'all', string> = {
@@ -61,23 +69,21 @@ export function searchLearningPrograms(
   query: string,
   category: AlgorithmCategory | 'all' = 'all'
 ): LearningProgram[] {
-  const q = query.toLowerCase().trim();
+  const q = (query || '').toLowerCase().trim();
 
-  return ALL_LEARNING_PROGRAMS.filter((p) => {
-    // Category match
-    if (category !== 'all' && p.category !== category) {
-      return false;
-    }
+  return ALL_LEARNING_PROGRAMS.filter((program) => {
+    const matchesCategory = category === 'all' || program.category === category;
+    if (!matchesCategory) return false;
 
     if (!q) return true;
 
-    // Search query match
-    return (
-      p.title.toLowerCase().includes(q) ||
-      p.slug.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      p.conceptSummary.toLowerCase().includes(q) ||
-      p.tags.some((t) => t.toLowerCase().includes(q))
-    );
+    const inTitle = program.title.toLowerCase().includes(q);
+    const inDescription = program.description.toLowerCase().includes(q);
+    const inConcept = (program.conceptSummary || '').toLowerCase().includes(q);
+    const inTags = program.tags.some((t) => t.toLowerCase().includes(q));
+    const inCategory = program.category.toLowerCase().includes(q);
+    const inSlug = program.slug.toLowerCase().includes(q);
+
+    return inTitle || inDescription || inConcept || inTags || inCategory || inSlug;
   });
 }
