@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { 
-  Mail, 
-  Phone, 
-  ExternalLink, 
-  Copy, 
-  Check, 
-  Sparkles, 
-  Code2, 
-  Terminal, 
-  Compass, 
-  Cpu, 
-  Layers, 
-  Share2, 
+import {
+  Mail,
+  Phone,
+  ExternalLink,
+  Copy,
+  Check,
+  Sparkles,
+  Code2,
+  Terminal,
+  Compass,
+  Cpu,
+  Layers,
+  Share2,
   ArrowUpRight,
   ShieldCheck,
   Send,
@@ -80,7 +80,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     name: 'Souvik Saha',
     badge: 'PRODUCT LEAD',
     badgeColor: 'bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-amber-500/10',
-    subtitle: 'Product Strategist & Co-Creator',
+    subtitle: 'Lead Developer & Full Stack Engineer',
     description: 'Driving product direction, user experience, and platform growth to make CodeVault Pro approachable and powerful for every student and developer.',
     avatar: '/team/souvik.jpg',
     skills: [
@@ -116,7 +116,7 @@ export const ContactPage: React.FC = () => {
 
   return (
     <div className="relative min-h-[calc(100vh-80px)] py-12 px-4 sm:px-6 max-w-6xl mx-auto space-y-12 animate-fade-in overflow-hidden">
-      
+
       {/* Background Code Ambient Symbols */}
       <div className="absolute inset-0 pointer-events-none select-none opacity-20 dark:opacity-15 -z-10 font-mono text-xs text-brand-400/40 dark:text-emerald-400/30 flex flex-wrap gap-16 justify-around overflow-hidden">
         <span className="animate-pulse">{'{ compiler: "ready" }'}</span>
