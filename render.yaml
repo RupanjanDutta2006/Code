@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: codevault-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: EXECUTION_TIMEOUT_SECONDS
+        value: "5"
+      - key: EXECUTION_MAX_MEMORY_MB
+        value: "256"
+      - key: PORT
+        value: "8000"

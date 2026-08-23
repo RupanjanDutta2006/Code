@@ -718,7 +718,7 @@ CodeVault Pro implements defensive security best practices:
 * **Node.js**: Node.js 18+ (Recommended: Node.js 20+)
 * **C/C++/Java/Go Compilers** (Optional for local execution; cloud fallback handles execution when local compilers are omitted).
 
-### 1. Backend Setup
+### 1. Local Backend Setup
 
 ```powershell
 # Navigate to project root
@@ -728,13 +728,13 @@ cd "d:\Personal Project\Online Compiler"
 .\venv\Scripts\Activate.ps1
 
 # Install backend dependencies
-pip install fastapi uvicorn sqlalchemy pydantic passlib python-jose python-multipart httpx pytest
+pip install -r requirements.txt
 
 # Start FastAPI server on port 8000
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### 2. Frontend Setup
+### 2. Local Frontend Setup
 
 ```powershell
 # Open a new terminal and navigate to frontend directory
@@ -749,7 +749,51 @@ npm run dev
 
 Visit **`http://localhost:5173`** in your browser.
 
-### 3. Automated Backend Tests
+### 3. Production Deployment Architecture (Render + Vercel)
+
+For true, real-time interactive terminal execution with persistent WebSockets (`/ws/execute`), genuine OS subprocesses (`subprocess.Popen`), and memory profiling, deploy using the industry standard decoupled topology:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                   Vercel (Frontend)                      │
+│             React 19 + Vite SPA (Edge CDN)               │
+│                                                          │
+│  Environment Variables in Vercel Dashboard:              │
+│    VITE_API_URL = https://codevault-backend.onrender.com │
+│    VITE_WS_URL  = wss://codevault-backend.onrender.com   │
+└────────────┬─────────────────────────────┬───────────────┘
+             │ REST APIs                   │ Persistent WebSockets
+             │ (/api/execute, auth, etc.)  │ (/ws/execute, /ws/playground)
+             ▼                             ▼
+┌──────────────────────────────────────────────────────────┐
+│                 Render.com (Backend API)                 │
+│         FastAPI + Uvicorn (Linux Docker Runner)          │
+│                                                          │
+│  - Python 3.11, GCC 13, G++, OpenJDK 21, Node.js, SQLite │
+│  - Real-time Bidirectional WebSocket I/O                 │
+│  - Peak Resident Set (psutil) Memory Profiling           │
+└──────────────────────────────────────────────────────────┘
+```
+
+#### Step A: Deploy Backend on Render.com (Free Tier)
+1. Go to [https://render.com](https://render.com) and create a **New Web Service**.
+2. Connect your GitHub repository: `https://github.com/RupanjanDutta2006/Code`.
+3. Choose **Docker** as the runtime (or use the included `render.yaml` Blueprint).
+   * **Root Directory**: `.`
+   * **Dockerfile Path**: `./Dockerfile`
+   * **Plan**: Free
+4. Click **Deploy Web Service**. Once deployed, Render will provide a service URL, e.g.:
+   `https://codevault-backend-xxxx.onrender.com`
+
+#### Step B: Connect Vercel to the Render Backend
+1. Go to your [Vercel Project Dashboard](https://vercel.com/dashboard) $\to$ **Settings** $\to$ **Environment Variables**.
+2. Add the two environment variables:
+   * **`VITE_API_URL`**: `https://codevault-backend-xxxx.onrender.com` (Your Render URL)
+   * **`VITE_WS_URL`**: `wss://codevault-backend-xxxx.onrender.com` (Your Render WebSocket URL)
+3. Go to **Deployments** $\to$ Click **Redeploy** (or push a new commit to `main`).
+4. Done! Your Vercel live application now connects directly to your cloud execution engine with 100% genuine interactive terminal capabilities.
+
+### 4. Automated Backend Tests
 
 ```powershell
 .\venv\Scripts\python -m pytest backend/tests/ -v

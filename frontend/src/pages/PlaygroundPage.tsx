@@ -84,9 +84,21 @@ export const PlaygroundPage: React.FC = () => {
   useEffect(() => {
     if (!currentRoomId) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/playground/${currentRoomId}`;
+    const customWsUrl = import.meta.env.VITE_WS_URL;
+    const customApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+    let wsUrl = '';
+
+    if (customWsUrl) {
+      const baseWs = customWsUrl.replace(/\/+$/, '');
+      wsUrl = `${baseWs}/ws/playground/${currentRoomId}`;
+    } else if (customApiUrl) {
+      const baseWs = customApiUrl.replace(/^http/, 'ws').replace(/\/+$/, '');
+      wsUrl = `${baseWs}/ws/playground/${currentRoomId}`;
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      wsUrl = `${protocol}//${host}/ws/playground/${currentRoomId}`;
+    }
 
     const ws = new WebSocket(wsUrl);
     socketRef.current = ws;

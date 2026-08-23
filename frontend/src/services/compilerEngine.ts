@@ -131,7 +131,14 @@ export function getCommandDisplay(lang: string): string {
  */
 export async function stopExecution(executionId: string): Promise<boolean> {
   try {
-    const res = await fetch('/api/execute/stop', {
+    const baseUrl = (
+      import.meta.env.VITE_API_URL ||
+      import.meta.env.VITE_API_BASE_URL ||
+      ''
+    ).replace(/\/+$/, '');
+    const endpoint = `${baseUrl}/api/execute/stop`;
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ execution_id: executionId }),
@@ -166,7 +173,11 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
 
   // 2. Primary: Execute directly on real Backend API (/api/execute)
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const baseUrl = (
+      import.meta.env.VITE_API_URL ||
+      import.meta.env.VITE_API_BASE_URL ||
+      ''
+    ).replace(/\/+$/, '');
     const endpoint = `${baseUrl}/api/execute`;
 
     const response = await fetch(endpoint, {

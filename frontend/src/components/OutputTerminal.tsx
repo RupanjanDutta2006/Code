@@ -313,21 +313,21 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     setIsProcessActive(true);
     setActiveTab('terminal');
 
-    const customBaseUrl = import.meta.env.VITE_API_BASE_URL;
-    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const customWsUrl = import.meta.env.VITE_WS_URL;
+    const customApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+    let wsUrl = '';
 
-    // If completely outside localhost and no custom API URL, use resilient interactive cloud execution
-    if (!isLocalDev && !customBaseUrl) {
-      const prefix = `PS CodeVault> ${getCommandDisplay(activeLang)}\n`;
-      setTerminalHistory(prefix);
-      executeFallback([], activeCode, activeLang);
-      return;
+    if (customWsUrl) {
+      const baseWs = customWsUrl.replace(/\/+$/, '');
+      wsUrl = baseWs.endsWith('/ws/execute') ? baseWs : `${baseWs}/ws/execute`;
+    } else if (customApiUrl) {
+      const baseWs = customApiUrl.replace(/^http/, 'ws').replace(/\/+$/, '');
+      wsUrl = `${baseWs}/ws/execute`;
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      wsUrl = `${protocol}//${host}/ws/execute`;
     }
-
-    // Connect to WebSocket /ws/execute
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = customBaseUrl ? customBaseUrl.replace(/^https?:\/\//, '') : window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/execute`;
 
     try {
       const ws = new WebSocket(wsUrl);
