@@ -19,6 +19,9 @@ import { CreatorPage } from './pages/CreatorPage';
 import { ContactPage } from './pages/ContactPage';
 import { MyClassPage } from './pages/MyClassPage';
 import { InteractiveClassPage } from './pages/InteractiveClassPage';
+import { FundamentalsCPage } from './pages/FundamentalsCPage';
+import { CCategoryPage } from './pages/CCategoryPage';
+import { InteractiveCWorkspacePage } from './pages/InteractiveCWorkspacePage';
 
 export const App: React.FC = () => {
   return (
@@ -41,6 +44,9 @@ export const App: React.FC = () => {
                   <Route path="/playground/:roomId" element={<PlaygroundPage />} />
                   <Route path="/my-class" element={<MyClassPage />} />
                   <Route path="/my-class/:slug" element={<InteractiveClassPage />} />
+                  <Route path="/my-class/c" element={<FundamentalsCPage />} />
+                  <Route path="/my-class/c/:category" element={<CCategoryPage />} />
+                  <Route path="/my-class/c/:category/:slug" element={<InteractiveCWorkspacePage />} />
                   <Route path="/classrooms" element={<ClassroomListPage />} />
                   <Route path="/classrooms/:id" element={<ClassroomDetailPage />} />
                   <Route path="/login" element={<LoginPage />} />
