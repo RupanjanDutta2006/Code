@@ -17,6 +17,7 @@ import {
   LearningStep,
   PlaybackSpeed,
   SPEED_DELAYS,
+  getStepDelay,
   PresetInput,
 } from '../learning/core/types';
 import { CodeViewerPanel } from '../learning/components/CodeViewerPanel';
@@ -99,12 +100,14 @@ export const InteractiveClassPage: React.FC = () => {
     setIsPlaying(false);
   }, [steps]);
 
-  // Animation Timer Loop
+  // Animation Timer Loop with dynamic event-aware delay
   useEffect(() => {
     if (!isPlaying) return;
 
-    const delay = SPEED_DELAYS[speed] || 900;
-    const interval = setInterval(() => {
+    const currentStep = steps[currentStepIndex];
+    const delay = getStepDelay(speed, currentStep?.event);
+
+    const timer = setTimeout(() => {
       setCurrentStepIndex((prev) => {
         if (prev >= steps.length - 1) {
           setIsPlaying(false);
@@ -114,8 +117,8 @@ export const InteractiveClassPage: React.FC = () => {
       });
     }, delay);
 
-    return () => clearInterval(interval);
-  }, [isPlaying, speed, steps.length]);
+    return () => clearTimeout(timer);
+  }, [isPlaying, currentStepIndex, speed, steps]);
 
   if (!program) {
     return null;

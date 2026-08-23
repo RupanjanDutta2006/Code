@@ -101,7 +101,35 @@ export interface PlaybackConfig {
 }
 
 export const SPEED_DELAYS: Record<PlaybackSpeed, number> = {
-  slow: 1800,
-  normal: 900,
-  fast: 350,
+  slow: 2800, // 2.8s per step (within 2.5 - 3.0s range for comfortable student reading)
+  normal: 1000, // 1.0s per step (within 0.9 - 1.1s range)
+  fast: 400, // 0.4s per step (within 0.35 - 0.5s range)
 };
+
+/**
+ * Centralized step delay calculator.
+ * Allows complex steps (e.g. SWAP, FOUND, POP, BACKTRACK) to have slightly
+ * extended durations in Slow mode for optimal educational clarity.
+ */
+export function getStepDelay(speed: PlaybackSpeed, stepEvent?: string): number {
+  const baseDelay = SPEED_DELAYS[speed] || 1000;
+
+  if (speed === 'slow') {
+    // Give complex or pivotal transition steps extra time in slow mode
+    if (
+      stepEvent &&
+      ['SWAP', 'FOUND', 'NOT_FOUND', 'COMPLETE', 'POP', 'DEQUEUE', 'BACKTRACK'].includes(
+        stepEvent
+      )
+    ) {
+      return baseDelay + 400; // 3.2s for complex actions
+    }
+  } else if (speed === 'normal') {
+    if (stepEvent && ['SWAP', 'FOUND', 'COMPLETE'].includes(stepEvent)) {
+      return baseDelay + 150; // 1.15s
+    }
+  }
+
+  return baseDelay;
+}
+

@@ -169,19 +169,30 @@ export const PlaybackControlBar: React.FC<PlaybackControlBarProps> = ({
         {/* Right: Speed Control */}
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-dark-800/90 p-1 rounded-xl border border-slate-200 dark:border-dark-700">
           <Gauge className="w-3.5 h-3.5 text-slate-400 mx-1 hidden sm:block" />
-          {(['slow', 'normal', 'fast'] as PlaybackSpeed[]).map((spd) => (
-            <button
-              key={spd}
-              onClick={() => onSpeedChange(spd)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
-                speed === spd
-                  ? 'bg-white dark:bg-dark-700 text-brand-600 dark:text-white shadow-sm'
-                  : 'text-slate-500 dark:text-dark-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              {spd === 'slow' ? 'Slow' : spd === 'normal' ? 'Normal' : 'Fast'}
-            </button>
-          ))}
+          {(['slow', 'normal', 'fast'] as PlaybackSpeed[]).map((spd) => {
+            const label = spd === 'slow' ? 'Slow' : spd === 'normal' ? 'Normal' : 'Fast';
+            const hint =
+              spd === 'slow'
+                ? 'Slow (2.8s per step - optimal for learning)'
+                : spd === 'normal'
+                ? 'Normal (1.0s per step)'
+                : 'Fast (0.4s per step)';
+
+            return (
+              <button
+                key={spd}
+                onClick={() => onSpeedChange(spd)}
+                title={hint}
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
+                  speed === spd
+                    ? 'bg-white dark:bg-dark-700 text-brand-600 dark:text-white shadow-sm'
+                    : 'text-slate-500 dark:text-dark-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
