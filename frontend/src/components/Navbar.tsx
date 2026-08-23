@@ -179,6 +179,17 @@ export const Navbar: React.FC = () => {
           >
             About
           </Link>
+
+          <Link
+            to="/contact"
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              isActive('/contact') 
+                ? 'text-emerald-600 dark:text-emerald-400 bg-slate-100 dark:bg-dark-800' 
+                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+            }`}
+          >
+            Contact
+          </Link>
         </div>
 
         {/* User Auth Action Buttons & Theme Switcher */}
@@ -318,6 +329,13 @@ export const Navbar: React.FC = () => {
             className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
           >
             About & Docs
+          </Link>
+          <Link
+            to="/contact"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800 text-emerald-600 dark:text-emerald-400"
+          >
+            Contact & Team
           </Link>
 
           <div className="pt-2 border-t border-slate-200 dark:border-dark-800">
