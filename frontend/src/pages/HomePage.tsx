@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Code2, 
   Play, 
+  Square,
+  RotateCcw,
   Sparkles, 
   Trophy, 
   GraduationCap, 
@@ -132,9 +134,41 @@ export const HomePage: React.FC = () => {
 
   const handleQuickRun = () => {
     if (terminalRef.current) {
+      setRunning(true);
       terminalRef.current.startInteractive(demoCode, selectedLang);
     }
   };
+
+  const handleStop = () => {
+    if (terminalRef.current) {
+      terminalRef.current.stop();
+      setRunning(false);
+    }
+  };
+
+  const handleReset = () => {
+    setDemoCode(DEFAULT_DEMO_CODE[selectedLang] || `# Code in ${selectedLang}\nprint("Running ${selectedLang} code!")`);
+    if (terminalRef.current) {
+      terminalRef.current.clear();
+    }
+    setResult(null);
+    setRunning(false);
+  };
+
+  // Keyboard shortcuts: Ctrl+Enter to Run, Ctrl+Shift+K to Stop
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleQuickRun();
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
+        e.preventDefault();
+        handleStop();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [demoCode, selectedLang]);
 
   return (
     <div className="space-y-20 pb-20">
@@ -202,11 +236,12 @@ export const HomePage: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <select
                 value={selectedLang}
                 onChange={(e) => handleLangChange(e.target.value)}
                 className="bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-slate-800 dark:text-dark-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-brand-500 font-mono transition-colors"
+                title="Select language"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l.id} value={l.id}>
@@ -216,13 +251,33 @@ export const HomePage: React.FC = () => {
               </select>
 
               <button
-                onClick={handleQuickRun}
-                disabled={running}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                onClick={handleReset}
+                className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-300 text-xs font-semibold border border-slate-200 dark:border-dark-700 transition-all flex items-center gap-1.5"
+                title="Reset editor to template"
               >
-                <Play className="w-3.5 h-3.5 fill-white" />
-                {running ? 'Running...' : 'Run Code'}
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
               </button>
+
+              {running ? (
+                <button
+                  onClick={handleStop}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-500/20 transition-all flex items-center gap-1.5"
+                  title="Stop running program (Ctrl+Shift+K)"
+                >
+                  <Square className="w-3.5 h-3.5 fill-white" />
+                  <span>Stop</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleQuickRun}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition-all flex items-center gap-1.5 hover:scale-[1.02]"
+                  title="Run code (Ctrl+Enter)"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span>Run Code</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -244,6 +299,7 @@ export const HomePage: React.FC = () => {
                 language={selectedLang}
                 sourceCode={demoCode}
                 onClear={() => setResult(null)}
+                onStop={() => setRunning(false)}
               />
             </div>
           </div>

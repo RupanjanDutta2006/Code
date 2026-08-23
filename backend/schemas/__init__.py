@@ -144,15 +144,33 @@ class ProgramDetailResponse(BaseModel):
 # Execution
 class ExecuteRequest(BaseModel):
     language: str
-    source_code: str
+    code: Optional[str] = None
+    source_code: Optional[str] = None
+    stdin: Optional[str] = ""
     custom_input: Optional[str] = ""
     program_id: Optional[int] = None
+    execution_id: Optional[str] = None
+
+    def get_code(self) -> str:
+        return self.code if self.code is not None else (self.source_code or "")
+
+    def get_input(self) -> str:
+        if self.stdin is not None and self.stdin != "":
+            return self.stdin
+        return self.custom_input or ""
 
 class ExecuteResponse(BaseModel):
-    status: str # 'success', 'error', 'timeout'
-    output: str
+    status: str # 'success', 'error', 'timeout', 'compilation_error', 'tle', 'mle'
+    stdout: str = ""
+    stderr: str = ""
+    output: str = ""
     error: Optional[str] = None
-    execution_time_ms: float
+    executionTime: float = 0.0 # in seconds (e.g. 0.42)
+    execution_time_ms: float = 0.0
+    memory: int = 0 # in KB (e.g. 12800)
+    exitCode: int = 0
+    exit_code: int = 0
+    error_type: Optional[str] = None
     cached: bool = False
 
 # Judge / Submissions

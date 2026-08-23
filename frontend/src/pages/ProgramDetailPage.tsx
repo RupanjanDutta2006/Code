@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Play, 
+  Square,
+  RotateCcw,
   Copy, 
   Check, 
   History, 
@@ -38,7 +40,6 @@ export const ProgramDetailPage: React.FC = () => {
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [sourceCode, setSourceCode] = useState('');
-  const [customInput, setCustomInput] = useState('');
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<ExecuteResult | null>(null);
   const [copied, setCopied] = useState(false);
@@ -85,7 +86,6 @@ export const ProgramDetailPage: React.FC = () => {
       queueRun({
         language: program.language,
         sourceCode,
-        customInput,
         programId: program.id,
       });
       setResult({
@@ -97,6 +97,7 @@ export const ProgramDetailPage: React.FC = () => {
     }
 
     if (terminalRef.current) {
+      setRunning(true);
       terminalRef.current.startInteractive(sourceCode, program.language);
       // Record analytics run event asynchronously
       api.post('/api/analytics/events', {
@@ -105,6 +106,39 @@ export const ProgramDetailPage: React.FC = () => {
       }).catch(() => {});
     }
   };
+
+  const handleStopCode = () => {
+    if (terminalRef.current) {
+      terminalRef.current.stop();
+      setRunning(false);
+    }
+  };
+
+  const handleResetCode = () => {
+    if (program) {
+      setSourceCode(program.source_code);
+      if (terminalRef.current) {
+        terminalRef.current.clear();
+      }
+      setResult(null);
+      setRunning(false);
+    }
+  };
+
+  // Keyboard shortcuts: Ctrl+Enter to Run, Ctrl+Shift+K to Stop
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleRunCode();
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
+        e.preventDefault();
+        handleStopCode();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [program, sourceCode, isOnline]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(sourceCode);
@@ -291,14 +325,36 @@ export const ProgramDetailPage: React.FC = () => {
               Execution Output
             </span>
 
-            <button
-              onClick={handleRunCode}
-              disabled={running}
-              className="px-5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
-            >
-              <Play className="w-3.5 h-3.5 fill-white" />
-              <span>{running ? 'Running...' : 'Run Code'}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleResetCode}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-300 text-xs font-semibold border border-slate-200 dark:border-dark-700 transition-all flex items-center gap-1.5"
+                title="Reset code to original version"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+
+              {running ? (
+                <button
+                  onClick={handleStopCode}
+                  className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md shadow-rose-500/20 transition-all flex items-center gap-1.5"
+                  title="Stop execution (Ctrl+Shift+K)"
+                >
+                  <Square className="w-3.5 h-3.5 fill-white" />
+                  <span>Stop</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleRunCode}
+                  className="px-5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition-all flex items-center gap-1.5 hover:scale-[1.02]"
+                  title="Run code (Ctrl+Enter)"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span>Run Code</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="h-[530px]">
@@ -309,6 +365,7 @@ export const ProgramDetailPage: React.FC = () => {
               language={program.language}
               sourceCode={sourceCode}
               onClear={() => setResult(null)}
+              onStop={() => setRunning(false)}
             />
           </div>
         </div>

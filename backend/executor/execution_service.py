@@ -22,14 +22,19 @@ class ExecutionService:
         custom_input: str = "",
         db: Optional[Session] = None,
         timeout: Optional[int] = None,
-        use_cache: bool = True
+        use_cache: bool = True,
+        execution_id: Optional[str] = None
     ) -> RunResult:
         runner = runner_registry.get(language)
         if not runner:
             return RunResult(
                 status="error",
                 output="",
-                error=f"Unsupported language '{language}'. Supported: {', '.join(runner_registry.supported_languages())}"
+                stdout="",
+                stderr=f"Unsupported language '{language}'. Supported: {', '.join(runner_registry.supported_languages())}",
+                error=f"Unsupported language '{language}'. Supported: {', '.join(runner_registry.supported_languages())}",
+                exit_code=1,
+                error_type="UnsupportedLanguage"
             )
 
         # Check Cache
@@ -40,10 +45,15 @@ class ExecutionService:
                 return RunResult(
                     status=cached_entry.status,
                     output=cached_entry.output,
-                    execution_time_ms=cached_entry.execution_time_ms
+                    stdout=cached_entry.output,
+                    stderr="",
+                    execution_time_ms=cached_entry.execution_time_ms,
+                    execution_time=round(cached_entry.execution_time_ms / 1000.0, 3),
+                    memory_kb=8192,
+                    exit_code=0
                 )
 
-        run_id = str(uuid.uuid4())
+        run_id = execution_id or str(uuid.uuid4())
         work_dir = SANDBOX_ROOT / run_id
         work_dir.mkdir(parents=True, exist_ok=True)
 
@@ -58,10 +68,15 @@ class ExecutionService:
             if runner.is_compiled():
                 compile_res = runner.compile(source_code, work_dir)
                 if not compile_res or not compile_res.success:
+                    err_msg = compile_res.output if compile_res else "Compilation failed."
                     return RunResult(
-                        status="error",
+                        status="compilation_error",
                         output="",
-                        error=compile_res.output if compile_res else "Compilation failed."
+                        stdout="",
+                        stderr=err_msg,
+                        error=err_msg,
+                        exit_code=1,
+                        error_type="CompilationError"
                     )
                 target = compile_res.artifact_path
 
@@ -93,5 +108,10 @@ class ExecutionService:
                     shutil.rmtree(work_dir, ignore_errors=True)
             except Exception:
                 pass
+
+    @staticmethod
+    def stop_execution(execution_id: str) -> bool:
+        from backend.executor.subprocess_runner import active_process_tracker
+        return active_process_tracker.stop(execution_id)
 
 execution_service = ExecutionService()

@@ -8,13 +8,16 @@ import {
   Eye, 
   Square, 
   Trash2, 
-  Loader2 
+  Loader2,
+  Clock,
+  Zap
 } from 'lucide-react';
 import { ExecuteResult } from '../services/api';
-import { executeUniversal, getCommandDisplay } from '../services/compilerEngine';
+import { executeUniversal, getCommandDisplay, stopExecution } from '../services/compilerEngine';
 
 export interface OutputTerminalHandle {
   startInteractive: (codeOverride?: string, langOverride?: string) => void;
+  stop: () => void;
   clear: () => void;
 }
 
@@ -24,36 +27,7 @@ interface OutputTerminalProps {
   language: string;
   sourceCode?: string;
   onClear?: () => void;
-}
-
-/**
- * Weaves user inputs into the raw program output to produce a real IDE terminal transcript.
- */
-function formatInteractiveOutput(rawOutput: string, inputs: string[]): string {
-  if (!rawOutput && inputs.length === 0) return '';
-  if (inputs.length === 0) return rawOutput;
-
-  let remainingOutput = rawOutput;
-  let formatted = '';
-
-  for (let i = 0; i < inputs.length; i++) {
-    const inp = inputs[i];
-    // Match up to the first prompt boundary (: ? > or newline)
-    const match = remainingOutput.match(/(.*?(?::|\?|>|\$|\n|$))\s*/s);
-    if (match && match[1] && match[1].trim().length > 0) {
-      const promptPart = match[1];
-      formatted += promptPart.trimEnd() + ' ' + inp + '\n';
-      remainingOutput = remainingOutput.slice(match[0].length);
-    } else {
-      formatted += inp + '\n';
-    }
-  }
-
-  if (remainingOutput.trim()) {
-    formatted += remainingOutput;
-  }
-
-  return formatted.trimEnd();
+  onStop?: () => void;
 }
 
 export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalProps>(({
@@ -62,6 +36,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   language,
   sourceCode = '',
   onClear,
+  onStop,
 }, ref) => {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'terminal' | 'preview'>(
@@ -72,24 +47,28 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   const [terminalHistory, setTerminalHistory] = useState<string>('');
   const [currentInput, setCurrentInput] = useState<string>('');
   const [isProcessActive, setIsProcessActive] = useState<boolean>(false);
-  const [exitInfo, setExitInfo] = useState<{ status: string; code?: number; time?: number } | null>(null);
+  const [activeExecutionId, setActiveExecutionId] = useState<string | null>(null);
+  const [exitInfo, setExitInfo] = useState<{
+    status: string;
+    code?: number;
+    timeMs?: number;
+    timeSec?: number;
+    memoryKb?: number;
+    errorType?: string;
+  } | null>(null);
 
   const socketRef = useRef<WebSocket | null>(null);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
   const inputInputRef = useRef<HTMLInputElement>(null);
 
-  // Session inputs accumulator for true interactive in-terminal input
   const sessionInputsRef = useRef<string[]>([]);
   const sourceCodeRef = useRef(sourceCode);
   const languageRef = useRef(language);
+  const isProcessActiveRef = useRef(isProcessActive);
 
-  useEffect(() => {
-    sourceCodeRef.current = sourceCode;
-  }, [sourceCode]);
-
-  useEffect(() => {
-    languageRef.current = language;
-  }, [language]);
+  useEffect(() => { sourceCodeRef.current = sourceCode; }, [sourceCode]);
+  useEffect(() => { languageRef.current = language; }, [language]);
+  useEffect(() => { isProcessActiveRef.current = isProcessActive; }, [isProcessActive]);
 
   const isHtml = language.toLowerCase() === 'html';
 
@@ -99,21 +78,23 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     }
   }, [language]);
 
-  // Auto-scroll inside terminal body
+  // Auto-scroll terminal to bottom whenever output or input updates
   useEffect(() => {
     if (terminalBodyRef.current) {
       terminalBodyRef.current.scrollTop = terminalBodyRef.current.scrollHeight;
     }
-  }, [terminalHistory, isProcessActive]);
+  }, [terminalHistory, currentInput, isProcessActive]);
 
-  // Auto-focus interactive input when process is active
+  // Focus input whenever process is active and on any output update
   useEffect(() => {
-    if (isProcessActive && inputInputRef.current) {
-      inputInputRef.current.focus({ preventScroll: true });
+    if (isProcessActive) {
+      setTimeout(() => {
+        inputInputRef.current?.focus({ preventScroll: true });
+      }, 20);
     }
   }, [isProcessActive, terminalHistory]);
 
-  // Sync external result from batch runner if provided
+  // Sync external result from props if provided
   useEffect(() => {
     if (result) {
       if (result.output) {
@@ -122,19 +103,40 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       if (result.error) {
         setTerminalHistory((prev) => prev + result.error + '\n');
       }
+      const timeMs = result.execution_time_ms;
+      const timeSec = result.executionTime !== undefined ? result.executionTime : Math.round(timeMs) / 1000.0;
       setExitInfo({
         status: result.status,
-        code: result.status === 'success' ? 0 : 1,
-        time: result.execution_time_ms,
+        code: result.exitCode ?? (result.status === 'success' ? 0 : 1),
+        timeMs,
+        timeSec,
+        memoryKb: result.memory || 8192,
+        errorType: result.error_type,
       });
       setIsProcessActive(false);
+      if (onStop) onStop();
     }
   }, [result]);
 
-  const executeWithInputs = async (inputs: string[], codeToSend?: string, langToSend?: string) => {
+  // Clean up socket on unmount
+  useEffect(() => {
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.onopen = null;
+        socketRef.current.onmessage = null;
+        socketRef.current.onerror = null;
+        socketRef.current.onclose = null;
+        try { socketRef.current.close(); } catch (e) {}
+      }
+    };
+  }, []);
+
+  const executeFallback = async (inputs: string[], codeToSend?: string, langToSend?: string) => {
     const effectiveCode = codeToSend !== undefined ? codeToSend : sourceCodeRef.current;
     const effectiveLang = langToSend !== undefined ? langToSend : languageRef.current;
     const inputPayload = inputs.join('\n');
+    const execId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    setActiveExecutionId(execId);
 
     try {
       const resp = await executeUniversal({
@@ -142,57 +144,65 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
         sourceCode: effectiveCode,
         customInput: inputPayload,
         stdin: inputPayload,
+        executionId: execId,
       });
 
       const prefix = `PS CodeVault> ${getCommandDisplay(effectiveLang)}\n`;
+      const timeMs = resp.execution_time_ms;
+      const timeSec = resp.executionTime !== undefined ? resp.executionTime : Math.round(timeMs) / 1000.0;
+      const memKb = resp.memory || 8192;
+      const memMb = (memKb / 1024).toFixed(1);
 
-      // Case 1: Program is waiting for input (e.g. Python input(), Java Scanner, C scanf)
-      if (resp.status === 'error' && resp.error && (resp.error.includes('EOFError') || resp.error.includes('NoSuchElementException'))) {
-        const formatted = formatInteractiveOutput(resp.output || '', inputs);
-        setTerminalHistory(prefix + formatted + (formatted && !formatted.endsWith(' ') ? ' ' : ''));
-        setIsProcessActive(true);
-        setExitInfo(null);
-        setTimeout(() => inputInputRef.current?.focus({ preventScroll: true }), 50);
-        return;
-      }
-
-      // Case 2: Clean success
       if (resp.status === 'success') {
-        const formatted = formatInteractiveOutput(resp.output || '', inputs);
+        const out = resp.output || resp.stdout || '';
         setTerminalHistory(
           prefix +
-          formatted +
-          `\n\n[Process completed with exit code 0 in ${resp.execution_time_ms}ms]\nPS CodeVault> `
+          (out ? out + (out.endsWith('\n') ? '' : '\n') : '') +
+          `\n[✓ Process finished — Exit 0 | Time: ${timeSec}s (${timeMs}ms) | Memory: ${memMb} MB]\nPS CodeVault> `
         );
         setExitInfo({
           status: 'success',
           code: 0,
-          time: resp.execution_time_ms,
+          timeMs,
+          timeSec,
+          memoryKb: memKb,
         });
-        setIsProcessActive(false);
-        return;
+      } else if (resp.status === 'timeout' || resp.status === 'tle') {
+        setTerminalHistory(
+          prefix +
+          `⏱ Time Limit Exceeded\nYour program exceeded the 5 second time limit.\n\n[Process terminated with exit code 124 in ${timeSec}s]\nPS CodeVault> `
+        );
+        setExitInfo({
+          status: 'timeout',
+          code: 124,
+          timeMs,
+          timeSec,
+          memoryKb: memKb,
+          errorType: 'TimeLimitExceeded',
+        });
+      } else {
+        const errorText = resp.error || resp.stderr || resp.output || 'Unknown Error';
+        setTerminalHistory(
+          prefix +
+          errorText +
+          (errorText.endsWith('\n') ? '' : '\n') +
+          `\n[✕ Process completed with exit code ${resp.exitCode ?? 1} in ${timeSec}s | Memory: ${memMb} MB]\nPS CodeVault> `
+        );
+        setExitInfo({
+          status: 'error',
+          code: resp.exitCode ?? 1,
+          timeMs,
+          timeSec,
+          memoryKb: memKb,
+          errorType: resp.error_type,
+        });
       }
-
-      // Case 3: Genuine runtime or compilation error
-      const formatted = formatInteractiveOutput(resp.output || '', inputs);
-      let errorText = formatted ? formatted + '\n' : '';
-      if (resp.error) errorText += resp.error;
-
-      setTerminalHistory(
-        prefix +
-        errorText +
-        `\n\n[Process completed with exit code ${resp.exit_code ?? 1} in ${resp.execution_time_ms}ms]\nPS CodeVault> `
-      );
-      setExitInfo({
-        status: 'error',
-        code: resp.exit_code ?? 1,
-        time: resp.execution_time_ms,
-      });
-      setIsProcessActive(false);
     } catch (err: any) {
       setTerminalHistory((prev) => prev + `\n[Execution Error: ${err.message || 'Unknown error'}]\nPS CodeVault> `);
-      setExitInfo({ status: 'error', code: 1, time: 0 });
+      setExitInfo({ status: 'error', code: 1, timeMs: 0, timeSec: 0, memoryKb: 0 });
+    } finally {
       setIsProcessActive(false);
+      if (onStop) onStop();
     }
   };
 
@@ -205,78 +215,105 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     if (activeLang.toLowerCase() === 'html') {
       setActiveTab('preview');
       setTerminalHistory(`PS CodeVault> ${getCommandDisplay(activeLang)}\n[HTML Live Preview Rendered Successfully]\nPS CodeVault> `);
-      setExitInfo({ status: 'success', code: 0, time: 10 });
+      setExitInfo({ status: 'success', code: 0, timeMs: 5, timeSec: 0.005, memoryKb: 4096 });
+      setIsProcessActive(false);
+      if (onStop) onStop();
       return;
     }
 
-    // Reset interactive session inputs
+    // Safely tear down previous WebSocket connection and listeners
+    if (socketRef.current) {
+      const oldWs = socketRef.current;
+      oldWs.onopen = null;
+      oldWs.onmessage = null;
+      oldWs.onerror = null;
+      oldWs.onclose = null;
+      try {
+        if (oldWs.readyState === WebSocket.OPEN) {
+          oldWs.send(JSON.stringify({ action: 'kill' }));
+        }
+        oldWs.close();
+      } catch (e) {}
+      socketRef.current = null;
+    }
+
     sessionInputsRef.current = [];
     setCurrentInput('');
     setExitInfo(null);
     setIsProcessActive(true);
+    setActiveTab('terminal');
 
     const customBaseUrl = import.meta.env.VITE_API_BASE_URL;
     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
+    // If completely outside localhost and no custom API URL, use fallback
     if (!isLocalDev && !customBaseUrl) {
-      executeWithInputs([], activeCode, activeLang);
+      executeFallback([], activeCode, activeLang);
       return;
     }
 
-    // Try WebSocket for local interactive I/O with fallback
-    let wsConnected = false;
+    // Connect to WebSocket /ws/execute
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = customBaseUrl ? customBaseUrl.replace(/^https?:\/\//, '') : window.location.host;
     const wsUrl = `${protocol}//${host}/ws/execute`;
-
-    if (socketRef.current) {
-      try { socketRef.current.close(); } catch (e) {}
-    }
 
     try {
       const ws = new WebSocket(wsUrl);
       socketRef.current = ws;
 
-      const wsTimer = setTimeout(() => {
-        if (!wsConnected) {
-          try { ws.close(); } catch (e) {}
-          executeWithInputs([], activeCode, activeLang);
-        }
-      }, 500);
-
       ws.onopen = () => {
-        wsConnected = true;
-        clearTimeout(wsTimer);
+        // Ensure this is still the active socket
+        if (socketRef.current !== ws) return;
+
         const prefix = getCommandDisplay(activeLang);
         setTerminalHistory(`PS CodeVault> ${prefix}\n`);
+        setIsProcessActive(true);
+
         ws.send(JSON.stringify({
           action: 'run',
           language: activeLang,
           source_code: activeCode,
         }));
+
         setTimeout(() => {
           inputInputRef.current?.focus({ preventScroll: true });
         }, 50);
       };
 
       ws.onmessage = (event) => {
+        if (socketRef.current !== ws) return;
+
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === 'stdout' || msg.type === 'stderr') {
             setTerminalHistory((prev) => prev + msg.data);
+            setIsProcessActive(true);
           } else if (msg.type === 'finished') {
             setIsProcessActive(false);
+            if (onStop) onStop();
+
+            const timeMs = msg.execution_time_ms || 0;
+            const timeSec = msg.executionTime !== undefined ? msg.executionTime : Math.round(timeMs) / 1000.0;
+            const memKb = msg.memory || 8192;
+            const memMb = (memKb / 1024).toFixed(1);
+            const exitCode = msg.exitCode !== undefined ? msg.exitCode : (msg.exit_code ?? 0);
+
             setExitInfo({
               status: msg.status,
-              code: msg.exit_code,
-              time: msg.execution_time_ms,
+              code: exitCode,
+              timeMs,
+              timeSec,
+              memoryKb: memKb,
+              errorType: msg.error_type,
             });
+
             setTerminalHistory((prev) => {
               const separator = prev.endsWith('\n') ? '' : '\n';
+              const statusTag = exitCode === 0 ? '✓ Process finished' : '✕ Process completed';
               return (
                 prev +
                 separator +
-                `\n[Process completed with exit code ${msg.exit_code ?? 0} in ${msg.execution_time_ms ?? 0}ms]\nPS CodeVault> `
+                `\n[${statusTag} with exit code ${exitCode} in ${timeSec}s (${timeMs}ms) | Memory: ${memMb} MB]\nPS CodeVault> `
               );
             });
           }
@@ -286,56 +323,74 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       };
 
       ws.onclose = () => {
-        if (!wsConnected) {
-          executeWithInputs([], activeCode, activeLang);
-        } else {
+        if (socketRef.current === ws) {
           setIsProcessActive(false);
+          if (onStop) onStop();
         }
       };
 
-      ws.onerror = () => {
-        if (!wsConnected) {
-          clearTimeout(wsTimer);
-          executeWithInputs([], activeCode, activeLang);
+      ws.onerror = (err) => {
+        console.warn('WebSocket connection error, falling back...', err);
+        if (socketRef.current === ws) {
+          executeFallback([], activeCode, activeLang);
         }
       };
     } catch (err) {
-      executeWithInputs([], activeCode, activeLang);
+      executeFallback([], activeCode, activeLang);
     }
   };
 
   const handleSendInput = (e: React.FormEvent) => {
     e.preventDefault();
     const inputVal = currentInput;
-    if (!inputVal && inputVal !== '') return;
     setCurrentInput('');
+
+    // Append typed input directly to terminal text history
+    setTerminalHistory((prev) => prev + inputVal + '\n');
 
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({
         action: 'stdin',
         data: inputVal + '\n',
       }));
-      setTerminalHistory((prev) => prev + inputVal + '\n');
     } else {
-      // Append input to session and feed to runner
       sessionInputsRef.current.push(inputVal);
-      executeWithInputs(sessionInputsRef.current);
+      executeFallback(sessionInputsRef.current);
     }
+
+    // Keep focus in input
+    setTimeout(() => {
+      inputInputRef.current?.focus({ preventScroll: true });
+    }, 20);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSendInput(e);
+    } else if (e.key === 'c' && e.ctrlKey) {
+      handleStopProcess();
     }
   };
 
-  const handleStopProcess = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleStopProcess = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({ action: 'kill' }));
     }
+    if (activeExecutionId) {
+      stopExecution(activeExecutionId);
+    }
     setIsProcessActive(false);
-    setTerminalHistory((prev) => prev + '\n^C\n[Process terminated]\nPS CodeVault> ');
+    setTerminalHistory((prev) => prev + '\n^C\n[Process terminated by user]\nPS CodeVault> ');
+    setExitInfo({
+      status: 'error',
+      code: 130,
+      timeMs: 0,
+      timeSec: 0,
+      memoryKb: 0,
+      errorType: 'UserCancelled',
+    });
+    if (onStop) onStop();
   };
 
   const handleClearTerminal = () => {
@@ -356,13 +411,16 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     startInteractive: (codeOverride?: string, langOverride?: string) => {
       handleStartInteractive(codeOverride, langOverride);
     },
+    stop: handleStopProcess,
     clear: handleClearTerminal,
   }));
 
+  const memMb = exitInfo?.memoryKb ? (exitInfo.memoryKb / 1024).toFixed(1) : null;
+
   return (
-    <div className="flex flex-col h-full bg-dark-900 border border-slate-300 dark:border-dark-700/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md transition-colors">
+    <div className="flex flex-col h-full bg-slate-900 dark:bg-dark-900 border border-slate-300 dark:border-dark-700/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md transition-colors">
       {/* Terminal Title Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-100 dark:bg-dark-950/80 border-b border-slate-200 dark:border-dark-800 select-none">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-800 dark:bg-dark-950/90 border-b border-slate-700 dark:border-dark-800 select-none">
         {/* Left: Window Dots & Tabs */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
@@ -376,8 +434,8 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
               onClick={() => setActiveTab('terminal')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium transition-all ${
                 activeTab === 'terminal'
-                  ? 'bg-slate-200 dark:bg-dark-800 text-slate-900 dark:text-white shadow-sm'
-                  : 'text-slate-500 dark:text-dark-400 hover:text-slate-900 dark:hover:text-dark-200'
+                  ? 'bg-slate-700 dark:bg-dark-800 text-white shadow-sm'
+                  : 'text-slate-400 dark:text-dark-400 hover:text-white'
               }`}
             >
               <TerminalIcon className="w-3.5 h-3.5" />
@@ -389,8 +447,8 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
                 onClick={() => setActiveTab('preview')}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium transition-all ${
                   activeTab === 'preview'
-                    ? 'bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30'
-                    : 'text-slate-500 dark:text-dark-400 hover:text-slate-900 dark:hover:text-dark-200'
+                    ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
+                    : 'text-slate-400 dark:text-dark-400 hover:text-white'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -400,113 +458,130 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
           </div>
         </div>
 
-        {/* Right: Actions & Status */}
+        {/* Right: Status & Actions */}
         <div className="flex items-center gap-2">
-          {/* Status Badge */}
-          {isProcessActive && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-500/30 text-[11px] font-mono text-brand-500 dark:text-brand-400 animate-pulse">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              <span>Interactive</span>
-            </span>
-          )}
-
-          {exitInfo && (
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium ${
-                exitInfo.code === 0
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-accent-emerald border border-emerald-500/20'
-                  : 'bg-rose-500/10 text-rose-600 dark:text-accent-rose border border-rose-500/20'
-              }`}
-            >
-              {exitInfo.code === 0 ? (
-                <CheckCircle className="w-3 h-3" />
-              ) : (
-                <AlertCircle className="w-3 h-3" />
-              )}
-              <span>
-                Exit {exitInfo.code ?? (exitInfo.status === 'success' ? 0 : 1)}
-                {exitInfo.time !== undefined && ` (${exitInfo.time}ms)`}
+          {/* Running State */}
+          {(isProcessActive || isRunning) && (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/40 text-[11px] font-mono text-blue-400 animate-pulse">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Running {language}...</span>
               </span>
-            </span>
+              <button
+                onClick={() => handleStopProcess()}
+                className="px-2 py-0.5 rounded-md bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 text-[11px] font-mono flex items-center gap-1 transition-colors"
+                title="Stop process (Ctrl+Shift+K)"
+              >
+                <Square className="w-2.5 h-2.5 fill-red-400" />
+                <span>Stop</span>
+              </button>
+            </div>
           )}
 
-          {/* Copy Output Button */}
+          {/* Success / Error Badges */}
+          {!isProcessActive && !isRunning && exitInfo && (
+            <div className="flex items-center gap-1.5">
+              {exitInfo.status === 'timeout' ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <Clock className="w-3 h-3 text-amber-400" />
+                  <span>Time Limit Exceeded</span>
+                </span>
+              ) : exitInfo.status === 'mle' ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  <Zap className="w-3 h-3 text-purple-400" />
+                  <span>Memory Limit Exceeded</span>
+                </span>
+              ) : exitInfo.code === 0 ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <CheckCircle className="w-3 h-3 text-emerald-400" />
+                  <span>Exit 0</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  <AlertCircle className="w-3 h-3 text-rose-400" />
+                  <span>Exit {exitInfo.code ?? 1} {exitInfo.errorType ? `(${exitInfo.errorType})` : ''}</span>
+                </span>
+              )}
+
+              {exitInfo.timeSec !== undefined && (
+                <span className="text-[11px] font-mono text-slate-400">
+                  {exitInfo.timeSec}s
+                </span>
+              )}
+
+              {memMb && (
+                <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
+                  • {memMb}MB
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Copy Button */}
           <button
             onClick={handleCopy}
-            className="p-1.5 rounded-lg text-slate-500 dark:text-dark-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-dark-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 dark:hover:bg-dark-800 transition-colors"
             title="Copy output"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
 
-          {/* Clear Terminal Button */}
+          {/* Clear Button */}
           <button
             onClick={handleClearTerminal}
-            className="p-1.5 rounded-lg text-slate-500 dark:text-dark-400 hover:text-rose-500 hover:bg-slate-200 dark:hover:bg-dark-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 dark:hover:bg-dark-800 transition-colors"
             title="Clear terminal"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
-
-          {/* Terminate Process Button */}
-          {isProcessActive && (
-            <button
-              onClick={handleStopProcess}
-              className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/20 transition-colors"
-              title="Terminate Process (Ctrl+C)"
-            >
-              <Square className="w-3.5 h-3.5 fill-rose-500" />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Main Content Area: Terminal or HTML Live Preview */}
-      {activeTab === 'preview' ? (
-        <div className="flex-1 w-full bg-white relative">
+      {/* Terminal Content Area */}
+      {activeTab === 'preview' && isHtml ? (
+        <div className="flex-1 bg-white p-2">
           <iframe
             srcDoc={sourceCode}
             title="HTML Live Preview"
+            className="w-full h-full border-0 rounded-lg"
             sandbox="allow-scripts allow-modals"
-            className="w-full h-full border-0"
           />
         </div>
       ) : (
         <div
           ref={terminalBodyRef}
-          onClick={() => isProcessActive && inputInputRef.current?.focus()}
-          className="flex-1 p-4 bg-[#0d1117] text-[#e6edf3] font-mono text-xs overflow-y-auto space-y-1.5 leading-relaxed selection:bg-brand-500 selection:text-white cursor-text"
-          style={{ fontFamily: "'Fira Code', 'JetBrains Mono', Consolas, monospace" }}
+          onClick={() => {
+            if (isProcessActive) {
+              inputInputRef.current?.focus({ preventScroll: true });
+            }
+          }}
+          className="flex-1 p-4 font-mono text-xs text-slate-200 overflow-y-auto bg-slate-950 select-text cursor-text"
         >
-          {/* Default Welcome Prompt */}
-          {!terminalHistory && !isProcessActive && (
-            <div className="text-[#8b949e] space-y-1 select-none">
-              <p>PS CodeVault Pro Terminal [Version 2.0.0]</p>
-              <p>Ready. Click <span className="text-brand-400 font-semibold">"Run Code"</span> to compile & execute.</p>
-              <p className="text-[11px] text-[#484f58]">Interactive input prompts appear directly inside the terminal window.</p>
+          {terminalHistory ? (
+            <div className="whitespace-pre-wrap font-mono leading-relaxed text-slate-200 inline">
+              {terminalHistory}
+            </div>
+          ) : (
+            <div className="text-slate-500 select-none flex flex-col items-center justify-center h-full gap-2">
+              <TerminalIcon className="w-8 h-8 opacity-40" />
+              <p>Ready to run code. Click "Run Code" or press <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 font-mono text-[10px]">Ctrl+Enter</kbd></p>
             </div>
           )}
 
-          {/* Render Full Terminal Text */}
-          {terminalHistory && (
-            <pre className="whitespace-pre-wrap break-all font-mono leading-relaxed inline">
-              {terminalHistory}
-            </pre>
-          )}
-
-          {/* Interactive In-Terminal Input Field */}
+          {/* Inline Interactive STDIN input styled as in-place shell typing */}
           {isProcessActive && (
-            <form onSubmit={handleSendInput} className="inline-flex items-center gap-1 ml-1 align-middle">
+            <form onSubmit={handleSendInput} className="inline-flex items-center align-baseline">
               <input
                 ref={inputInputRef}
                 type="text"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="type input here & Enter ↵"
-                className="bg-[#161b22] text-[#58a6ff] border border-[#30363d] focus:border-brand-500 rounded px-2 py-0.5 outline-none font-mono text-xs placeholder-[#484f58] w-48 transition-all"
                 autoFocus
+                className="bg-transparent border-none outline-none text-emerald-400 font-mono text-xs focus:ring-0 p-0 m-0 inline-block"
+                style={{ width: `${Math.max(1, currentInput.length + 1)}ch` }}
               />
+              <span className="inline-block w-2 h-3.5 bg-emerald-400 animate-pulse ml-0.5 align-middle" />
             </form>
           )}
         </div>
@@ -514,5 +589,3 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     </div>
   );
 });
-
-OutputTerminal.displayName = 'OutputTerminal';

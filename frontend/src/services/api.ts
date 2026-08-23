@@ -76,10 +76,17 @@ export interface TestCase {
 }
 
 export interface ExecuteResult {
-  status: 'success' | 'error' | 'timeout';
+  status: 'success' | 'error' | 'timeout' | 'compilation_error' | 'tle' | 'mle';
+  stdout?: string;
+  stderr?: string;
   output: string;
   error?: string;
   execution_time_ms: number;
+  executionTime?: number;
+  memory?: number; // in KB
+  exitCode?: number;
+  exit_code?: number;
+  error_type?: string;
   cached?: boolean;
 }
 

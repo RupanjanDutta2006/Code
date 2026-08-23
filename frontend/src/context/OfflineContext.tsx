@@ -5,7 +5,7 @@ export interface QueuedRun {
   id: string;
   language: string;
   sourceCode: string;
-  customInput: string;
+  customInput?: string;
   programId?: number;
   timestamp: number;
 }

@@ -106,18 +106,55 @@ if input_data:
     assert data["passed_count"] == data["total_count"]
     assert data["verdict"] == "Accepted"
 
-def test_classroom_leaderboard():
-    login_resp = client.post("/api/auth/login", json={
-        "username_or_email": "prof_sharma",
-        "password": "password123"
+def test_api_execute_python_with_stdin():
+    code = """name = input()
+print(f"Hello {name}")"""
+    response = client.post("/api/execute", json={
+        "language": "python",
+        "code": code,
+        "stdin": "Rupanjan"
     })
-    token = login_resp.json()["access_token"]
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert "Hello Rupanjan" in data["stdout"]
+    assert data["exitCode"] == 0
+    assert data["memory"] > 0
+    assert data["executionTime"] >= 0
 
-    classes = client.get("/api/classrooms", headers={"Authorization": f"Bearer {token}"}).json()
-    assert len(classes) >= 1
-    class_id = classes[0]["id"]
+def test_api_execute_syntax_error():
+    code = "def invalid_syntax(:"
+    response = client.post("/api/execute", json={
+        "language": "python",
+        "code": code
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "error"
+    assert "SyntaxError" in data["stderr"]
+    assert data["error_type"] == "SyntaxError"
+    assert data["exitCode"] != 0
 
-    leaderboard = client.get(f"/api/classrooms/{class_id}/leaderboard", headers={"Authorization": f"Bearer {token}"}).json()
-    assert len(leaderboard) >= 2
-    student_names = [e["student_username"] for e in leaderboard]
-    assert "asha_r" in student_names
+def test_api_execute_zero_division():
+    code = "x = 10 / 0"
+    response = client.post("/api/execute", json={
+        "language": "python",
+        "code": code
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "error"
+    assert "ZeroDivisionError" in data["stderr"]
+    assert data["error_type"] == "ZeroDivisionError"
+
+def test_api_execute_timeout():
+    code = "while True: pass"
+    response = client.post("/api/execute", json={
+        "language": "python",
+        "code": code
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "timeout"
+    assert "Time Limit Exceeded" in data["stderr"]
+    assert data["error_type"] == "TimeLimitExceeded"

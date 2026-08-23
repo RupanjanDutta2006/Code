@@ -201,10 +201,25 @@ class InteractiveSession:
 
     async def _stream_output(self, loop):
         """Reads stdout byte by byte / chunk by chunk in realtime and sends to websocket."""
+        import psutil
+        peak_memory_kb = 8192
         try:
             while self.is_running and self.process:
+                # Sample memory
+                try:
+                    if self.process and self.process.pid:
+                        p = psutil.Process(self.process.pid)
+                        mem = p.memory_info().rss // 1024
+                        for ch in p.children(recursive=True):
+                            try: mem += ch.memory_info().rss // 1024
+                            except Exception: pass
+                        if mem > peak_memory_kb:
+                            peak_memory_kb = mem
+                except Exception:
+                    pass
+
                 # Read chunks non-blockingly via executor
-                chunk = await loop.run_in_executor(None, lambda: self.process.stdout.read(1024))
+                chunk = await loop.run_in_executor(None, lambda: self.process.stdout.read(1024) if self.process and self.process.stdout else None)
                 if not chunk:
                     break
                 
@@ -218,17 +233,30 @@ class InteractiveSession:
                 await loop.run_in_executor(None, self.process.wait)
                 exit_code = self.process.returncode
                 elapsed_ms = (time.perf_counter() - self.start_time) * 1000.0
+                elapsed_sec = round(elapsed_ms / 1000.0, 3)
 
                 await self.websocket.send_json({
                     "type": "finished",
                     "status": "success" if exit_code == 0 else "error",
                     "exit_code": exit_code,
-                    "execution_time_ms": round(elapsed_ms, 2)
+                    "exitCode": exit_code,
+                    "execution_time_ms": round(elapsed_ms, 2),
+                    "executionTime": elapsed_sec,
+                    "memory": peak_memory_kb,
+                    "memory_kb": peak_memory_kb
                 })
         except Exception as e:
             try:
                 await self.websocket.send_json({"type": "stderr", "data": f"\r\n[Process terminated: {e}]\r\n"})
-                await self.websocket.send_json({"type": "finished", "status": "error", "exit_code": 1})
+                await self.websocket.send_json({
+                    "type": "finished",
+                    "status": "error",
+                    "exit_code": 1,
+                    "exitCode": 1,
+                    "execution_time_ms": 0,
+                    "executionTime": 0,
+                    "memory": 8192
+                })
             except Exception:
                 pass
         finally:
@@ -239,9 +267,17 @@ class InteractiveSession:
         self.is_running = False
         if self.process:
             try:
-                self.process.kill()
+                import psutil
+                parent = psutil.Process(self.process.pid)
+                for child in parent.children(recursive=True):
+                    try: child.kill()
+                    except Exception: pass
+                parent.kill()
             except Exception:
-                pass
+                try:
+                    self.process.kill()
+                except Exception:
+                    pass
         self.cleanup()
 
     def cleanup(self):

@@ -17,10 +17,16 @@ class CompileResult:
 
 @dataclass
 class RunResult:
-    status: str # 'success', 'error', 'timeout'
-    output: str
+    status: str # 'success', 'error', 'timeout', 'compilation_error', 'tle', 'mle'
+    output: str = ""
+    stdout: str = ""
+    stderr: str = ""
     error: Optional[str] = None
     execution_time_ms: float = 0.0
+    execution_time: float = 0.0 # in seconds
+    memory_kb: int = 0
+    exit_code: int = 0
+    error_type: Optional[str] = None
 
 class BaseRunner(ABC):
     @abstractmethod

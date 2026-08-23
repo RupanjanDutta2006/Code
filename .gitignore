@@ -39,4 +39,5 @@ data/*.sqlite3
 Thumbs.db
 # Backups & nested folders
 Code_Vault_V1/
+Code v latest 8/
 scratch/
