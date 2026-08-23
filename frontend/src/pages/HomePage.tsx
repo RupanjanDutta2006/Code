@@ -219,6 +219,14 @@ export const HomePage: React.FC = () => {
             <Users className="w-5 h-5 text-accent-violet" />
             Live Playground
           </Link>
+
+          <Link
+            to="/creator"
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600/30 via-brand-600/30 to-cyan-600/30 hover:from-purple-600/40 hover:to-cyan-600/40 text-white font-semibold text-base border border-purple-500/40 transition-all flex items-center gap-2 shadow-lg shadow-purple-500/10"
+          >
+            <Sparkles className="w-5 h-5 text-amber-400" />
+            Creator & Resources
+          </Link>
         </div>
       </section>
 
@@ -420,6 +428,43 @@ export const HomePage: React.FC = () => {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Section 3: Creator & Curated Resources Spotlight */}
+      <section className="max-w-6xl mx-auto px-4">
+        <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-dark-900 via-purple-950/20 to-dark-900 p-8 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+              <img
+                src="https://ugc.production.linktr.ee/04a9a50a-252b-4d1f-962d-7787b0a45c2b_WhatsApp-Image-2026-04-20-at-10.37.37-AM.jpeg"
+                alt="Coder Babuu"
+                className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-lg shadow-purple-500/20"
+              />
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-semibold">
+                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span>Creator & Free Resources</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-white">
+                  Curated Codes, DSA Notes & Assignments by Coder Babuu
+                </h3>
+                <p className="text-xs sm:text-sm text-dark-300 max-w-xl">
+                  Access free Python, C, C++, and DSA code repositories, downloadable lecture notes, and assignments directly on CodeVault.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              to="/creator"
+              className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2 flex-shrink-0 hover:scale-[1.02]"
+            >
+              <span>Explore All Resources</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>

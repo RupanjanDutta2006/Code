@@ -158,6 +158,18 @@ export const Navbar: React.FC = () => {
           </Link>
 
           <Link
+            to="/creator"
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              isActive('/creator') 
+                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            Creator
+          </Link>
+
+          <Link
             to="/about"
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               isActive('/about') 
@@ -291,6 +303,14 @@ export const Navbar: React.FC = () => {
             className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
           >
             + Create Program
+          </Link>
+          <Link
+            to="/creator"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            Creator & Resources
           </Link>
           <Link
             to="/about"

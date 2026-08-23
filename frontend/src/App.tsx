@@ -15,6 +15,7 @@ import { ClassroomListPage } from './pages/ClassroomListPage';
 import { ClassroomDetailPage } from './pages/ClassroomDetailPage';
 import { LoginPage } from './pages/LoginPage';
 import { AboutPage } from './pages/AboutPage';
+import { CreatorPage } from './pages/CreatorPage';
 
 export const App: React.FC = () => {
   return (
@@ -39,6 +40,7 @@ export const App: React.FC = () => {
                   <Route path="/classrooms/:id" element={<ClassroomDetailPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/about" element={<AboutPage />} />
+                  <Route path="/creator" element={<CreatorPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </main>
@@ -51,6 +53,8 @@ export const App: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-4 text-slate-400 dark:text-dark-400">
                     <a href="/about" className="hover:text-slate-900 dark:hover:text-white transition-colors">Documentation</a>
+                    <span>•</span>
+                    <a href="/creator" className="hover:text-brand-500 dark:hover:text-brand-400 transition-colors font-medium">Creator & Resources</a>
                     <span>•</span>
                     <span>11 Compilers & Sandboxes</span>
                     <span>•</span>
