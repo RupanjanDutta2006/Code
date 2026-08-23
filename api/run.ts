@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { executeCode, ExecuteServiceRequest } from '../../server/compilerService';
+import { executeCode, ExecuteServiceRequest } from '../server/compilerService';
 
 export default async function handler(req: any, res: any) {
   // CORS headers
@@ -21,7 +21,7 @@ export default async function handler(req: any, res: any) {
       success: false,
       status: 'error',
       stdout: '',
-      stderr: 'Method Not Allowed. Use POST.',
+      stderr: 'Method Not Allowed. Use POST /api/run.',
       output: '',
       error: 'Method Not Allowed. Use POST.',
       exitCode: 405,

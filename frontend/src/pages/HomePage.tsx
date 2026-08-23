@@ -232,7 +232,7 @@ export const HomePage: React.FC = () => {
 
       {/* Interactive Quick Runner Demo */}
       <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-2xl border border-slate-200 dark:border-dark-700 bg-white/80 dark:bg-dark-900/80 p-6 shadow-2xl backdrop-blur-xl space-y-4 transition-colors">
+        <div className="rounded-3xl liquid-glass p-6 sm:p-8 shadow-2xl space-y-4 transition-colors">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">

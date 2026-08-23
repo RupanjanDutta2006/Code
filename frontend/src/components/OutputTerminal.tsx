@@ -489,9 +489,9 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   const memMb = exitInfo?.memoryKb ? (exitInfo.memoryKb / 1024).toFixed(1) : null;
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 dark:bg-dark-900 border border-slate-300 dark:border-dark-700/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md transition-colors">
+    <div className="flex flex-col h-full liquid-glass rounded-2xl overflow-hidden shadow-2xl transition-colors">
       {/* Terminal Title Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-800 dark:bg-dark-950/90 border-b border-slate-700 dark:border-dark-800 select-none">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-800/90 dark:bg-dark-950/80 border-b border-slate-700/80 dark:border-dark-800/80 select-none backdrop-blur-sm">
         {/* Left: Window Dots & Tabs */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">

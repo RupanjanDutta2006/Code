@@ -34,7 +34,7 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 dark:bg-dark-900/90 backdrop-blur-md border-b border-slate-200 dark:border-dark-700/80 px-4 sm:px-6 py-3 transition-colors duration-200">
+    <nav className="sticky top-0 z-50 liquid-glass border-b border-slate-200/80 dark:border-dark-700/80 px-4 sm:px-6 py-3 transition-colors duration-200">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* Brand Logo */}

@@ -28,6 +28,7 @@ const handleExecute = async (req: Request, res: Response) => {
   res.status(200).json(result);
 };
 
+app.post('/api/run', handleExecute);
 app.post('/api/programs/execute', handleExecute);
 app.post('/api/execute', handleExecute);
 

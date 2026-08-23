@@ -173,31 +173,45 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
     };
   }
 
-  // 2. Primary: Execute via Vercel Backend API (/api/programs/execute)
+  // 2. Primary: Execute via Vercel Backend API (/api/run or /api/programs/execute)
   try {
     const baseUrl = (
       import.meta.env.VITE_API_URL ||
       import.meta.env.VITE_API_BASE_URL ||
       ''
     ).replace(/\/+$/, '');
-    const endpoint = `${baseUrl}/api/programs/execute`;
+    
+    // Try /api/run first, then /api/programs/execute
+    const endpoints = [`${baseUrl}/api/run`, `${baseUrl}/api/programs/execute`];
+    let response: Response | null = null;
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        language: normLang,
-        code: req.sourceCode,
-        source_code: req.sourceCode,
-        stdin: rawStdin,
-        custom_input: rawStdin,
-        program_id: req.programId,
-        execution_id: req.executionId,
-      }),
-    });
+    for (const endpoint of endpoints) {
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            language: normLang,
+            code: req.sourceCode,
+            source_code: req.sourceCode,
+            stdin: rawStdin,
+            custom_input: rawStdin,
+            program_id: req.programId,
+            execution_id: req.executionId,
+          }),
+        });
 
-    const contentType = response.headers.get('content-type') || '';
-    if (response.ok && contentType.includes('application/json')) {
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          response = res;
+          break;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    if (response) {
       const data = await response.json();
       const elapsed = data.execution_time_ms || Math.round(performance.now() - startTime);
       const elapsedSec = data.executionTime !== undefined ? data.executionTime : Math.round(elapsed) / 1000.0;
