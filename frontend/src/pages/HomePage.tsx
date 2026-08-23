@@ -440,7 +440,7 @@ export const HomePage: React.FC = () => {
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
               <img
-                src="https://ugc.production.linktr.ee/04a9a50a-252b-4d1f-962d-7787b0a45c2b_WhatsApp-Image-2026-04-20-at-10.37.37-AM.jpeg"
+                src="/team/rupanjan.jpg"
                 alt="Coder Babuu"
                 className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-lg shadow-purple-500/20"
               />

@@ -174,7 +174,7 @@ export const CreatorPage: React.FC = () => {
           <div className="relative group">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-brand-500 via-purple-500 to-cyan-500 opacity-75 blur-md group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
             <img
-              src="https://ugc.production.linktr.ee/04a9a50a-252b-4d1f-962d-7787b0a45c2b_WhatsApp-Image-2026-04-20-at-10.37.37-AM.jpeg"
+              src="/team/rupanjan.jpg"
               alt="Coder Babuu"
               className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white dark:border-dark-900 shadow-xl"
             />

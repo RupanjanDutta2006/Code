@@ -60,7 +60,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-emerald-500/10',
     subtitle: 'Lead Developer & Full Stack Engineer',
     description: 'Building and optimizing the CodeVault Pro platform with full-stack architecture, multi-language compiler sandboxing, and real-time collaboration systems.',
-    avatar: 'https://ugc.production.linktr.ee/04a9a50a-252b-4d1f-962d-7787b0a45c2b_WhatsApp-Image-2026-04-20-at-10.37.37-AM.jpeg',
+    avatar: '/team/rupanjan.jpg',
     skills: [
       { name: 'Python', colorClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30' },
       { name: 'React', colorClass: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' },
@@ -82,7 +82,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     badgeColor: 'bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-amber-500/10',
     subtitle: 'Product Strategist & Co-Creator',
     description: 'Driving product direction, user experience, and platform growth to make CodeVault Pro approachable and powerful for every student and developer.',
-    avatar: 'https://github.com/S0u1k.png',
+    avatar: '/team/souvik.jpg',
     skills: [
       { name: 'Product Strategy', colorClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
       { name: 'UI/UX', colorClass: 'bg-purple-500/15 text-purple-300 border-purple-500/30' },
