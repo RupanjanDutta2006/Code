@@ -30,6 +30,48 @@ interface OutputTerminalProps {
   onStop?: () => void;
 }
 
+/**
+ * Detects if a cloud/batch execution paused because it reached an input() statement
+ */
+function isWaitingForInput(stderr?: string, output?: string): boolean {
+  if (!stderr && !output) return false;
+  const combined = (stderr || '') + ' ' + (output || '');
+  return (
+    combined.includes('EOFError: EOF when reading a line') ||
+    combined.includes('EOFError') ||
+    combined.includes('NoSuchElementException') ||
+    combined.includes('java.util.NoSuchElementException') ||
+    combined.includes('unexpected end of file')
+  );
+}
+
+/**
+ * Formats multi-step interactive prompts and user inputs into a continuous terminal transcript
+ */
+function buildInteractiveTranscript(prefix: string, rawStdout: string, inputs: string[]): string {
+  if (!rawStdout && inputs.length === 0) return prefix;
+
+  let result = prefix;
+  let remaining = rawStdout || '';
+
+  for (let i = 0; i < inputs.length; i++) {
+    const inp = inputs[i];
+    const match = remaining.match(/^(.*?(?::|\?|>|\$|\n))/s);
+    if (match && match[1]) {
+      result += match[1].trimEnd() + ' ' + inp + '\n';
+      remaining = remaining.slice(match[1].length).replace(/^\s+/, '');
+    } else {
+      result += inp + '\n';
+    }
+  }
+
+  if (remaining) {
+    result += remaining;
+  }
+
+  return result;
+}
+
 export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalProps>(({
   result,
   isRunning = false,
@@ -64,11 +106,9 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   const sessionInputsRef = useRef<string[]>([]);
   const sourceCodeRef = useRef(sourceCode);
   const languageRef = useRef(language);
-  const isProcessActiveRef = useRef(isProcessActive);
 
   useEffect(() => { sourceCodeRef.current = sourceCode; }, [sourceCode]);
   useEffect(() => { languageRef.current = language; }, [language]);
-  useEffect(() => { isProcessActiveRef.current = isProcessActive; }, [isProcessActive]);
 
   const isHtml = language.toLowerCase() === 'html';
 
@@ -90,7 +130,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     if (isProcessActive) {
       setTimeout(() => {
         inputInputRef.current?.focus({ preventScroll: true });
-      }, 20);
+      }, 30);
     }
   }, [isProcessActive, terminalHistory]);
 
@@ -134,9 +174,11 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
   const executeFallback = async (inputs: string[], codeToSend?: string, langToSend?: string) => {
     const effectiveCode = codeToSend !== undefined ? codeToSend : sourceCodeRef.current;
     const effectiveLang = langToSend !== undefined ? langToSend : languageRef.current;
-    const inputPayload = inputs.join('\n');
+    const inputPayload = inputs.join('\n') + (inputs.length > 0 ? '\n' : '');
     const execId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     setActiveExecutionId(execId);
+
+    const prefix = `PS CodeVault> ${getCommandDisplay(effectiveLang)}\n`;
 
     try {
       const resp = await executeUniversal({
@@ -147,17 +189,31 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
         executionId: execId,
       });
 
-      const prefix = `PS CodeVault> ${getCommandDisplay(effectiveLang)}\n`;
       const timeMs = resp.execution_time_ms;
       const timeSec = resp.executionTime !== undefined ? resp.executionTime : Math.round(timeMs) / 1000.0;
       const memKb = resp.memory || 8192;
       const memMb = (memKb / 1024).toFixed(1);
 
+      // 1. Check if the program is waiting for more interactive user input (e.g. Python input(), C scanf)
+      if (isWaitingForInput(resp.stderr || resp.error, resp.stdout || resp.output)) {
+        const rawStdout = resp.stdout || resp.output || '';
+        const transcript = buildInteractiveTranscript(prefix, rawStdout, inputs);
+        setTerminalHistory(transcript);
+        setIsProcessActive(true);
+        setTimeout(() => {
+          inputInputRef.current?.focus({ preventScroll: true });
+        }, 50);
+        return;
+      }
+
+      // 2. Program finished successfully
       if (resp.status === 'success') {
-        const out = resp.output || resp.stdout || '';
+        const rawStdout = resp.output || resp.stdout || '';
+        const transcript = buildInteractiveTranscript(prefix, rawStdout, inputs);
+        const separator = transcript.endsWith('\n') ? '' : '\n';
         setTerminalHistory(
-          prefix +
-          (out ? out + (out.endsWith('\n') ? '' : '\n') : '') +
+          transcript +
+          separator +
           `\n[✓ Process finished — Exit 0 | Time: ${timeSec}s (${timeMs}ms) | Memory: ${memMb} MB]\nPS CodeVault> `
         );
         setExitInfo({
@@ -167,10 +223,17 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
           timeSec,
           memoryKb: memKb,
         });
-      } else if (resp.status === 'timeout' || resp.status === 'tle') {
+        setIsProcessActive(false);
+        if (onStop) onStop();
+        return;
+      }
+
+      // 3. Timeout
+      if (resp.status === 'timeout' || resp.status === 'tle') {
+        const transcript = buildInteractiveTranscript(prefix, resp.output || '', inputs);
         setTerminalHistory(
-          prefix +
-          `⏱ Time Limit Exceeded\nYour program exceeded the 5 second time limit.\n\n[Process terminated with exit code 124 in ${timeSec}s]\nPS CodeVault> `
+          transcript +
+          `\n⏱ Time Limit Exceeded\nYour program exceeded the 5 second time limit.\n\n[Process terminated with exit code 124 in ${timeSec}s]\nPS CodeVault> `
         );
         setExitInfo({
           status: 'timeout',
@@ -180,27 +243,34 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
           memoryKb: memKb,
           errorType: 'TimeLimitExceeded',
         });
-      } else {
-        const errorText = resp.error || resp.stderr || resp.output || 'Unknown Error';
-        setTerminalHistory(
-          prefix +
-          errorText +
-          (errorText.endsWith('\n') ? '' : '\n') +
-          `\n[✕ Process completed with exit code ${resp.exitCode ?? 1} in ${timeSec}s | Memory: ${memMb} MB]\nPS CodeVault> `
-        );
-        setExitInfo({
-          status: 'error',
-          code: resp.exitCode ?? 1,
-          timeMs,
-          timeSec,
-          memoryKb: memKb,
-          errorType: resp.error_type,
-        });
+        setIsProcessActive(false);
+        if (onStop) onStop();
+        return;
       }
+
+      // 4. Real Runtime / Compilation Error
+      const errorText = resp.error || resp.stderr || resp.output || 'Unknown Error';
+      const transcript = buildInteractiveTranscript(prefix, resp.stdout || '', inputs);
+      setTerminalHistory(
+        transcript +
+        (transcript.endsWith('\n') ? '' : '\n') +
+        errorText +
+        (errorText.endsWith('\n') ? '' : '\n') +
+        `\n[✕ Process completed with exit code ${resp.exitCode ?? 1} in ${timeSec}s | Memory: ${memMb} MB]\nPS CodeVault> `
+      );
+      setExitInfo({
+        status: 'error',
+        code: resp.exitCode ?? 1,
+        timeMs,
+        timeSec,
+        memoryKb: memKb,
+        errorType: resp.error_type,
+      });
+      setIsProcessActive(false);
+      if (onStop) onStop();
     } catch (err: any) {
       setTerminalHistory((prev) => prev + `\n[Execution Error: ${err.message || 'Unknown error'}]\nPS CodeVault> `);
       setExitInfo({ status: 'error', code: 1, timeMs: 0, timeSec: 0, memoryKb: 0 });
-    } finally {
       setIsProcessActive(false);
       if (onStop) onStop();
     }
@@ -246,8 +316,10 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     const customBaseUrl = import.meta.env.VITE_API_BASE_URL;
     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-    // If completely outside localhost and no custom API URL, use fallback
+    // If completely outside localhost and no custom API URL, use resilient interactive cloud execution
     if (!isLocalDev && !customBaseUrl) {
+      const prefix = `PS CodeVault> ${getCommandDisplay(activeLang)}\n`;
+      setTerminalHistory(prefix);
       executeFallback([], activeCode, activeLang);
       return;
     }
@@ -262,7 +334,6 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       socketRef.current = ws;
 
       ws.onopen = () => {
-        // Ensure this is still the active socket
         if (socketRef.current !== ws) return;
 
         const prefix = getCommandDisplay(activeLang);
@@ -330,7 +401,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
       };
 
       ws.onerror = (err) => {
-        console.warn('WebSocket connection error, falling back...', err);
+        console.warn('WebSocket connection unavailable, using interactive cloud runner...', err);
         if (socketRef.current === ws) {
           executeFallback([], activeCode, activeLang);
         }
@@ -361,7 +432,7 @@ export const OutputTerminal = forwardRef<OutputTerminalHandle, OutputTerminalPro
     // Keep focus in input
     setTimeout(() => {
       inputInputRef.current?.focus({ preventScroll: true });
-    }, 20);
+    }, 30);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
