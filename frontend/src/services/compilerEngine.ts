@@ -25,6 +25,7 @@ export interface ExecutionResponse {
   exitCode?: number;
   exit_code?: number;
   error_type?: string;
+  stage?: string;
   cached?: boolean;
 }
 
@@ -61,22 +62,22 @@ export const LANGUAGE_CONFIGS: Record<string, LanguageConfig> = {
     commandDisplay: 'javac Main.java && java Main',
   },
   javascript: {
-    compiler: 'client-js',
+    compiler: 'nodejs-20.17.0',
     fileName: 'solution.js',
     commandDisplay: 'node solution.js',
   },
   js: {
-    compiler: 'client-js',
+    compiler: 'nodejs-20.17.0',
     fileName: 'solution.js',
     commandDisplay: 'node solution.js',
   },
   typescript: {
-    compiler: 'client-js',
+    compiler: 'typescript-5.6.2',
     fileName: 'solution.ts',
     commandDisplay: 'node --experimental-strip-types solution.ts',
   },
   ts: {
-    compiler: 'client-js',
+    compiler: 'typescript-5.6.2',
     fileName: 'solution.ts',
     commandDisplay: 'node --experimental-strip-types solution.ts',
   },
@@ -115,6 +116,7 @@ export function normalizeLanguage(lang: string): string {
   if (l === 'c++') return 'cpp';
   if (l === 'js') return 'javascript';
   if (l === 'ts') return 'typescript';
+  if (l === 'py') return 'python';
   return l || 'python';
 }
 
@@ -136,7 +138,7 @@ export async function stopExecution(executionId: string): Promise<boolean> {
       import.meta.env.VITE_API_BASE_URL ||
       ''
     ).replace(/\/+$/, '');
-    const endpoint = `${baseUrl}/api/execute/stop`;
+    const endpoint = `${baseUrl}/api/programs/execute/stop`;
 
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -171,14 +173,14 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
     };
   }
 
-  // 2. Primary: Execute directly on real Backend API (/api/execute)
+  // 2. Primary: Execute via Vercel Backend API (/api/programs/execute)
   try {
     const baseUrl = (
       import.meta.env.VITE_API_URL ||
       import.meta.env.VITE_API_BASE_URL ||
       ''
     ).replace(/\/+$/, '');
-    const endpoint = `${baseUrl}/api/execute`;
+    const endpoint = `${baseUrl}/api/programs/execute`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -194,7 +196,8 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
       }),
     });
 
-    if (response.ok) {
+    const contentType = response.headers.get('content-type') || '';
+    if (response.ok && contentType.includes('application/json')) {
       const data = await response.json();
       const elapsed = data.execution_time_ms || Math.round(performance.now() - startTime);
       const elapsedSec = data.executionTime !== undefined ? data.executionTime : Math.round(elapsed) / 1000.0;
@@ -215,20 +218,15 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
         exitCode,
         exit_code: exitCode,
         error_type: data.error_type,
+        stage: data.stage,
         cached: data.cached,
       };
     }
   } catch (e) {
-    console.warn('Direct backend call failed, attempting fallback cloud engine...', e);
+    console.warn('Direct backend API call failed, attempting fallback cloud engine...', e);
   }
 
-  // 3. Fallback for client JS/TS if backend is offline
-  if (normLang === 'javascript' || normLang === 'js' || normLang === 'typescript' || normLang === 'ts') {
-    const elapsed = Math.round(performance.now() - startTime);
-    return executeBrowserJS(req.sourceCode, rawStdin, elapsed);
-  }
-
-  // 4. Fallback Cloud Engine (Wandbox API) for static deployments
+  // 3. Fallback Cloud Engine (Wandbox API) if API route is unreachable
   const config = LANGUAGE_CONFIGS[normLang] || LANGUAGE_CONFIGS.python;
   let codeToRun = req.sourceCode;
 
@@ -260,33 +258,42 @@ export async function executeUniversal(req: ExecutionRequest): Promise<Execution
     const data = await response.json();
     const stdout = data.program_output || data.compiler_output || '';
     const stderr = data.program_error || data.compiler_error || '';
-    const exitCode = typeof data.status === 'number' ? data.status : (stderr && !stdout ? 1 : 0);
+    const exitCode = typeof data.status === 'number' ? data.status : (data.status ? Number(data.status) : (stderr && !stdout ? 1 : 0));
+    const isCompileError = Boolean(data.compiler_error && !data.program_output);
 
     return {
-      status: exitCode === 0 ? 'success' : 'error',
+      status: exitCode === 0 ? 'success' : (isCompileError ? 'compilation_error' : 'error'),
       stdout,
       stderr,
       output: stdout,
       error: stderr || undefined,
       execution_time_ms: elapsed,
       executionTime: Math.round(elapsed) / 1000.0,
-      memory: 12400,
+      memory: 8192,
       exitCode,
       exit_code: exitCode,
+      stage: isCompileError ? 'compilation' : 'runtime',
     };
   } catch (err: any) {
+    // 4. Last resort in-browser evaluation for JS/TS if external network also fails
+    if (normLang === 'javascript' || normLang === 'js' || normLang === 'typescript' || normLang === 'ts') {
+      const elapsed = Math.round(performance.now() - startTime);
+      return executeBrowserJS(req.sourceCode, rawStdin, elapsed);
+    }
+
     const elapsed = Math.round(performance.now() - startTime);
     return {
       status: 'error',
       stdout: '',
-      stderr: `Execution Error: ${err.message || 'Unable to connect to backend runner.'}`,
+      stderr: `Execution Error: ${err.message || 'Unable to connect to execution runner.'}`,
       output: '',
-      error: `Execution Error: ${err.message || 'Unable to connect to backend runner.'}`,
+      error: `Execution Error: ${err.message || 'Unable to connect to execution runner.'}`,
       execution_time_ms: elapsed,
       executionTime: Math.round(elapsed) / 1000.0,
       memory: 0,
       exitCode: 1,
       exit_code: 1,
+      stage: 'runtime',
     };
   }
 }
