@@ -17,7 +17,9 @@ import {
   Sparkles,
   Users,
   Sun,
-  Moon
+  Moon,
+  Zap,
+  Bot
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useOffline } from '../context/OfflineContext';
@@ -106,7 +108,7 @@ export const Navbar: React.FC = () => {
                     : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
                 }`}
               >
-                <PlusCircle className="w-4 h-4 text-accent-emerald" />
+                <PlusCircle className="w-4 h-4 text-emerald-500 dark:text-accent-emerald" />
                 New Program
               </Link>
               <Link
@@ -118,7 +120,7 @@ export const Navbar: React.FC = () => {
                 }`}
               >
                 <GraduationCap className="w-4 h-4 text-accent-amber" />
-                My Classes
+                Classrooms
               </Link>
             </>
           ) : (
@@ -195,6 +197,7 @@ export const Navbar: React.FC = () => {
           </Link>
         </div>
 
+<<<<<<< HEAD
         {/* User Auth Action Buttons & Theme Switcher */}
         <div className="hidden lg:flex items-center gap-3">
           {/* CodeVault AI Global Button */}
@@ -204,6 +207,17 @@ export const Navbar: React.FC = () => {
             title="Open CodeVault AI Chat"
           >
             <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+=======
+        {/* User Auth Action Buttons & Theme Switcher & AI Button */}
+        <div className="hidden lg:flex items-center gap-2.5">
+          {/* AI Chat Button */}
+          <button
+            onClick={toggleChat}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600/90 to-teal-600/90 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 border border-emerald-400/30 transition-all hover:scale-105 active:scale-95"
+            title="Open CodeVault AI Chat"
+          >
+            <Zap className="w-3.5 h-3.5 fill-current" />
+>>>>>>> 611aab4dcee9a9d5de9509ea61c5ad984c6d2c4f
             <span>CodeVault AI</span>
           </button>
 
@@ -293,6 +307,20 @@ export const Navbar: React.FC = () => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden mt-3 pt-3 border-t border-slate-200 dark:border-dark-800 space-y-2 animate-slide-up">
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              toggleChat();
+            }}
+            className="w-full px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600/90 to-teal-600/90 text-white font-bold text-sm flex items-center justify-between shadow-md shadow-emerald-500/20"
+          >
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 fill-current" />
+              <span>CodeVault AI Chat</span>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20">Ask AI</span>
+          </button>
+
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}

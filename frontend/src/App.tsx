@@ -5,7 +5,12 @@ import { OfflineProvider } from './context/OfflineContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AIChatProvider } from './context/AIChatContext';
 import { Navbar } from './components/Navbar';
+<<<<<<< HEAD
 import { CodeVaultAIChat } from './components/CodeVaultAIChat';
+=======
+import { AIChatDrawer } from './components/AIChatDrawer';
+import { AIChatFloatingButton } from './components/AIChatFloatingButton';
+>>>>>>> 611aab4dcee9a9d5de9509ea61c5ad984c6d2c4f
 import { HomePage } from './pages/HomePage';
 import { ProgramsPage } from './pages/ProgramsPage';
 import { ProgramDetailPage } from './pages/ProgramDetailPage';
@@ -29,7 +34,11 @@ export const App: React.FC = () => {
         <OfflineProvider>
           <AIChatProvider>
             <BrowserRouter>
+<<<<<<< HEAD
               <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-100 selection:bg-brand-500 selection:text-white transition-colors duration-200">
+=======
+              <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-100 selection:bg-brand-500 selection:text-white transition-colors duration-200 relative">
+>>>>>>> 611aab4dcee9a9d5de9509ea61c5ad984c6d2c4f
                 <Navbar />
                 
                 <main className="flex-1">
@@ -54,8 +63,14 @@ export const App: React.FC = () => {
                   </Routes>
                 </main>
 
+<<<<<<< HEAD
                 {/* Global Unified CodeVault AI Chat Trigger & Drawer */}
                 <CodeVaultAIChat />
+=======
+                {/* Global AI Chat Drawer & Floating Trigger */}
+                <AIChatDrawer />
+                <AIChatFloatingButton />
+>>>>>>> 611aab4dcee9a9d5de9509ea61c5ad984c6d2c4f
 
                 {/* Footer */}
                 <footer className="border-t border-slate-200 dark:border-dark-800/80 bg-white/70 dark:bg-dark-900/60 py-6 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-sm transition-colors duration-200">

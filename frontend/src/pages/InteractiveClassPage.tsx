@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   Info,
+  Maximize2,
 } from 'lucide-react';
 import { getProgramBySlug } from '../learning/registry/learningPrograms';
 import {
@@ -20,12 +21,16 @@ import {
   getStepDelay,
   PresetInput,
 } from '../learning/core/types';
+import { useDeviceLayout } from '../learning/hooks/useDeviceLayout';
+import { useLearningFullscreen } from '../learning/hooks/useLearningFullscreen';
 import { CodeViewerPanel } from '../learning/components/CodeViewerPanel';
 import { OutputViewerPanel } from '../learning/components/OutputViewerPanel';
 import { VariableWatchPanel } from '../learning/components/VariableWatchPanel';
 import { StepExplanationPanel } from '../learning/components/StepExplanationPanel';
 import { PlaybackControlBar } from '../learning/components/PlaybackControlBar';
 import { PresetSelector } from '../learning/components/PresetSelector';
+import { MobileLandscapeOnboarding } from '../learning/components/MobileLandscapeOnboarding';
+import { MobileLandscapeFullscreen } from '../learning/components/MobileLandscapeFullscreen';
 
 // Visualizer Renderers
 import { ArrayVisualizer } from '../learning/renderers/ArrayVisualizer';
@@ -183,6 +188,9 @@ export const InteractiveClassPage: React.FC = () => {
     setCurrentStepIndex(0);
   };
 
+  const layout = useDeviceLayout();
+  const { isFullscreen, enterFullscreen, exitFullscreen } = useLearningFullscreen();
+
   const handlePracticeInCompiler = () => {
     // Navigate to playground with preloaded source code
     navigate('/playground', {
@@ -193,8 +201,56 @@ export const InteractiveClassPage: React.FC = () => {
     });
   };
 
+  // Dedicated Mobile Landscape / Fullscreen Learning Mode
+  if (isFullscreen || (layout.isMobile && layout.isLandscape)) {
+    return (
+      <MobileLandscapeFullscreen
+        program={program}
+        steps={steps}
+        currentStepIndex={currentStepIndex}
+        currentStep={currentStep}
+        activeLineNumber={resolvedLineNumber}
+        selectedLanguage={selectedLanguage}
+        availableLanguages={availableLanguages}
+        isPlaying={isPlaying}
+        speed={speed}
+        renderVisualizer={renderVisualizer}
+        onLanguageChange={setSelectedLanguage}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onPrevious={() => {
+          setIsPlaying(false);
+          setCurrentStepIndex((prev) => Math.max(0, prev - 1));
+        }}
+        onNext={() => {
+          setIsPlaying(false);
+          setCurrentStepIndex((prev) => Math.min(steps.length - 1, prev + 1));
+        }}
+        onRestart={() => {
+          setIsPlaying(false);
+          setCurrentStepIndex(0);
+        }}
+        onSpeedChange={setSpeed}
+        onStepChange={(idx) => {
+          setIsPlaying(false);
+          setCurrentStepIndex(idx);
+        }}
+        onExitFullscreen={exitFullscreen}
+        onPracticeInCompiler={handlePracticeInCompiler}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen py-6 px-3 sm:px-6 max-w-[1600px] mx-auto space-y-6">
+    <div className="min-h-screen py-6 px-3 sm:px-6 max-w-[1600px] mx-auto space-y-6 relative">
+      {/* Mobile Landscape Onboarding / Rotation Guidance */}
+      <MobileLandscapeOnboarding
+        isMobile={layout.isMobile}
+        isPortrait={layout.isPortrait}
+        isFullscreen={isFullscreen}
+        onEnterFullscreen={() => enterFullscreen()}
+      />
+
       {/* Top Breadcrumb & Actions Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-dark-800">
         {/* Left Title & Meta */}
@@ -222,13 +278,22 @@ export const InteractiveClassPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Complexity & Practice Button */}
+        {/* Right Complexity, Fullscreen & Practice Button */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-dark-700 text-xs font-mono text-slate-600 dark:text-dark-300">
             <span>Time: <b>{program.timeComplexity.average}</b></span>
             <span>•</span>
             <span>Space: <b>{program.spaceComplexity}</b></span>
           </div>
+
+          <button
+            onClick={() => enterFullscreen()}
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-600 dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors"
+            title="Open Fullscreen Landscape Mode"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Fullscreen</span>
+          </button>
 
           <button
             onClick={() => setShowAboutModal(!showAboutModal)}

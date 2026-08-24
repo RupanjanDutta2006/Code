@@ -168,7 +168,9 @@ export interface AnalyticsStats {
 
 export interface AIResponse {
   provider: string;
+  model?: string;
   explanation?: string;
+  response?: string;
   suggested_code?: string;
   diff_text?: string;
   disclaimer: string;
