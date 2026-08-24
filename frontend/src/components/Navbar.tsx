@@ -203,10 +203,10 @@ export const Navbar: React.FC = () => {
           <button
             onClick={toggleChat}
             className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600/90 to-teal-600/90 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 border border-emerald-400/30 transition-all hover:scale-105 active:scale-95"
-            title="Open NVIDIA Nemotron AI Chat"
+            title="Open CodeVault AI Chat"
           >
             <Zap className="w-3.5 h-3.5 fill-current" />
-            <span>Nemotron AI</span>
+            <span>CodeVault AI</span>
           </button>
 
           {/* Theme Toggle Button */}
@@ -304,7 +304,7 @@ export const Navbar: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 fill-current" />
-              <span>NVIDIA Nemotron AI Chat</span>
+              <span>CodeVault AI Chat</span>
             </div>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20">Ask AI</span>
           </button>

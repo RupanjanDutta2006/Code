@@ -7,6 +7,7 @@ export interface AIChatMessage {
   content: string;
   timestamp: number;
   isStreaming?: boolean;
+  isError?: boolean;
 }
 
 export interface WorkspaceContext {
@@ -37,12 +38,12 @@ interface AIChatContextType {
   ) => void;
 }
 
-const STORAGE_KEY = 'codevault_nemotron_chat_history_v1';
+const STORAGE_KEY = 'codevault_ai_chat_history_v2';
 
 const INITIAL_GREETING: AIChatMessage = {
   id: 'greeting-1',
   role: 'assistant',
-  content: `Hello! I'm **NVIDIA Nemotron 3.5**, your AI Computer Science tutor and coding assistant.
+  content: `Hello! I'm **CodeVault AI**, your AI Computer Science tutor and coding assistant.
 
 I can help you:
 - 🔍 **Explain code** and break down algorithms step-by-step
@@ -72,6 +73,7 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isStreaming, setIsStreaming] = useState(false);
   const [workspaceContext, setWorkspaceContextState] = useState<WorkspaceContext>({});
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastSendTimeRef = useRef<number>(0);
 
   // Sync with LocalStorage
   useEffect(() => {
@@ -121,7 +123,7 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       {
         id: `greeting-${Date.now()}`,
         role: 'assistant',
-        content: `Started a new chat session with **NVIDIA Nemotron 3.5**! What would you like to build or debug?`,
+        content: `Started a new session with **CodeVault AI**! What coding challenge or algorithm would you like to work on?`,
         timestamp: Date.now(),
       },
     ]);
@@ -137,22 +139,27 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const sendMessage = useCallback(
     async (promptText: string, customContext?: Partial<WorkspaceContext>) => {
-      if (!promptText.trim() || isStreaming) return;
+      const now = Date.now();
+      // Debounce protection against rapid double-clicks (<400ms)
+      if (now - lastSendTimeRef.current < 400 || isStreaming) return;
+      if (!promptText.trim()) return;
+
+      lastSendTimeRef.current = now;
 
       const activeCtx = { ...workspaceContext, ...customContext };
       const userMessage: AIChatMessage = {
-        id: `user-${Date.now()}`,
+        id: `user-${now}`,
         role: 'user',
         content: promptText,
-        timestamp: Date.now(),
+        timestamp: now,
       };
 
-      const assistantMessageId = `assistant-${Date.now() + 1}`;
+      const assistantMessageId = `assistant-${now + 1}`;
       const assistantPlaceholder: AIChatMessage = {
         id: assistantMessageId,
         role: 'assistant',
         content: '',
-        timestamp: Date.now() + 1,
+        timestamp: now + 1,
         isStreaming: true,
       };
 
@@ -163,7 +170,7 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       abortControllerRef.current = controller;
 
       const historyPayload = messages
-        .filter((m) => m.role === 'user' || m.role === 'assistant')
+        .filter((m) => !m.isError && (m.role === 'user' || m.role === 'assistant'))
         .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }));
 
@@ -175,8 +182,9 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         fullPromptContext += `\n[Compiler Error / Output]:\n${activeCtx.compilerError}\n`;
       }
 
+      const streamEndpoint = `${API_BASE_URL}/api/ai/chat/stream`;
+
       try {
-        const streamEndpoint = `${API_BASE_URL}/api/ai/chat/stream`;
         const response = await fetch(streamEndpoint, {
           method: 'POST',
           headers: {
@@ -191,9 +199,37 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           signal: controller.signal,
         });
 
+        // 1. Rate Limit Error Handling
+        if (response.status === 429) {
+          const errData = await response.json().catch(() => ({}));
+          const rateMsg = errData.message || "You're sending messages too quickly. Please wait a moment and try again.";
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId
+                ? { ...msg, content: `⏳ **Rate Limit**: ${rateMsg}`, isStreaming: false, isError: true }
+                : msg
+            )
+          );
+          return;
+        }
+
+        // 2. Client Bad Request (e.g. message too large)
+        if (response.status === 400) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData.message || 'Your message or code is too large. Please shorten it.';
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId
+                ? { ...msg, content: `⚠️ ${errMsg}`, isStreaming: false, isError: true }
+                : msg
+            )
+          );
+          return;
+        }
+
+        // 3. Fallback to standard endpoint if streaming response stream is missing
         if (!response.ok || !response.body) {
-          // Fallback to standard endpoint
-          throw new Error('Streaming failed, falling back to standard endpoint');
+          throw new Error(`HTTP ${response.status}`);
         }
 
         const reader = response.body.getReader();
@@ -236,10 +272,9 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         );
       } catch (err: any) {
         if (err.name === 'AbortError') {
-          console.log('[Nemotron] Chat generation aborted by user.');
+          console.log('[CodeVault AI] Chat generation stopped by user.');
         } else {
-          console.error('[Nemotron] Streaming error, attempting standard API:', err);
-          // Standard API fallback
+          console.error('[CodeVault AI] Stream failed, attempting standard API fallback:', err);
           try {
             const fallbackRes = await fetch(`${API_BASE_URL}/api/ai/chat`, {
               method: 'POST',
@@ -250,8 +285,25 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 language: activeCtx.language || 'c',
               }),
             });
+
+            if (fallbackRes.status === 429) {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? {
+                        ...msg,
+                        content: "⏳ **Rate Limit**: You're sending messages too quickly. Please wait a moment and try again.",
+                        isStreaming: false,
+                        isError: true,
+                      }
+                    : msg
+                )
+              );
+              return;
+            }
+
             const data = await fallbackRes.json();
-            const reply = data.response || data.explanation || 'Analyzed request successfully.';
+            const reply = data.response || data.explanation || 'CodeVault AI analyzed your request.';
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === assistantMessageId
@@ -266,8 +318,9 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   ? {
                       ...msg,
                       content:
-                        '⚠️ **Unable to contact NVIDIA Nemotron.** Please verify your network connection and try again.',
+                        '⚠️ **CodeVault AI is temporarily unavailable.** Please try again in a moment.',
                       isStreaming: false,
+                      isError: true,
                     }
                   : msg
               )

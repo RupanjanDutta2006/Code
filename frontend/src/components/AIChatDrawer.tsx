@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Sparkles,
   Zap,
   Send,
   Square,
@@ -11,8 +10,6 @@ import {
   User,
   Copy,
   Check,
-  Code2,
-  AlertCircle,
   HelpCircle,
   Wrench,
   Gauge,
@@ -32,7 +29,6 @@ export const AIChatDrawer: React.FC = () => {
     abortGeneration,
     newChat,
     clearChat,
-    setWorkspaceContext,
   } = useAIChat();
 
   const [inputQuery, setInputQuery] = useState('');
@@ -89,7 +85,6 @@ export const AIChatDrawer: React.FC = () => {
 
   // Helper to render formatted markdown with code fences
   const renderMessageContent = (content: string, msgId: string) => {
-    // Split by code blocks ```lang ... ```
     const parts = content.split(/(```[\s\S]*?```)/g);
 
     return (
@@ -165,7 +160,6 @@ export const AIChatDrawer: React.FC = () => {
   };
 
   const renderInlineMarkdown = (text: string) => {
-    // Process **bold** and `code`
     const tokens = text.split(/(\*\*.*?\*\*|`.*?`)/g);
     return tokens.map((token, idx) => {
       if (token.startsWith('**') && token.endsWith('**')) {
@@ -192,12 +186,12 @@ export const AIChatDrawer: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-white text-sm">NVIDIA Nemotron AI</h2>
+              <h2 className="font-bold text-white text-sm">CodeVault AI</h2>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30">
-                Nemotron 3.5
+                Nemotron
               </span>
             </div>
-            <p className="text-[10px] text-slate-400">Deep Reasoning & Coding Assistant</p>
+            <p className="text-[10px] text-slate-400">AI Coding & Learning Assistant</p>
           </div>
         </div>
 
@@ -268,6 +262,8 @@ export const AIChatDrawer: React.FC = () => {
               className={`p-3.5 rounded-2xl max-w-[88%] shadow-md ${
                 msg.role === 'user'
                   ? 'bg-emerald-600 text-white rounded-tr-none shadow-emerald-500/20'
+                  : msg.isError
+                  ? 'bg-amber-950/50 border border-amber-500/40 text-amber-200 rounded-tl-none'
                   : 'bg-slate-950/90 border border-slate-800/90 text-slate-200 rounded-tl-none'
               }`}
             >
@@ -275,8 +271,8 @@ export const AIChatDrawer: React.FC = () => {
                 renderMessageContent(msg.content, msg.id)
               ) : (
                 <div className="flex items-center gap-2 text-emerald-400 text-xs py-1">
-                  <Sparkles className="w-4 h-4 animate-spin" />
-                  <span>Nemotron is reasoning...</span>
+                  <Zap className="w-4 h-4 animate-spin text-emerald-400" />
+                  <span>CodeVault AI is reasoning...</span>
                 </div>
               )}
             </div>
@@ -289,12 +285,12 @@ export const AIChatDrawer: React.FC = () => {
           </div>
         ))}
 
-        {/* Streaming Thinking Indicator */}
+        {/* Streaming Indicator */}
         {isStreaming && (
           <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs animate-pulse">
             <div className="flex items-center gap-2">
               <Zap className="w-3.5 h-3.5 fill-emerald-400/50 text-emerald-400" />
-              <span>Generating response via NVIDIA NIM...</span>
+              <span>Generating response...</span>
             </div>
             <button
               onClick={abortGeneration}
@@ -344,8 +340,9 @@ export const AIChatDrawer: React.FC = () => {
               e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Ask Nemotron anything... (Shift+Enter for newline)"
-            className="flex-1 bg-transparent text-white text-xs sm:text-[13px] placeholder-slate-500 outline-none resize-none max-h-28 px-1 py-0.5 leading-relaxed"
+            disabled={isStreaming}
+            placeholder="Ask CodeVault AI anything... (Shift+Enter for newline)"
+            className="flex-1 bg-transparent text-white text-xs sm:text-[13px] placeholder-slate-500 outline-none resize-none max-h-28 px-1 py-0.5 leading-relaxed disabled:opacity-50"
           />
 
           <div className="flex items-center gap-1 shrink-0">
@@ -373,7 +370,7 @@ export const AIChatDrawer: React.FC = () => {
         </div>
 
         <div className="flex items-center justify-between mt-2 px-1 text-[10px] text-slate-500">
-          <span>Powered by NVIDIA NIM (Nemotron 3.5 Lightning 30B)</span>
+          <span>Powered by NVIDIA Nemotron</span>
           <span>Press Enter ↵ to send</span>
         </div>
       </div>

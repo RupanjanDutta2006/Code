@@ -69,12 +69,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       return code;
     };
 
-    // 1. Monaco Action: Explain Selection with Nemotron
+    // 1. Monaco Action: Explain Selection with CodeVault AI
     editor.addAction({
-      id: 'nemotron-explain-code',
-      label: '🤖 Nemotron: Explain Selected Code',
+      id: 'codevault-explain-code',
+      label: '🤖 CodeVault AI: Explain Selected Code',
       keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE],
-      contextMenuGroupId: '1_nemotron',
+      contextMenuGroupId: '1_codevault',
       contextMenuOrder: 1,
       run: () => {
         const text = getSelectedOrFullCode();
@@ -82,12 +82,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       },
     });
 
-    // 2. Monaco Action: Fix / Debug with Nemotron
+    // 2. Monaco Action: Fix / Debug with CodeVault AI
     editor.addAction({
-      id: 'nemotron-fix-code',
-      label: '🛠️ Nemotron: Find & Fix Bugs in Selection',
+      id: 'codevault-fix-code',
+      label: '🛠️ CodeVault AI: Find & Fix Bugs in Selection',
       keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF],
-      contextMenuGroupId: '1_nemotron',
+      contextMenuGroupId: '1_codevault',
       contextMenuOrder: 2,
       run: () => {
         const text = getSelectedOrFullCode();
@@ -95,11 +95,11 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       },
     });
 
-    // 3. Monaco Action: Optimize with Nemotron
+    // 3. Monaco Action: Optimize with CodeVault AI
     editor.addAction({
-      id: 'nemotron-optimize-code',
-      label: '⚡ Nemotron: Optimize Selected Code',
-      contextMenuGroupId: '1_nemotron',
+      id: 'codevault-optimize-code',
+      label: '⚡ CodeVault AI: Optimize Selected Code',
+      contextMenuGroupId: '1_codevault',
       contextMenuOrder: 3,
       run: () => {
         const text = getSelectedOrFullCode();
@@ -107,11 +107,11 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       },
     });
 
-    // 4. Monaco Action: Add Comments with Nemotron
+    // 4. Monaco Action: Add Comments with CodeVault AI
     editor.addAction({
-      id: 'nemotron-comment-code',
-      label: '📝 Nemotron: Add Explanatory Comments',
-      contextMenuGroupId: '1_nemotron',
+      id: 'codevault-comment-code',
+      label: '📝 CodeVault AI: Add Explanatory Comments',
+      contextMenuGroupId: '1_codevault',
       contextMenuOrder: 4,
       run: () => {
         const text = getSelectedOrFullCode();
@@ -119,11 +119,11 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       },
     });
 
-    // 5. Monaco Action: Generate Tests with Nemotron
+    // 5. Monaco Action: Generate Tests with CodeVault AI
     editor.addAction({
-      id: 'nemotron-test-code',
-      label: '🧪 Nemotron: Generate Edge Test Cases',
-      contextMenuGroupId: '1_nemotron',
+      id: 'codevault-test-code',
+      label: '🧪 CodeVault AI: Generate Edge Test Cases',
+      contextMenuGroupId: '1_codevault',
       contextMenuOrder: 5,
       run: () => {
         const text = getSelectedOrFullCode();

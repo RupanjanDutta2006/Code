@@ -8,6 +8,12 @@ import {
   suggestFixWithNemotron,
   NVIDIA_CONFIG,
 } from './aiService';
+import {
+  getClientIdentifier,
+  checkRateLimit,
+  releaseRateLimit,
+  validateAIInput,
+} from './rateLimiter';
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -25,6 +31,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
     status: 'ok',
     engine: 'CodeVault Cloud Compiler Service (Wandbox)',
     supported_languages: SUPPORTED_LANGUAGES,
+    ai_service: 'CodeVault AI',
     ai_provider: 'nvidia',
     ai_model: NVIDIA_CONFIG.model,
     version: '2.1.0',
@@ -51,16 +58,28 @@ app.post(['/api/execute/stop', '/api/programs/execute/stop'], (req: Request, res
 });
 
 // ==========================================
-// NVIDIA NIM (Nemotron) AI Endpoints
+// CodeVault AI Endpoints (Powered by Nemotron)
 // ==========================================
+
+// AI Health Diagnostic
+app.get('/api/ai/health', (_req: Request, res: Response) => {
+  res.json({
+    service: 'CodeVault AI',
+    configured: Boolean(NVIDIA_CONFIG.apiKey),
+    provider: 'nemotron',
+    model: NVIDIA_CONFIG.model,
+    status: 'ready',
+  });
+});
 
 // AI Explain Code
 app.post('/api/ai/explain', async (req: Request, res: Response) => {
-  const { language, source_code, code } = req.body;
+  const { language, source_code, code, context } = req.body;
   const rawCode = source_code || code || '';
   const result = await explainCodeWithNemotron({
     source_code: rawCode,
     language: language || 'c',
+    context,
   });
   res.json(result);
 });
@@ -81,44 +100,103 @@ app.post('/api/ai/suggest-fix', async (req: Request, res: Response) => {
 
 // AI Interactive Chat (Standard Non-Streaming)
 app.post('/api/ai/chat', async (req: Request, res: Response) => {
-  const { messages, source_code, language, context } = req.body;
-  const result = await chatWithNemotron({
-    messages: Array.isArray(messages) ? messages : [{ role: 'user', content: String(req.body.message || '') }],
-    source_code,
-    language,
-    context,
-  });
-  res.json(result);
+  const { messages, message, source_code, language, context } = req.body;
+  const normalizedMessages = Array.isArray(messages)
+    ? messages
+    : [{ role: 'user', content: String(message || '') }];
+
+  // 1. Validate Input
+  const validation = validateAIInput(normalizedMessages, source_code);
+  if (!validation.valid) {
+    res.status(400).json({ error: validation.error, message: validation.message });
+    return;
+  }
+
+  // 2. Check Rate Limit
+  const clientId = getClientIdentifier(req);
+  const rateCheck = checkRateLimit(clientId);
+  if (!rateCheck.allowed) {
+    if (rateCheck.retryAfter) {
+      res.setHeader('Retry-After', String(rateCheck.retryAfter));
+    }
+    res.status(rateCheck.statusCode || 429).json({
+      error: rateCheck.error,
+      message: rateCheck.message,
+      retryAfter: rateCheck.retryAfter,
+    });
+    return;
+  }
+
+  try {
+    const result = await chatWithNemotron({
+      messages: normalizedMessages,
+      source_code,
+      language,
+      context,
+    });
+    res.json(result);
+  } finally {
+    releaseRateLimit(clientId);
+  }
 });
 
 // AI Interactive Chat (Real-Time SSE Streaming)
 app.post('/api/ai/chat/stream', async (req: Request, res: Response) => {
-  const { messages, source_code, language, context } = req.body;
+  const { messages, message, source_code, language, context } = req.body;
+  const normalizedMessages = Array.isArray(messages)
+    ? messages
+    : [{ role: 'user', content: String(message || '') }];
+
+  // 1. Validate Input
+  const validation = validateAIInput(normalizedMessages, source_code);
+  if (!validation.valid) {
+    res.status(400).json({ error: validation.error, message: validation.message });
+    return;
+  }
+
+  // 2. Check Rate Limit
+  const clientId = getClientIdentifier(req);
+  const rateCheck = checkRateLimit(clientId);
+  if (!rateCheck.allowed) {
+    if (rateCheck.retryAfter) {
+      res.setHeader('Retry-After', String(rateCheck.retryAfter));
+    }
+    res.status(rateCheck.statusCode || 429).json({
+      error: rateCheck.error,
+      message: rateCheck.message,
+      retryAfter: rateCheck.retryAfter,
+    });
+    return;
+  }
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders?.();
 
-  await streamChatWithNemotron(
-    {
-      messages: Array.isArray(messages) ? messages : [{ role: 'user', content: String(req.body.message || '') }],
-      source_code,
-      language,
-      context,
-    },
-    (token: string) => {
-      res.write(`data: ${JSON.stringify({ token })}\n\n`);
-    },
-    () => {
-      res.write('data: [DONE]\n\n');
-      res.end();
-    },
-    (err: any) => {
-      res.write(`data: ${JSON.stringify({ error: err.message || 'Stream error' })}\n\n`);
-      res.end();
-    }
-  );
+  try {
+    await streamChatWithNemotron(
+      {
+        messages: normalizedMessages,
+        source_code,
+        language,
+        context,
+      },
+      (token: string) => {
+        res.write(`data: ${JSON.stringify({ token })}\n\n`);
+      },
+      () => {
+        res.write('data: [DONE]\n\n');
+        res.end();
+      },
+      (err: any) => {
+        res.write(`data: ${JSON.stringify({ error: err.message || 'Stream error' })}\n\n`);
+        res.end();
+      }
+    );
+  } finally {
+    releaseRateLimit(clientId);
+  }
 });
 
 // AI Config Info

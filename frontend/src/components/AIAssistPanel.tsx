@@ -48,7 +48,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     {
       id: 'init-1',
       role: 'assistant',
-      content: `Hello! I'm **Nemotron**, your AI Computer Science tutor. Ask me anything about your ${language ? language.toUpperCase() : 'C'} code, Big-O complexity, test cases, or debugging!`,
+      content: `Hello! I'm **CodeVault AI**, your AI Computer Science tutor. Ask me anything about your ${language ? language.toUpperCase() : 'C'} code, Big-O complexity, test cases, or debugging!`,
     },
   ]);
   const [inputQuery, setInputQuery] = useState('');
@@ -179,13 +179,13 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           </div>
           <div>
             <span className="font-bold text-white text-sm flex items-center gap-2">
-              <span>NVIDIA Nemotron AI Tutor</span>
+              <span>CodeVault AI Tutor</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30">
-                NVIDIA NIM • Nemotron 3.5
+                Nemotron Powered
               </span>
             </span>
             <span className="text-xs text-slate-400 dark:text-dark-400 block">
-              Ask questions, get line-by-line explanations, and debug errors with NVIDIA reasoning AI.
+              Ask questions, get line-by-line explanations, and debug errors with AI reasoning.
             </span>
           </div>
         </div>
