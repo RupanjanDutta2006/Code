@@ -22,6 +22,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useOffline } from '../context/OfflineContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAIChat } from '../context/AIChatContext';
 
 export const Navbar: React.FC = () => {
   const { user, logout, isTeacher, isCreator } = useAuth();
@@ -30,6 +31,8 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const { toggleChat } = useAIChat();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -194,6 +197,16 @@ export const Navbar: React.FC = () => {
 
         {/* User Auth Action Buttons & Theme Switcher */}
         <div className="hidden lg:flex items-center gap-3">
+          {/* CodeVault AI Global Button */}
+          <button
+            onClick={toggleChat}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600/15 to-indigo-600/15 hover:from-brand-600/25 hover:to-indigo-600/25 text-brand-600 dark:text-brand-300 border border-brand-500/30 flex items-center gap-1.5 text-xs font-semibold shadow-sm transition-all hover:scale-105"
+            title="Open CodeVault AI Chat"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+            <span>CodeVault AI</span>
+          </button>
+
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}

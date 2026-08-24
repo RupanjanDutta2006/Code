@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Sparkles, HelpCircle, Wrench, AlertTriangle, ChevronDown, ChevronUp, Loader2, Copy, Check } from 'lucide-react';
+import { Sparkles, HelpCircle, Wrench, AlertTriangle, ChevronDown, ChevronUp, Loader2, Copy, Check, MessageSquare } from 'lucide-react';
 import { api, AIResponse } from '../services/api';
 import { DiffViewer } from './DiffViewer';
+import { useAIChat } from '../context/AIChatContext';
 
 interface AIAssistPanelProps {
   sourceCode: string;
@@ -22,6 +23,18 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const { setIsOpen: setChatOpen, sendMessage, setActiveAttachment } = useAIChat();
+
+  const handleOpenFullChat = () => {
+    setActiveAttachment({
+      type: 'code',
+      title: `${language.toUpperCase()} Program`,
+      content: sourceCode,
+      language,
+    });
+    setChatOpen(true);
+  };
+
   const handleExplain = async () => {
     setLoading(true);
     setActiveAction('explain');
@@ -32,10 +45,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       });
       setResponse(res.data);
     } catch (err) {
-      // Intelligent local explanation fallback
       setResponse({
         provider: 'CodeVault Assistant (Built-in)',
-        explanation: `### Code Analysis for ${language.toUpperCase()}\n\n1. **Structure**: Contains ${sourceCode.split('\n').length} lines of code.\n2. **Execution**: Uses standard ${language} library syntax.\n3. **Logic Flow**: Clean entry-point with direct I/O processing.\n4. **Optimization Tip**: Make sure input conditions are validated and memory is handled efficiently.`,
+        explanation: `### Code Analysis for ${language.toUpperCase()}\n\n1. **Structure**: Contains ${sourceCode.split('\n').length} lines of code.\n2. **Execution**: Uses standard ${language} syntax.\n3. **Logic Flow**: Direct I/O and processing pipeline.\n4. **Tip**: Validate all loop bounds and verify handling of empty/edge inputs.`,
         disclaimer: 'AI-generated code analysis is provided for educational assistance. Always verify the code logic independently.',
       });
     } finally {
@@ -56,7 +68,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     } catch (err) {
       setResponse({
         provider: 'CodeVault Assistant (Built-in)',
-        explanation: `### Fix Recommendation\n\n${lastError ? `**Detected Issue**: \`${lastError}\`\n\n` : ''}**Suggestions**:\n- Check that all variables and functions are declared before usage.\n- Ensure all required inputs (STDIN) are provided.\n- Confirm matching parentheses, brackets, and semicolons if applicable.`,
+        explanation: `### Fix Recommendation\n\n${lastError ? `**Detected Issue**: \`${lastError}\`\n\n` : ''}**Suggestions**:\n- Check that all variables and functions are declared before usage.\n- Ensure required inputs (STDIN) are provided.\n- Confirm matching parentheses, brackets, and semicolons if applicable.`,
         suggested_code: sourceCode,
         disclaimer: 'AI fix suggestion is advisory only. Ensure tests pass before submitting.',
       });
@@ -86,9 +98,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           </div>
           <div>
             <span className="font-semibold text-white text-sm flex items-center gap-2">
-              Ask for Help (AI)
+              Ask for Help (CodeVault AI)
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-medium border border-indigo-500/30">
-                Opt-in Helper
+                Hybrid AI
               </span>
             </span>
             <span className="text-xs text-dark-400 block">
@@ -106,31 +118,41 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       {isOpen && (
         <div className="p-5 border-t border-dark-700/80 space-y-4 animate-slide-up">
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2.5">
-            <button
-              onClick={handleExplain}
-              disabled={loading}
-              className={`px-3.5 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-2 ${
-                activeAction === 'explain'
-                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-500/20'
-                  : 'bg-dark-800 text-dark-200 border-dark-700 hover:bg-dark-750 hover:text-white'
-              } disabled:opacity-50`}
-            >
-              <HelpCircle className="w-4 h-4 text-indigo-400" />
-              Explain this code
-            </button>
+          <div className="flex flex-wrap gap-2.5 items-center justify-between">
+            <div className="flex flex-wrap gap-2.5">
+              <button
+                onClick={handleExplain}
+                disabled={loading}
+                className={`px-3.5 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-2 ${
+                  activeAction === 'explain'
+                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-500/20'
+                    : 'bg-dark-800 text-dark-200 border-dark-700 hover:bg-dark-750 hover:text-white'
+                } disabled:opacity-50`}
+              >
+                <HelpCircle className="w-4 h-4 text-indigo-400" />
+                Explain this code
+              </button>
+
+              <button
+                onClick={handleSuggestFix}
+                disabled={loading}
+                className={`px-3.5 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-2 ${
+                  activeAction === 'fix'
+                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-500/20'
+                    : 'bg-dark-800 text-dark-200 border-dark-700 hover:bg-dark-750 hover:text-white'
+                } disabled:opacity-50`}
+              >
+                <Wrench className="w-4 h-4 text-accent-amber" />
+                Why did my code fail / Suggest a fix
+              </button>
+            </div>
 
             <button
-              onClick={handleSuggestFix}
-              disabled={loading}
-              className={`px-3.5 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-2 ${
-                activeAction === 'fix'
-                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-500/20'
-                  : 'bg-dark-800 text-dark-200 border-dark-700 hover:bg-dark-750 hover:text-white'
-              } disabled:opacity-50`}
+              onClick={handleOpenFullChat}
+              className="px-3.5 py-2 rounded-xl text-xs font-medium bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-md shadow-brand-500/20 flex items-center gap-2 transition-all"
             >
-              <Wrench className="w-4 h-4 text-accent-amber" />
-              Why did my code fail / Suggest a fix
+              <MessageSquare className="w-4 h-4" />
+              Chat in CodeVault AI
             </button>
           </div>
 
