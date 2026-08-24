@@ -1,28 +1,108 @@
 import os
 import httpx
-from typing import Dict, Any, Optional
-from backend.config import GEMINI_API_KEY, OPENAI_API_KEY, AI_PROVIDER
+from typing import Dict, Any, Optional, List
+from backend.config import (
+    NVIDIA_API_KEY,
+    NVIDIA_BASE_URL,
+    NVIDIA_MODEL,
+    NVIDIA_TEMPERATURE,
+    NVIDIA_TOP_P,
+    NVIDIA_MAX_TOKENS,
+    GEMINI_API_KEY,
+    OPENAI_API_KEY,
+    AI_PROVIDER,
+)
 from backend.services.diff_service import generate_unified_diff
 
 class AIService:
+    @staticmethod
+    async def chat(messages: List[Dict[str, str]], context: Optional[str] = None) -> Dict[str, Any]:
+        """Interactive multi-turn chat with Nemotron AI."""
+        if NVIDIA_API_KEY:
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    resp = await client.post(
+                        f"{NVIDIA_BASE_URL}/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {NVIDIA_API_KEY}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": NVIDIA_MODEL,
+                            "messages": messages,
+                            "temperature": NVIDIA_TEMPERATURE,
+                            "top_p": NVIDIA_TOP_P,
+                            "max_tokens": NVIDIA_MAX_TOKENS,
+                        },
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        reply = data["choices"][0]["message"]["content"]
+                        return {
+                            "provider": "NVIDIA NIM (Nemotron)",
+                            "model": NVIDIA_MODEL,
+                            "response": reply,
+                            "disclaimer": "AI-generated content. Always verify before relying on it.",
+                        }
+            except Exception as e:
+                print(f"[NVIDIA NIM Chat Error]: {e}")
+
+        return {
+            "provider": "CodeVault Assistant (Built-in)",
+            "model": "local-fallback",
+            "response": "I am ready to help you with code explanations, complexity analysis, and debugging.",
+            "disclaimer": "Advisory analysis only.",
+        }
+
     @staticmethod
     async def explain_code(source_code: str, language: str, context: Optional[str] = None) -> Dict[str, Any]:
         """Explains the purpose, algorithm, and time/space complexity of the provided code."""
         prompt = (
             f"You are a friendly, encouraging Computer Science tutor for high school and university students.\n"
             f"Explain the following {language} code in simple, clear terms.\n"
-            f"Include:\n1. Summary / Purpose\n2. Key Logic Breakdown\n3. Time & Space Complexity (if applicable)\n4. Beginner Tip.\n\n"
+            f"Include:\n1. 🎯 Purpose & High-Level Summary\n2. 🔍 Key Logic Breakdown\n3. ⚡ Time & Space Complexity (Big-O)\n4. 💡 Beginner Tip & Pitfalls.\n\n"
             f"Code:\n```{language}\n{source_code}\n```"
         )
-        
-        # Check Gemini API Key
+
+        # 1. Check NVIDIA NIM (Nemotron)
+        if NVIDIA_API_KEY:
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    resp = await client.post(
+                        f"{NVIDIA_BASE_URL}/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {NVIDIA_API_KEY}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": NVIDIA_MODEL,
+                            "messages": [
+                                {"role": "system", "content": "You are Nemotron, an expert Computer Science tutor for CodeVault Pro."},
+                                {"role": "user", "content": prompt},
+                            ],
+                            "temperature": NVIDIA_TEMPERATURE,
+                            "top_p": NVIDIA_TOP_P,
+                            "max_tokens": NVIDIA_MAX_TOKENS,
+                        },
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        explanation = data["choices"][0]["message"]["content"]
+                        return {
+                            "provider": "NVIDIA NIM (Nemotron)",
+                            "model": NVIDIA_MODEL,
+                            "explanation": explanation,
+                            "disclaimer": "AI-generated code explanation. Always verify logic independently.",
+                        }
+            except Exception as e:
+                print(f"[NVIDIA NIM API Error]: {e}")
+
+        # 2. Check Gemini API Key
         if GEMINI_API_KEY:
             try:
                 async with httpx.AsyncClient(timeout=15.0) as client:
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-                    payload = {
-                        "contents": [{"parts": [{"text": prompt}]}]
-                    }
+                    payload = {"contents": [{"parts": [{"text": prompt}]}]}
                     resp = await client.post(url, json=payload)
                     if resp.status_code == 200:
                         data = resp.json()
@@ -30,12 +110,12 @@ class AIService:
                         return {
                             "provider": "Google Gemini",
                             "explanation": explanation,
-                            "disclaimer": "AI-generated content. May be inaccurate. Always verify before relying on it."
+                            "disclaimer": "AI-generated content. May be inaccurate. Always verify before relying on it.",
                         }
             except Exception as e:
                 print(f"Gemini API error: {e}")
 
-        # Check OpenAI Key
+        # 3. Check OpenAI Key
         if OPENAI_API_KEY:
             try:
                 async with httpx.AsyncClient(timeout=15.0) as client:
@@ -46,9 +126,9 @@ class AIService:
                             "model": "gpt-4o-mini",
                             "messages": [
                                 {"role": "system", "content": "You are a helpful student coding tutor."},
-                                {"role": "user", "content": prompt}
-                            ]
-                        }
+                                {"role": "user", "content": prompt},
+                            ],
+                        },
                     )
                     if resp.status_code == 200:
                         data = resp.json()
@@ -56,16 +136,16 @@ class AIService:
                         return {
                             "provider": "OpenAI",
                             "explanation": explanation,
-                            "disclaimer": "AI-generated content. May be inaccurate. Always verify before relying on it."
+                            "disclaimer": "AI-generated content. May be inaccurate. Always verify before relying on it.",
                         }
             except Exception as e:
                 print(f"OpenAI API error: {e}")
 
-        # Intelligent Fallback Explanation Engine
+        # Fallback Explanation Engine
         lines = source_code.strip().splitlines()
         line_count = len(lines)
         lang_upper = language.upper()
-        
+
         explanation = (
             f"### 📘 Code Explanation ({lang_upper})\n\n"
             f"**Overview:**\n"
@@ -74,12 +154,12 @@ class AIService:
             f"- Contains structured execution logic and data input/output handling.\n"
             f"- Processes program flow with sequential and conditional statements.\n\n"
             f"**Beginner Tip:**\n"
-            f"To test this code effectively, try running it with both standard and edge-case inputs in the Playground or Practice & Check panel!"
+            f"To test this code effectively, try running it with both standard and edge-case inputs in the Playground!"
         )
         return {
             "provider": "CodeVault Assistant (Built-in)",
             "explanation": explanation,
-            "disclaimer": "AI-generated content. May be inaccurate. Always verify before relying on it."
+            "disclaimer": "Advisory analysis only.",
         }
 
     @staticmethod
@@ -89,7 +169,7 @@ class AIService:
         error_message: Optional[str] = None,
         input_data: Optional[str] = None,
         expected_output: Optional[str] = None,
-        actual_output: Optional[str] = None
+        actual_output: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Suggests a targeted fix for failing code or runtime errors, returning a diff."""
         prompt = (
@@ -99,51 +179,57 @@ class AIService:
             f"Input: {input_data or 'N/A'}\n"
             f"Expected Output: {expected_output or 'N/A'}\n"
             f"Actual Output: {actual_output or 'N/A'}\n\n"
-            f"Source Code:\n```{language}\n{source_code}\n```\n\n"
-            f"Respond with:\n"
-            f"1. Explanation of why the bug occurred\n"
-            f"2. Exact corrected code inside a ```{language} code block."
+            f"Code:\n```{language}\n{source_code}\n```\n\n"
+            f"Provide:\n1. Root Cause\n2. Suggested Fix Description\n3. Full Corrected Code inside a ```{language} codeblock."
         )
 
-        if GEMINI_API_KEY:
+        if NVIDIA_API_KEY:
             try:
-                async with httpx.AsyncClient(timeout=15.0) as client:
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-                    resp = await client.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    resp = await client.post(
+                        f"{NVIDIA_BASE_URL}/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {NVIDIA_API_KEY}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": NVIDIA_MODEL,
+                            "messages": [
+                                {"role": "system", "content": "You are Nemotron, an expert debugging assistant for CodeVault Pro."},
+                                {"role": "user", "content": prompt},
+                            ],
+                            "temperature": NVIDIA_TEMPERATURE,
+                            "top_p": NVIDIA_TOP_P,
+                            "max_tokens": NVIDIA_MAX_TOKENS,
+                        },
+                    )
                     if resp.status_code == 200:
                         data = resp.json()
-                        text = data["candidates"][0]["content"]["parts"][0]["text"]
-                        
-                        # Extract suggested code if present
-                        suggested_code = source_code
-                        if f"```{language}" in text:
-                            code_part = text.split(f"```{language}")[1].split("```")[0].strip()
-                            suggested_code = code_part
-                        elif "```" in text:
-                            code_part = text.split("```")[1].split("```")[0].strip()
-                            suggested_code = code_part
+                        explanation = data["choices"][0]["message"]["content"]
+                        extracted_code = source_code
+                        import re
+                        match = re.search(rf"```{language}?\s*([\s\S]*?)```", explanation, re.IGNORECASE)
+                        if match:
+                            extracted_code = match.group(1).strip()
 
-                        diff_text = generate_unified_diff(source_code, suggested_code, "Original Code", "Suggested Fix")
+                        diff_patch = generate_unified_diff(source_code, extracted_code, filename=f"solution.{language}")
+
                         return {
-                            "provider": "Google Gemini",
-                            "explanation": text,
-                            "suggested_code": suggested_code,
-                            "diff_text": diff_text,
-                            "disclaimer": "AI-generated content. May be inaccurate. Always verify before relying on it."
+                            "provider": "NVIDIA NIM (Nemotron)",
+                            "model": NVIDIA_MODEL,
+                            "explanation": explanation,
+                            "suggested_code": extracted_code,
+                            "diff": diff_patch,
+                            "disclaimer": "AI-generated fixes are advisory. Verify test execution before accepting.",
                         }
             except Exception as e:
-                print(f"Gemini error: {e}")
+                print(f"[NVIDIA NIM Fix Error]: {e}")
 
-        # Fallback fix suggestion
-        explanation = (
-            f"### 🛠️ Debug Analysis\n\n"
-            f"- **Observed Error/Mismatch**: `{error_message or 'Check failed against expected answer'}`\n"
-            f"- **Recommendation**: Verify variable types, boundary conditions (such as 0-indexing vs 1-indexing), and ensure all edge cases (empty input, single element, negative numbers) are handled."
-        )
+        # Fallback fix advice
         return {
             "provider": "CodeVault Assistant (Built-in)",
-            "explanation": explanation,
+            "model": "local-fallback",
+            "explanation": f"### Fix Suggestions\n\n- Check variable declarations and scope.\n- Verify syntax and matching braces.\n- Ensure required inputs (STDIN) are provided.",
             "suggested_code": source_code,
-            "diff_text": generate_unified_diff(source_code, source_code, "Original Code", "Suggested Fix"),
-            "disclaimer": "AI-generated content. May be inaccurate. Always verify before relying on it."
+            "disclaimer": "Advisory analysis only.",
         }

@@ -1,0 +1,228 @@
+/**
+ * CodeVault Pro - NVIDIA NIM (Nemotron) AI Service
+ */
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface AIExplainRequest {
+  source_code: string;
+  language: string;
+  context?: string;
+}
+
+export interface AISuggestFixRequest {
+  source_code: string;
+  language: string;
+  error_message?: string;
+  input_data?: string;
+  expected_output?: string;
+}
+
+export interface AIChatRequest {
+  messages: ChatMessage[];
+  source_code?: string;
+  language?: string;
+  context?: string;
+}
+
+export const NVIDIA_CONFIG = {
+  apiKey:
+    process.env.NVIDIA_API_KEY ||
+    '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',
+  baseURL:
+    process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1',
+  model:
+    process.env.NVIDIA_MODEL || 'nvidia/nemotron-3.5-lightning-30b-a3b',
+  reasoningBudget: Number(process.env.NVIDIA_REASONING_BUDGET || 16384),
+  enableThinking: process.env.NVIDIA_ENABLE_THINKING !== 'false',
+  temperature: Number(process.env.NVIDIA_TEMPERATURE || 0.7),
+  topP: Number(process.env.NVIDIA_TOP_P || 0.95),
+  maxTokens: Number(process.env.NVIDIA_MAX_TOKENS || 16384),
+};
+
+async function callNvidiaNim(messages: ChatMessage[], maxTokensOverride?: number): Promise<string> {
+  const apiKey = NVIDIA_CONFIG.apiKey;
+  const baseURL = NVIDIA_CONFIG.baseURL;
+  const model = NVIDIA_CONFIG.model;
+
+  const payload = {
+    model,
+    messages,
+    temperature: NVIDIA_CONFIG.temperature,
+    top_p: NVIDIA_CONFIG.topP,
+    max_tokens: maxTokensOverride || NVIDIA_CONFIG.maxTokens,
+  };
+
+  const res = await fetch(`${baseURL}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`NVIDIA NIM API Error (${res.status}): ${errorText}`);
+  }
+
+  const data: any = await res.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  return text;
+}
+
+/**
+ * 1. Interactive Chat with Nemotron
+ */
+export async function chatWithNemotron(req: AIChatRequest): Promise<{
+  provider: string;
+  model: string;
+  response: string;
+  disclaimer: string;
+}> {
+  const systemPrompt = `You are Nemotron, an expert AI Computer Science tutor and coding assistant for CodeVault Pro.
+You help high-school, undergraduate, and competitive programming students understand concepts, debug errors, and write clean, optimal code.
+Provide friendly, clear, structured responses with markdown formatting.
+When providing code snippets, always specify the language markdown fence.`;
+
+  const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt }];
+
+  if (req.source_code) {
+    messages.push({
+      role: 'system',
+      content: `Current Workspace Code (${req.language || 'c'}):\n\`\`\`${req.language || 'c'}\n${req.source_code}\n\`\`\``,
+    });
+  }
+
+  messages.push(...req.messages);
+
+  try {
+    const content = await callNvidiaNim(messages);
+    return {
+      provider: 'NVIDIA NIM (Nemotron)',
+      model: NVIDIA_CONFIG.model,
+      response: content,
+      disclaimer: 'AI-generated guidance. Always test code before submitting.',
+    };
+  } catch (err: any) {
+    console.error('[NVIDIA NIM Chat Error]:', err.message);
+    return {
+      provider: 'CodeVault Assistant (Offline Fallback)',
+      model: 'local-fallback',
+      response: `I am currently operating in offline mode. Please verify your NVIDIA API key and network connection.`,
+      disclaimer: 'Advisory analysis only.',
+    };
+  }
+}
+
+/**
+ * 2. Explain Code with Nemotron
+ */
+export async function explainCodeWithNemotron(req: AIExplainRequest): Promise<{
+  provider: string;
+  model: string;
+  explanation: string;
+  disclaimer: string;
+}> {
+  const prompt = `You are a friendly, encouraging Computer Science tutor for students.
+Explain the following ${req.language} code in clear, simple terms.
+
+Structure your response into:
+1. 🎯 **Purpose & High-Level Summary**
+2. 🔍 **Line-by-Line / Logical Breakdown**
+3. ⚡ **Time & Space Complexity** (Big-O analysis)
+4. 💡 **Beginner Tip & Common Pitfalls**
+
+Code:
+\`\`\`${req.language}
+${req.source_code}
+\`\`\``;
+
+  const messages: ChatMessage[] = [
+    { role: 'system', content: 'You are Nemotron, an expert Computer Science tutor for CodeVault Pro.' },
+    { role: 'user', content: prompt },
+  ];
+
+  try {
+    const content = await callNvidiaNim(messages);
+    return {
+      provider: 'NVIDIA NIM (Nemotron)',
+      model: NVIDIA_CONFIG.model,
+      explanation: content,
+      disclaimer: 'AI-generated code explanation. Always verify logic independently.',
+    };
+  } catch (err: any) {
+    console.error('[NVIDIA NIM Explain Error]:', err.message);
+    const lines = req.source_code ? req.source_code.split('\n').length : 0;
+    return {
+      provider: 'CodeVault Assistant (Built-in)',
+      model: 'local-fallback',
+      explanation: `### 📘 Code Analysis for ${req.language.toUpperCase()}\n\n- **Length**: ${lines} lines.\n- **Language**: ${req.language}\n- **Ready**: Code is structured and ready for cloud sandbox execution.`,
+      disclaimer: 'Advisory analysis only.',
+    };
+  }
+}
+
+/**
+ * 3. Suggest Fix with Nemotron
+ */
+export async function suggestFixWithNemotron(req: AISuggestFixRequest): Promise<{
+  provider: string;
+  model: string;
+  explanation: string;
+  suggested_code?: string;
+  disclaimer: string;
+}> {
+  const prompt = `You are a debugging assistant for students.
+Analyze this ${req.language} code and the failure information:
+- Error / Failure: ${req.error_message || 'Compilation or runtime error'}
+- Input Data: ${req.input_data || 'Standard input'}
+- Expected Output: ${req.expected_output || 'Correct execution'}
+
+Provide:
+1. ⚠️ **Root Cause**: What caused the bug?
+2. 🛠️ **How to Fix**: Exact changes needed.
+3. 💻 **Corrected Full Code**: Provide the complete corrected program in a fenced code block (\`\`\`${req.language}).
+
+Code:
+\`\`\`${req.language}
+${req.source_code}
+\`\`\``;
+
+  const messages: ChatMessage[] = [
+    { role: 'system', content: 'You are Nemotron, an expert debugging assistant for CodeVault Pro.' },
+    { role: 'user', content: prompt },
+  ];
+
+  try {
+    const content = await callNvidiaNim(messages);
+
+    // Extract code fence if present
+    let extractedCode = req.source_code;
+    const match = content.match(/```(?:[a-zA-Z+]+)?\n([\s\S]*?)```/);
+    if (match && match[1]) {
+      extractedCode = match[1].trim();
+    }
+
+    return {
+      provider: 'NVIDIA NIM (Nemotron)',
+      model: NVIDIA_CONFIG.model,
+      explanation: content,
+      suggested_code: extractedCode,
+      disclaimer: 'AI-suggested fixes are advisory. Test thoroughly before submitting.',
+    };
+  } catch (err: any) {
+    console.error('[NVIDIA NIM Fix Error]:', err.message);
+    return {
+      provider: 'CodeVault Assistant (Built-in)',
+      model: 'local-fallback',
+      explanation: `### Fix Suggestions\n\n${req.error_message ? `**Detected Issue**: \`${req.error_message}\`\n\n` : ''}- Check variable declarations and scope.\n- Verify syntax and matching braces.\n- Ensure required inputs (STDIN) are provided.`,
+      suggested_code: req.source_code,
+      disclaimer: 'Advisory analysis only.',
+    };
+  }
+}

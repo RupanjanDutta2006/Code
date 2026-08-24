@@ -22,7 +22,15 @@ EXECUTION_MAX_OUTPUT_BYTES = int(os.getenv("EXECUTION_MAX_OUTPUT_BYTES", "104857
 EXECUTION_MAX_MEMORY_MB = int(os.getenv("EXECUTION_MAX_MEMORY_MB", "256"))
 
 # AI Assist
-AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini")
+AI_PROVIDER = os.getenv("AI_PROVIDER", "nvidia")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "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")
+NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
+NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b")
+NVIDIA_REASONING_BUDGET = int(os.getenv("NVIDIA_REASONING_BUDGET", "16384"))
+NVIDIA_ENABLE_THINKING = os.getenv("NVIDIA_ENABLE_THINKING", "true").lower() == "true"
+NVIDIA_TEMPERATURE = float(os.getenv("NVIDIA_TEMPERATURE", "0.7"))
+NVIDIA_TOP_P = float(os.getenv("NVIDIA_TOP_P", "0.95"))
+NVIDIA_MAX_TOKENS = int(os.getenv("NVIDIA_MAX_TOKENS", "16384"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
