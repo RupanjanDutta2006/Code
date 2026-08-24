@@ -17,11 +17,14 @@ import {
   Sparkles,
   Users,
   Sun,
-  Moon
+  Moon,
+  Zap,
+  Bot
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useOffline } from '../context/OfflineContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAIChat } from '../context/AIChatContext';
 
 export const Navbar: React.FC = () => {
   const { user, logout, isTeacher, isCreator } = useAuth();
@@ -30,6 +33,8 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const { toggleChat } = useAIChat();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -103,7 +108,7 @@ export const Navbar: React.FC = () => {
                     : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
                 }`}
               >
-                <PlusCircle className="w-4 h-4 text-accent-emerald" />
+                <PlusCircle className="w-4 h-4 text-emerald-500 dark:text-accent-emerald" />
                 New Program
               </Link>
               <Link
@@ -115,7 +120,7 @@ export const Navbar: React.FC = () => {
                 }`}
               >
                 <GraduationCap className="w-4 h-4 text-accent-amber" />
-                My Classes
+                Classrooms
               </Link>
             </>
           ) : (
@@ -192,8 +197,18 @@ export const Navbar: React.FC = () => {
           </Link>
         </div>
 
-        {/* User Auth Action Buttons & Theme Switcher */}
-        <div className="hidden lg:flex items-center gap-3">
+        {/* User Auth Action Buttons & Theme Switcher & AI Button */}
+        <div className="hidden lg:flex items-center gap-2.5">
+          {/* AI Chat Button */}
+          <button
+            onClick={toggleChat}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600/90 to-teal-600/90 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 border border-emerald-400/30 transition-all hover:scale-105 active:scale-95"
+            title="Open NVIDIA Nemotron AI Chat"
+          >
+            <Zap className="w-3.5 h-3.5 fill-current" />
+            <span>Nemotron AI</span>
+          </button>
+
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
@@ -280,6 +295,20 @@ export const Navbar: React.FC = () => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden mt-3 pt-3 border-t border-slate-200 dark:border-dark-800 space-y-2 animate-slide-up">
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              toggleChat();
+            }}
+            className="w-full px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600/90 to-teal-600/90 text-white font-bold text-sm flex items-center justify-between shadow-md shadow-emerald-500/20"
+          >
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 fill-current" />
+              <span>NVIDIA Nemotron AI Chat</span>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20">Ask AI</span>
+          </button>
+
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}

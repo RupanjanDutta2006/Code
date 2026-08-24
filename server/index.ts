@@ -3,6 +3,7 @@ import cors from 'cors';
 import { executeCode, SUPPORTED_LANGUAGES } from './compilerService';
 import {
   chatWithNemotron,
+  streamChatWithNemotron,
   explainCodeWithNemotron,
   suggestFixWithNemotron,
   NVIDIA_CONFIG,
@@ -78,7 +79,7 @@ app.post('/api/ai/suggest-fix', async (req: Request, res: Response) => {
   res.json(result);
 });
 
-// AI Interactive Chat
+// AI Interactive Chat (Standard Non-Streaming)
 app.post('/api/ai/chat', async (req: Request, res: Response) => {
   const { messages, source_code, language, context } = req.body;
   const result = await chatWithNemotron({
@@ -88,6 +89,36 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
     context,
   });
   res.json(result);
+});
+
+// AI Interactive Chat (Real-Time SSE Streaming)
+app.post('/api/ai/chat/stream', async (req: Request, res: Response) => {
+  const { messages, source_code, language, context } = req.body;
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  await streamChatWithNemotron(
+    {
+      messages: Array.isArray(messages) ? messages : [{ role: 'user', content: String(req.body.message || '') }],
+      source_code,
+      language,
+      context,
+    },
+    (token: string) => {
+      res.write(`data: ${JSON.stringify({ token })}\n\n`);
+    },
+    () => {
+      res.write('data: [DONE]\n\n');
+      res.end();
+    },
+    (err: any) => {
+      res.write(`data: ${JSON.stringify({ error: err.message || 'Stream error' })}\n\n`);
+      res.end();
+    }
+  );
 });
 
 // AI Config Info

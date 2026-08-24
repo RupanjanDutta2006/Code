@@ -76,7 +76,7 @@ async function callNvidiaNim(messages: ChatMessage[], maxTokensOverride?: number
 }
 
 /**
- * 1. Interactive Chat with Nemotron
+ * 1. Interactive Chat with Nemotron (Standard Response)
  */
 export async function chatWithNemotron(req: AIChatRequest): Promise<{
   provider: string;
@@ -116,6 +116,84 @@ When providing code snippets, always specify the language markdown fence.`;
       response: `I am currently operating in offline mode. Please verify your NVIDIA API key and network connection.`,
       disclaimer: 'Advisory analysis only.',
     };
+  }
+}
+
+/**
+ * 1b. Real-Time Streaming Chat with Nemotron via Server-Sent Events (SSE)
+ */
+export async function streamChatWithNemotron(
+  req: AIChatRequest,
+  onToken: (token: string) => void,
+  onDone: () => void,
+  onError: (err: any) => void
+): Promise<void> {
+  const systemPrompt = `You are Nemotron, an expert AI Computer Science tutor and coding assistant for CodeVault Pro.
+You help high-school, undergraduate, and competitive programming students understand concepts, debug errors, and write clean, optimal code.
+Provide friendly, clear, structured responses with markdown formatting.
+When providing code snippets, always specify the language markdown fence.`;
+
+  const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt }];
+
+  if (req.source_code) {
+    messages.push({
+      role: 'system',
+      content: `Current Workspace Code (${req.language || 'c'}):\n\`\`\`${req.language || 'c'}\n${req.source_code}\n\`\`\``,
+    });
+  }
+
+  messages.push(...req.messages);
+
+  try {
+    const res = await fetch(`${NVIDIA_CONFIG.baseURL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${NVIDIA_CONFIG.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: NVIDIA_CONFIG.model,
+        messages,
+        temperature: NVIDIA_CONFIG.temperature,
+        top_p: NVIDIA_CONFIG.topP,
+        max_tokens: NVIDIA_CONFIG.maxTokens,
+        stream: true,
+      }),
+    });
+
+    if (!res.ok || !res.body) {
+      const errText = await res.text();
+      throw new Error(`NVIDIA NIM Streaming Error (${res.status}): ${errText}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let done = false;
+
+    while (!done) {
+      const { value, done: streamDone } = await reader.read();
+      done = streamDone;
+      if (value) {
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
+            try {
+              const json = JSON.parse(line.slice(6));
+              const token = json.choices?.[0]?.delta?.content || '';
+              if (token) {
+                onToken(token);
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    }
+
+    onDone();
+  } catch (err: any) {
+    console.error('[NVIDIA NIM Streaming Error]:', err.message);
+    onError(err);
   }
 }
 
