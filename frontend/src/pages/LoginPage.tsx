@@ -4,15 +4,12 @@ import {
   LogIn, 
   UserPlus, 
   Code2, 
-  GraduationCap, 
-  Sparkles, 
-  CheckCircle2, 
   Smartphone, 
   Mail, 
-  ArrowRight, 
-  ShieldCheck, 
   RotateCw,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ConfirmationResult } from '../services/firebase';
@@ -214,61 +211,63 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-10 transition-colors duration-200">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 mesh-gradient-bg">
       {/* Invisible reCAPTCHA container for Phone Auth */}
       <div id="recaptcha-container"></div>
 
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-500 to-purple-500 flex items-center justify-center text-white mx-auto shadow-xl shadow-brand-500/20">
-            <Code2 className="w-6 h-6" />
+        <div className="text-center space-y-3">
+          <div className="relative w-14 h-14 rounded-3xl bg-gradient-to-tr from-neon-blue via-brand-600 to-neon-purple flex items-center justify-center text-white mx-auto shadow-2xl shadow-brand-500/30">
+            <Code2 className="w-7 h-7" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-neon-blue to-neon-purple rounded-3xl blur-md opacity-50 -z-10" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-sans">
             {mode === 'register' 
               ? 'Create CodeVault Account' 
               : mode === 'phone' 
               ? 'Mobile SMS Authentication' 
-              : 'Welcome Back to CodeVault'}
+              : 'Welcome Back'}
           </h1>
-          <p className="text-xs text-slate-500 dark:text-dark-300 max-w-sm mx-auto">
+          <p className="text-xs text-dark-300 max-w-sm mx-auto leading-relaxed">
             {mode === 'register'
               ? 'Sign up to practice, compile in 11+ languages, and manage classrooms.'
               : mode === 'phone'
               ? 'Fast and secure login using your mobile number and one-time SMS code.'
-              : 'Sign in with Google, GitHub, Phone SMS, or your username.'}
+              : 'Sign in with Google, GitHub, Phone SMS, or your credentials.'}
           </p>
         </div>
 
         {/* Demo Fast Login Buttons */}
-        <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-dark-900 border border-slate-200 dark:border-dark-700/80 space-y-2">
+        <div className="p-4 rounded-3xl bg-[#0e1222]/80 border border-[#232b4b] space-y-2.5 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-slate-600 dark:text-dark-300 uppercase tracking-wider font-mono">
-              ⚡ Quick Demo Accounts
+            <span className="text-[10px] font-bold text-dark-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-neon-purple" />
+              ⚡ Instant Demo Profiles
             </span>
-            <span className="text-[10px] text-brand-600 dark:text-brand-400 font-medium">Instant Access</span>
+            <span className="text-[10px] text-purple-400 font-semibold">1-Click Access</span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={() => handleDemoLogin('prof_sharma')}
-              className="px-3 py-2 rounded-xl bg-white dark:bg-dark-850 hover:bg-slate-50 dark:hover:bg-dark-800 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-amber-600 dark:text-amber-300 text-left transition-colors shadow-sm"
+              className="px-3.5 py-2.5 rounded-2xl bg-dark-900 hover:bg-dark-850 border border-amber-500/30 text-xs font-bold text-amber-300 text-left transition-all shadow-sm"
             >
               👨‍🏫 Teacher Mode
-              <span className="block text-[10px] font-normal text-slate-500 dark:text-dark-400">Prof. Sharma</span>
+              <span className="block text-[10px] font-normal text-dark-400">Prof. Sharma</span>
             </button>
 
             <button
               onClick={() => handleDemoLogin('asha_r')}
-              className="px-3 py-2 rounded-xl bg-white dark:bg-dark-850 hover:bg-slate-50 dark:hover:bg-dark-800 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-emerald-600 dark:text-emerald-300 text-left transition-colors shadow-sm"
+              className="px-3.5 py-2.5 rounded-2xl bg-dark-900 hover:bg-dark-850 border border-emerald-500/30 text-xs font-bold text-emerald-300 text-left transition-all shadow-sm"
             >
               🎓 Student Mode
-              <span className="block text-[10px] font-normal text-slate-500 dark:text-dark-400">Asha R.</span>
+              <span className="block text-[10px] font-normal text-dark-400">Asha R.</span>
             </button>
           </div>
         </div>
 
         {/* Form Card */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-dark-700 shadow-xl space-y-5 transition-colors duration-200">
+        <div className="p-6 sm:p-7 rounded-3xl oky-glass border border-[#232b4b] shadow-2xl space-y-5">
           
           {/* Social Auth Buttons (Google & GitHub) */}
           <div className="space-y-2.5">
@@ -276,10 +275,10 @@ export const LoginPage: React.FC = () => {
               type="button"
               disabled={loading || socialLoading !== null}
               onClick={handleGoogleAuth}
-              className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-dark-700 bg-white dark:bg-dark-950 hover:bg-slate-50 dark:hover:bg-dark-800 text-slate-800 dark:text-white text-xs font-semibold shadow-sm transition-all flex items-center justify-center gap-3 disabled:opacity-50 group hover:border-slate-300 dark:hover:border-dark-600"
+              className="w-full py-3 px-4 rounded-2xl border border-[#232b4b] bg-dark-900/90 hover:bg-dark-850 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-3 disabled:opacity-50 hover:border-purple-500/30"
             >
               {socialLoading === 'google' ? (
-                <RotateCw className="w-4 h-4 animate-spin text-brand-500" />
+                <RotateCw className="w-4 h-4 animate-spin text-purple-400" />
               ) : (
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -307,10 +306,10 @@ export const LoginPage: React.FC = () => {
               type="button"
               disabled={loading || socialLoading !== null}
               onClick={handleGithubAuth}
-              className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-dark-700 bg-slate-900 hover:bg-slate-800 dark:bg-dark-950 dark:hover:bg-dark-800 text-white text-xs font-semibold shadow-sm transition-all flex items-center justify-center gap-3 disabled:opacity-50 group"
+              className="w-full py-3 px-4 rounded-2xl border border-[#232b4b] bg-dark-900/90 hover:bg-dark-850 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-3 disabled:opacity-50 hover:border-purple-500/30"
             >
               {socialLoading === 'github' ? (
-                <RotateCw className="w-4 h-4 animate-spin text-brand-400" />
+                <RotateCw className="w-4 h-4 animate-spin text-purple-400" />
               ) : (
                 <svg className="w-4 h-4 shrink-0 fill-current text-white" viewBox="0 0 24 24">
                   <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
@@ -322,21 +321,21 @@ export const LoginPage: React.FC = () => {
 
           {/* Divider */}
           <div className="relative flex items-center justify-center">
-            <div className="border-t border-slate-200 dark:border-dark-750 w-full"></div>
-            <span className="bg-white dark:bg-dark-900 px-3 text-[10px] font-semibold text-slate-400 dark:text-dark-400 uppercase tracking-widest font-mono">
+            <div className="border-t border-[#1b223c] w-full"></div>
+            <span className="bg-[#0e1222] px-3 text-[10px] font-bold text-dark-400 uppercase tracking-widest font-mono">
               Or Authenticate With
             </span>
           </div>
 
           {/* Mode Switcher Tabs */}
-          <div className="grid grid-cols-3 p-1 bg-slate-100 dark:bg-dark-950 rounded-xl border border-slate-200 dark:border-dark-750">
+          <div className="grid grid-cols-3 p-1.5 bg-dark-950 rounded-2xl border border-[#1b223c]">
             <button
               type="button"
               onClick={() => { setMode('email'); setError(''); setSuccessMsg(''); }}
-              className={`py-1.5 text-[11px] font-semibold rounded-lg transition-all flex items-center justify-center gap-1 ${
+              className={`py-2 text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
                 mode === 'email' 
-                  ? 'bg-brand-600 text-white shadow-sm' 
-                  : 'text-slate-600 dark:text-dark-400 hover:text-slate-900 dark:hover:text-dark-200'
+                  ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white shadow-md' 
+                  : 'text-dark-400 hover:text-white'
               }`}
             >
               <Mail className="w-3.5 h-3.5" />
@@ -345,22 +344,22 @@ export const LoginPage: React.FC = () => {
             <button
               type="button"
               onClick={() => { setMode('phone'); setError(''); setSuccessMsg(''); }}
-              className={`py-1.5 text-[11px] font-semibold rounded-lg transition-all flex items-center justify-center gap-1 ${
+              className={`py-2 text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
                 mode === 'phone' 
-                  ? 'bg-brand-600 text-white shadow-sm' 
-                  : 'text-slate-600 dark:text-dark-400 hover:text-slate-900 dark:hover:text-dark-200'
+                  ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white shadow-md' 
+                  : 'text-dark-400 hover:text-white'
               }`}
             >
               <Smartphone className="w-3.5 h-3.5" />
-              <span>Phone SMS</span>
+              <span>SMS OTP</span>
             </button>
             <button
               type="button"
               onClick={() => { setMode('register'); setError(''); setSuccessMsg(''); }}
-              className={`py-1.5 text-[11px] font-semibold rounded-lg transition-all flex items-center justify-center gap-1 ${
+              className={`py-2 text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
                 mode === 'register' 
-                  ? 'bg-brand-600 text-white shadow-sm' 
-                  : 'text-slate-600 dark:text-dark-400 hover:text-slate-900 dark:hover:text-dark-200'
+                  ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white shadow-md' 
+                  : 'text-dark-400 hover:text-white'
               }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
@@ -370,36 +369,36 @@ export const LoginPage: React.FC = () => {
 
           {/* Error & Success Feedback Alerts */}
           {error && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2 animate-shake">
+            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs flex items-start gap-2">
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{successMsg}</span>
             </div>
           )}
 
-          {/* Tab 1: Standard Username/Email Login OR Tab 3: Sign Up */}
+          {/* Standard Login & Register Form */}
           {(mode === 'email' || mode === 'register') && (
-            <form onSubmit={handleSubmit} className="space-y-3.5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'register' && (
                 <>
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-dark-300 block mb-1.5">
+                    <label className="text-xs font-bold text-dark-300 block mb-1.5">
                       Account Role *
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => setRole('USER')}
-                        className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                        className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                           role === 'USER'
-                            ? 'border-brand-500 bg-brand-500/15 text-brand-700 dark:text-white'
-                            : 'border-slate-200 dark:border-dark-700 bg-slate-50 dark:bg-dark-950 text-slate-500 dark:text-dark-400 hover:text-slate-800 dark:hover:text-white'
+                            ? 'border-purple-500 bg-purple-500/20 text-white shadow-md'
+                            : 'border-[#1b223c] bg-dark-950 text-dark-400 hover:text-white'
                         }`}
                       >
                         🎓 Student
@@ -407,10 +406,10 @@ export const LoginPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setRole('TEACHER')}
-                        className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                        className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                           role === 'TEACHER'
-                            ? 'border-amber-500 bg-amber-500/15 text-amber-700 dark:text-white'
-                            : 'border-slate-200 dark:border-dark-700 bg-slate-50 dark:bg-dark-950 text-slate-500 dark:text-dark-400 hover:text-slate-800 dark:hover:text-white'
+                            ? 'border-amber-500 bg-amber-500/20 text-white shadow-md'
+                            : 'border-[#1b223c] bg-dark-950 text-dark-400 hover:text-white'
                         }`}
                       >
                         👨‍🏫 Teacher
@@ -419,7 +418,7 @@ export const LoginPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-dark-300 block mb-1">
+                    <label className="text-xs font-bold text-dark-300 block mb-1">
                       Full Name (Optional)
                     </label>
                     <input
@@ -427,12 +426,12 @@ export const LoginPage: React.FC = () => {
                       placeholder="e.g. Alex Johnson"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-dark-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-brand-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-dark-950 border border-[#232b4b] rounded-2xl text-xs text-white placeholder-dark-500 outline-none focus:border-purple-500 transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-dark-300 block mb-1">
+                    <label className="text-xs font-bold text-dark-300 block mb-1">
                       Email Address *
                     </label>
                     <input
@@ -441,14 +440,14 @@ export const LoginPage: React.FC = () => {
                       placeholder="student@school.edu"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-dark-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-brand-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-dark-950 border border-[#232b4b] rounded-2xl text-xs text-white placeholder-dark-500 outline-none focus:border-purple-500 transition-colors"
                     />
                   </div>
                 </>
               )}
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-dark-300 block mb-1">
+                <label className="text-xs font-bold text-dark-300 block mb-1">
                   {mode === 'register' ? 'Choose Username *' : 'Username or Email *'}
                 </label>
                 <input
@@ -457,12 +456,12 @@ export const LoginPage: React.FC = () => {
                   placeholder="e.g. rohit_k"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-dark-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-brand-500 transition-colors"
+                  className="w-full px-4 py-2.5 bg-dark-950 border border-[#232b4b] rounded-2xl text-xs text-white placeholder-dark-500 outline-none focus:border-purple-500 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-dark-300 block mb-1">
+                <label className="text-xs font-bold text-dark-300 block mb-1">
                   Password *
                 </label>
                 <input
@@ -471,14 +470,14 @@ export const LoginPage: React.FC = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-dark-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-brand-500 transition-colors"
+                  className="w-full px-4 py-2.5 bg-dark-950 border border-[#232b4b] rounded-2xl text-xs text-white placeholder-dark-500 outline-none focus:border-purple-500 transition-colors"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-brand-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-neon-blue to-neon-purple hover:from-brand-600 hover:to-purple-600 text-white font-bold text-xs shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-102"
               >
                 {loading ? (
                   <RotateCw className="w-4 h-4 animate-spin" />
@@ -497,160 +496,71 @@ export const LoginPage: React.FC = () => {
             </form>
           )}
 
-          {/* Tab 2: Phone Number & SMS OTP Auth */}
+          {/* Phone SMS OTP Auth */}
           {mode === 'phone' && (
             <div className="space-y-4">
               {!otpSent ? (
-                <form onSubmit={handleSendOtp} className="space-y-3.5">
+                <form onSubmit={handleSendOtp} className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-dark-300 block mb-1.5">
-                      Account Role *
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setRole('USER')}
-                        className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                          role === 'USER'
-                            ? 'border-brand-500 bg-brand-500/15 text-brand-700 dark:text-white'
-                            : 'border-slate-200 dark:border-dark-700 bg-slate-50 dark:bg-dark-950 text-slate-500 dark:text-dark-400 hover:text-slate-800 dark:hover:text-white'
-                        }`}
-                      >
-                        🎓 Student
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRole('TEACHER')}
-                        className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                          role === 'TEACHER'
-                            ? 'border-amber-500 bg-amber-500/15 text-amber-700 dark:text-white'
-                            : 'border-slate-200 dark:border-dark-700 bg-slate-50 dark:bg-dark-950 text-slate-500 dark:text-dark-400 hover:text-slate-800 dark:hover:text-white'
-                        }`}
-                      >
-                        👨‍🏫 Teacher
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-dark-300 block mb-1">
-                      Phone Number *
+                    <label className="text-xs font-bold text-dark-300 block mb-1.5">
+                      Mobile Number *
                     </label>
                     <div className="flex gap-2">
                       <select
                         value={countryCode}
                         onChange={(e) => setCountryCode(e.target.value)}
-                        className="px-2.5 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-dark-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-brand-500 font-mono"
+                        className="px-3 py-2.5 bg-dark-950 border border-[#232b4b] rounded-2xl text-xs text-white font-mono outline-none"
                       >
-                        <option value="+91">🇮🇳 +91 (IN)</option>
-                        <option value="+1">🇺🇸 +1 (US/CA)</option>
-                        <option value="+44">🇬🇧 +44 (UK)</option>
-                        <option value="+61">🇦🇺 +61 (AU)</option>
-                        <option value="+49">🇩🇪 +49 (DE)</option>
-                        <option value="+81">🇯🇵 +81 (JP)</option>
-                        <option value="+65">🇸🇬 +65 (SG)</option>
-                        <option value="+971">🇦🇪 +971 (UAE)</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
                       </select>
                       <input
                         type="tel"
                         required
-                        placeholder="98765 43210"
+                        placeholder="9876543210"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="flex-1 px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-dark-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-brand-500 font-mono transition-colors"
+                        className="flex-1 px-4 py-2.5 bg-dark-950 border border-[#232b4b] rounded-2xl text-xs text-white placeholder-dark-500 outline-none focus:border-purple-500 transition-colors font-mono"
                       />
                     </div>
-                    <span className="text-[10px] text-slate-500 dark:text-dark-400 block mt-1">
-                      We will send a 6-digit SMS verification code to this number.
-                    </span>
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-neon-blue to-neon-purple hover:from-brand-600 hover:to-purple-600 text-white font-bold text-xs shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    {loading ? (
-                      <RotateCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Smartphone className="w-4 h-4" />
-                        <span>Send SMS Verification Code</span>
-                      </>
-                    )}
+                    {loading ? <RotateCw className="w-4 h-4 animate-spin" /> : <span>Send OTP Code</span>}
                   </button>
                 </form>
               ) : (
-                <form onSubmit={handleVerifyOtp} className="space-y-3.5 animate-fadeIn">
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-dark-750 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-slate-500 dark:text-dark-400 block">Sent code to</span>
-                      <span className="text-xs font-semibold text-slate-900 dark:text-white font-mono">
-                        {countryCode} {phoneNumber}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { setOtpSent(false); setOtpCode(''); }}
-                      className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline font-medium"
-                    >
-                      Change
-                    </button>
-                  </div>
-
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-dark-300 block mb-1">
-                      Enter 6-Digit SMS Code *
+                    <label className="text-xs font-bold text-dark-300 block mb-1">
+                      Enter 6-digit SMS OTP *
                     </label>
                     <input
                       type="text"
-                      maxLength={6}
                       required
                       placeholder="123456"
                       value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
-                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-dark-700 rounded-xl text-center text-lg tracking-[0.5em] font-mono text-slate-900 dark:text-white outline-none focus:border-brand-500"
+                      onChange={(e) => setOtpCode(e.target.value)}
+                      className="w-full px-4 py-3 bg-dark-950 border border-[#232b4b] rounded-2xl text-base text-white text-center font-mono tracking-widest outline-none focus:border-purple-500"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    disabled={loading || otpCode.length < 6}
-                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    disabled={loading}
+                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-neon-blue to-neon-purple text-white font-bold text-xs shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    {loading ? (
-                      <RotateCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>Verify & Sign In</span>
-                      </>
-                    )}
+                    {loading ? <RotateCw className="w-4 h-4 animate-spin" /> : <span>Verify & Sign In</span>}
                   </button>
-
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-dark-400 pt-1">
-                    <span>Didn't receive SMS?</span>
-                    <button
-                      type="button"
-                      disabled={resendTimer > 0 || loading}
-                      onClick={handleSendOtp}
-                      className="text-brand-600 dark:text-brand-400 hover:underline disabled:opacity-50 font-medium"
-                    >
-                      {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend SMS Code'}
-                    </button>
-                  </div>
                 </form>
               )}
             </div>
           )}
-
-          {/* Privacy & Security Note */}
-          <div className="pt-2 text-center">
-            <p className="text-[10px] text-slate-400 dark:text-dark-400 flex items-center justify-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-emerald-500" />
-              <span>Firebase Authenticated • 256-Bit SSL Protected Session</span>
-            </p>
-          </div>
         </div>
       </div>
     </div>

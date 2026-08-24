@@ -4,11 +4,11 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-100 font-sans antialiased transition-colors duration-200;
+    @apply bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-200 font-sans antialiased transition-colors duration-200 selection:bg-neon-purple selection:text-white;
   }
 }
 
-/* Custom modern scrollbar */
+/* Custom sleek scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -20,11 +20,11 @@
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 9999px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: #1b223c;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -32,31 +32,78 @@
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+  background: #333d66;
 }
 
 /* =========================================================
-   LIQUID GLASS DESIGN SYSTEM
+   OKYAI-INSPIRED FUTURISTIC GLASS DESIGN SYSTEM
    ========================================================= */
 
-.liquid-glass {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 12px 32px rgba(0, 0, 0, 0.05);
+/* Background Mesh Aura */
+.mesh-gradient-bg {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(52, 18, 253, 0.12) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(136, 10, 204, 0.12) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(0, 240, 255, 0.06) 0px, transparent 50%);
 }
 
-.dark .liquid-glass {
-  background: rgba(13, 17, 23, 0.78);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 16px 40px rgba(0, 0, 0, 0.45);
+.dark .mesh-gradient-bg {
+  background-image: 
+    radial-gradient(at 10% 10%, rgba(52, 18, 253, 0.16) 0px, transparent 50%),
+    radial-gradient(at 90% 10%, rgba(136, 10, 204, 0.16) 0px, transparent 50%),
+    radial-gradient(at 50% 85%, rgba(136, 10, 204, 0.1) 0px, transparent 50%);
 }
 
+/* Universal Liquid / Frosted Glass */
+.liquid-glass, .oky-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 12px 32px rgba(0, 0, 0, 0.04);
+}
+
+.dark .liquid-glass, .dark .oky-glass {
+  background: rgba(14, 18, 34, 0.72);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 20px 48px rgba(0, 0, 0, 0.55);
+}
+
+/* Frosted Glass Card */
+.liquid-glass-card, .oky-glass-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 24px rgba(0, 0, 0, 0.03);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .liquid-glass-card, .dark .oky-glass-card {
+  background: rgba(14, 18, 34, 0.65);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(35, 43, 75, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.liquid-glass-card:hover, .oky-glass-card:hover {
+  border-color: rgba(99, 102, 241, 0.45);
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px -8px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.dark .liquid-glass-card:hover, .dark .oky-glass-card:hover {
+  border-color: rgba(136, 10, 204, 0.55);
+  transform: translateY(-3px);
+  box-shadow: 0 22px 48px -10px rgba(136, 10, 204, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Glass Toolbar */
 .liquid-glass-toolbar {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(226, 232, 240, 0.9);
@@ -64,52 +111,47 @@
 }
 
 .dark .liquid-glass-toolbar {
-  background: rgba(22, 27, 34, 0.85);
+  background: rgba(20, 26, 46, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(48, 54, 61, 0.8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(35, 43, 75, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 32px rgba(0, 0, 0, 0.5);
 }
 
-.liquid-glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+/* Gradient text utilities */
+.text-gradient-brand {
+  @apply bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent;
 }
 
-.dark .liquid-glass-card {
-  background: rgba(22, 27, 34, 0.7);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(48, 54, 61, 0.7);
+.dark .text-gradient-brand {
+  @apply bg-gradient-to-r from-indigo-300 via-purple-300 to-cyan-300 bg-clip-text text-transparent;
 }
 
-.liquid-glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+.text-gradient-neon {
+  @apply bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink bg-clip-text text-transparent;
 }
 
-.dark .liquid-glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+.dark .text-gradient-neon {
+  @apply bg-gradient-to-r from-[#818cf8] via-[#c084fc] to-[#38bdf8] bg-clip-text text-transparent;
 }
 
-/* Glow highlights */
+/* Neon Glow Accents */
 .glow-brand {
-  box-shadow: 0 0 20px -3px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 25px -4px rgba(99, 102, 241, 0.35);
 }
 
 .dark .glow-brand {
-  box-shadow: 0 0 20px -3px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 28px -4px rgba(136, 10, 204, 0.45);
+}
+
+.glow-neon-purple {
+  box-shadow: 0 0 28px -4px rgba(136, 10, 204, 0.5);
+}
+
+.glow-neon-blue {
+  box-shadow: 0 0 28px -4px rgba(52, 18, 253, 0.5);
 }
 
 .glow-emerald {
-  box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.25);
-}
-
-.dark .glow-emerald {
   box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.35);
 }

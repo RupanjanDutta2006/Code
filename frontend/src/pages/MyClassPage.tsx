@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Search, GraduationCap, Sparkles, Code2, BookOpen, Layers } from 'lucide-react';
+import { Search, GraduationCap, BookOpen } from 'lucide-react';
 import {
-  ALL_LEARNING_PROGRAMS,
   CATEGORY_LABELS,
   searchLearningPrograms,
 } from '../learning/registry/learningPrograms';
@@ -28,42 +27,42 @@ export const MyClassPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12 mesh-gradient-bg">
       {/* Hero Header */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto pt-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-600 dark:text-brand-400 text-xs font-bold tracking-wide">
-          <GraduationCap className="w-4 h-4" />
-          <span>Interactive Algorithm Classroom</span>
+      <div className="text-center space-y-5 max-w-3xl mx-auto pt-4">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-neon-blue/15 to-neon-purple/15 border border-purple-500/30 text-purple-300 text-xs font-bold tracking-wide shadow-sm">
+          <GraduationCap className="w-4 h-4 text-neon-purple" />
+          <span>Interactive DSA Studio & Execution Traces</span>
         </div>
 
-        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight font-sans">
           Understand Code Visually,{' '}
-          <span className="bg-gradient-to-r from-brand-600 via-purple-500 to-cyan-500 bg-clip-text text-transparent">
+          <span className="text-gradient-neon">
             One Step at a Time.
           </span>
         </h1>
 
-        <p className="text-sm sm:text-base text-slate-600 dark:text-dark-300 leading-relaxed">
-          Watch code execute synchronized with animated data structures, step-by-step variable inspection, and real-time execution flow.
+        <p className="text-sm sm:text-base text-slate-600 dark:text-dark-300 leading-relaxed max-w-2xl mx-auto font-normal">
+          Watch algorithm execution synchronized with animated data structures, step-by-step state inspection, and line-by-line code tracing.
         </p>
 
         {/* Search Bar */}
         <div className="relative max-w-2xl mx-auto pt-4">
           <div className="relative flex items-center">
-            <Search className="w-5 h-5 absolute left-4 text-slate-400" />
+            <Search className="w-5 h-5 absolute left-4 text-dark-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search programs, algorithms, concepts (e.g. bubble, binary search, tree)..."
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl liquid-glass border border-slate-300 dark:border-dark-700 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-500 shadow-xl transition-all"
+              placeholder="Search algorithms, data structures, concepts (e.g. bubble sort, binary search, tree)..."
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl oky-glass border border-slate-300 dark:border-[#232b4b] text-slate-900 dark:text-white text-sm outline-none focus:border-purple-500 shadow-xl transition-all"
             />
           </div>
         </div>
       </div>
 
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 justify-start sm:justify-center">
+      <div className="flex items-center gap-2.5 overflow-x-auto pb-2 justify-start sm:justify-center">
         {categories.map((cat) => {
           const isSelected = selectedCategory === cat;
 
@@ -71,10 +70,10 @@ export const MyClassPage: React.FC = () => {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all duration-200 border ${
                 isSelected
-                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/25 scale-105'
-                  : 'bg-white/80 dark:bg-dark-800/80 border border-slate-200 dark:border-dark-700 text-slate-600 dark:text-dark-300 hover:border-slate-300 dark:hover:border-dark-600'
+                  ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white border-purple-400 shadow-lg shadow-brand-500/25 scale-105'
+                  : 'bg-white/80 dark:bg-dark-900/80 border-slate-200 dark:border-[#1b223c] text-slate-600 dark:text-dark-300 hover:text-white hover:border-purple-500/30'
               }`}
             >
               {CATEGORY_LABELS[cat]}
@@ -84,9 +83,9 @@ export const MyClassPage: React.FC = () => {
       </div>
 
       {/* Results Count & Grid */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="flex items-center justify-between px-2">
-          <span className="text-xs font-mono text-slate-500 dark:text-dark-400">
+          <span className="text-xs font-mono font-medium text-slate-500 dark:text-dark-400">
             Showing {filteredPrograms.length} Interactive Lessons
           </span>
         </div>
@@ -98,20 +97,20 @@ export const MyClassPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 rounded-3xl liquid-glass space-y-3">
-            <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+          <div className="text-center py-16 rounded-3xl oky-glass space-y-4 border border-[#232b4b]">
+            <BookOpen className="w-12 h-12 text-dark-400 mx-auto" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white font-sans">
               No programs matched "{searchQuery}"
             </h3>
-            <p className="text-xs text-slate-500 dark:text-dark-400">
-              Try searching for "bubble", "binary", "list", "stack", or clear filters.
+            <p className="text-xs text-slate-500 dark:text-dark-400 max-w-sm mx-auto">
+              Try searching for "bubble", "binary", "linked list", "stack", or clear active filters.
             </p>
             <button
               onClick={() => {
                 setSearchQuery('');
                 setSelectedCategory('all');
               }}
-              className="px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold"
+              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-neon-blue to-neon-purple text-white text-xs font-bold shadow-md shadow-brand-500/20"
             >
               Clear Filters
             </button>

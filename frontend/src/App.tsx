@@ -5,12 +5,7 @@ import { OfflineProvider } from './context/OfflineContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AIChatProvider } from './context/AIChatContext';
 import { Navbar } from './components/Navbar';
-<<<<<<< HEAD
 import { CodeVaultAIChat } from './components/CodeVaultAIChat';
-=======
-import { AIChatDrawer } from './components/AIChatDrawer';
-import { AIChatFloatingButton } from './components/AIChatFloatingButton';
->>>>>>> 611aab4dcee9a9d5de9509ea61c5ad984c6d2c4f
 import { HomePage } from './pages/HomePage';
 import { ProgramsPage } from './pages/ProgramsPage';
 import { ProgramDetailPage } from './pages/ProgramDetailPage';
@@ -34,11 +29,7 @@ export const App: React.FC = () => {
         <OfflineProvider>
           <AIChatProvider>
             <BrowserRouter>
-<<<<<<< HEAD
-              <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-100 selection:bg-brand-500 selection:text-white transition-colors duration-200">
-=======
-              <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-100 selection:bg-brand-500 selection:text-white transition-colors duration-200 relative">
->>>>>>> 611aab4dcee9a9d5de9509ea61c5ad984c6d2c4f
+              <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-200 selection:bg-neon-purple selection:text-white transition-colors duration-200 relative">
                 <Navbar />
                 
                 <main className="flex-1">
@@ -63,27 +54,21 @@ export const App: React.FC = () => {
                   </Routes>
                 </main>
 
-<<<<<<< HEAD
                 {/* Global Unified CodeVault AI Chat Trigger & Drawer */}
                 <CodeVaultAIChat />
-=======
-                {/* Global AI Chat Drawer & Floating Trigger */}
-                <AIChatDrawer />
-                <AIChatFloatingButton />
->>>>>>> 611aab4dcee9a9d5de9509ea61c5ad984c6d2c4f
 
                 {/* Footer */}
-                <footer className="border-t border-slate-200 dark:border-dark-800/80 bg-white/70 dark:bg-dark-900/60 py-6 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-sm transition-colors duration-200">
-                  <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+                <footer className="border-t border-slate-200/80 dark:border-[#1b223c] bg-white/70 dark:bg-dark-950/80 py-8 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-xl transition-colors duration-200">
+                  <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <span className="font-semibold text-slate-900 dark:text-white">CodeVault Pro</span> — Empowering students & teachers with modern code tooling.
+                      <span className="font-bold text-slate-900 dark:text-white">CodeVault Pro</span> — Next-Gen AI Code Platform & Interactive Learning Studio.
                     </div>
                     <div className="flex items-center gap-4 text-slate-400 dark:text-dark-400">
-                      <a href="/about" className="hover:text-slate-900 dark:hover:text-white transition-colors">Documentation</a>
+                      <a href="/about" className="hover:text-purple-400 transition-colors">Documentation</a>
                       <span>•</span>
-                      <a href="/creator" className="hover:text-brand-500 dark:hover:text-brand-400 transition-colors font-medium">Creator</a>
+                      <a href="/creator" className="hover:text-purple-400 transition-colors font-medium">Creator</a>
                       <span>•</span>
-                      <a href="/contact" className="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors font-medium">Contact & Team</a>
+                      <a href="/contact" className="hover:text-cyan-400 transition-colors font-medium">Contact & Team</a>
                       <span>•</span>
                       <span>11 Compilers</span>
                     </div>

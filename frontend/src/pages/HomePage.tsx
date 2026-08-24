@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
-  Code2, 
   Play, 
   Square,
   RotateCcw,
@@ -13,27 +12,28 @@ import {
   CheckCircle2, 
   Users, 
   Terminal, 
-  FileCode,
-  ShieldCheck,
-  Zap
+  Cpu,
+  Layers,
+  Bot
 } from 'lucide-react';
 import { CodeEditor } from '../components/CodeEditor';
 import { OutputTerminal, OutputTerminalHandle } from '../components/OutputTerminal';
-import { api, ExecuteResult } from '../services/api';
+import { ExecuteResult } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useAIChat } from '../context/AIChatContext';
 
 const LANGUAGES = [
-  { id: 'python', name: 'Python', ext: '.py', icon: '🐍', color: 'from-amber-500/20 to-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-  { id: 'cpp', name: 'C++', ext: '.cpp', icon: '⚡', color: 'from-blue-500/20 to-cyan-500/20 text-blue-400 border-blue-500/30' },
-  { id: 'c', name: 'C', ext: '.c', icon: '⚙️', color: 'from-slate-500/20 to-zinc-500/20 text-zinc-300 border-zinc-500/30' },
-  { id: 'java', name: 'Java', ext: '.java', icon: '☕', color: 'from-orange-500/20 to-red-500/20 text-orange-400 border-orange-500/30' },
-  { id: 'javascript', name: 'JavaScript', ext: '.js', icon: '🟨', color: 'from-yellow-500/20 to-amber-500/20 text-yellow-300 border-yellow-500/30' },
-  { id: 'typescript', name: 'TypeScript', ext: '.ts', icon: '🔷', color: 'from-blue-500/20 to-indigo-500/20 text-indigo-400 border-indigo-500/30' },
-  { id: 'go', name: 'Go', ext: '.go', icon: '🐹', color: 'from-cyan-500/20 to-teal-500/20 text-cyan-400 border-cyan-500/30' },
-  { id: 'rust', name: 'Rust', ext: '.rs', icon: '🦀', color: 'from-orange-500/20 to-amber-600/20 text-orange-400 border-orange-500/30' },
-  { id: 'kotlin', name: 'Kotlin', ext: '.kt', icon: '💜', color: 'from-purple-500/20 to-pink-500/20 text-purple-400 border-purple-500/30' },
-  { id: 'html', name: 'HTML/CSS', ext: '.html', icon: '🌐', color: 'from-rose-500/20 to-pink-500/20 text-rose-400 border-rose-500/30' },
-  { id: 'sql', name: 'SQL (SQLite)', ext: '.sql', icon: '🗄️', color: 'from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30' },
+  { id: 'python', name: 'Python', ext: '.py', icon: '🐍', color: 'border-yellow-500/25 hover:border-yellow-400/60 bg-yellow-500/5' },
+  { id: 'cpp', name: 'C++', ext: '.cpp', icon: '⚡', color: 'border-blue-500/25 hover:border-blue-400/60 bg-blue-500/5' },
+  { id: 'c', name: 'C', ext: '.c', icon: '⚙️', color: 'border-slate-500/25 hover:border-slate-300/60 bg-slate-500/5' },
+  { id: 'java', name: 'Java', ext: '.java', icon: '☕', color: 'border-orange-500/25 hover:border-orange-400/60 bg-orange-500/5' },
+  { id: 'javascript', name: 'JavaScript', ext: '.js', icon: '🟨', color: 'border-amber-500/25 hover:border-amber-400/60 bg-amber-500/5' },
+  { id: 'typescript', name: 'TypeScript', ext: '.ts', icon: '🔷', color: 'border-indigo-500/25 hover:border-indigo-400/60 bg-indigo-500/5' },
+  { id: 'go', name: 'Go', ext: '.go', icon: '🐹', color: 'border-cyan-500/25 hover:border-cyan-400/60 bg-cyan-500/5' },
+  { id: 'rust', name: 'Rust', ext: '.rs', icon: '🦀', color: 'border-orange-500/25 hover:border-orange-400/60 bg-orange-500/5' },
+  { id: 'kotlin', name: 'Kotlin', ext: '.kt', icon: '💜', color: 'border-purple-500/25 hover:border-purple-400/60 bg-purple-500/5' },
+  { id: 'html', name: 'HTML/CSS', ext: '.html', icon: '🌐', color: 'border-rose-500/25 hover:border-rose-400/60 bg-rose-500/5' },
+  { id: 'sql', name: 'SQL (SQLite)', ext: '.sql', icon: '🗄️', color: 'border-emerald-500/25 hover:border-emerald-400/60 bg-emerald-500/5' },
 ];
 
 const DEFAULT_DEMO_CODE: Record<string, string> = {
@@ -103,9 +103,9 @@ SELECT * FROM languages;`,
 <html>
 <head>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0f172a; color: white; text-align: center; padding: 30px; }
-    .card { background: #1e293b; padding: 25px; border-radius: 16px; display: inline-block; border: 1px solid #334155; }
-    h1 { color: #38bdf8; margin-top: 0; }
+    body { font-family: system-ui, sans-serif; background: #070913; color: white; text-align: center; padding: 30px; }
+    .card { background: #0e1222; padding: 25px; border-radius: 20px; display: inline-block; border: 1px solid #232b4b; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    h1 { color: #818cf8; margin-top: 0; }
   </style>
 </head>
 <body>
@@ -119,7 +119,7 @@ SELECT * FROM languages;`,
 
 export const HomePage: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const { toggleChat } = useAIChat();
   const [selectedLang, setSelectedLang] = useState('python');
   const [demoCode, setDemoCode] = useState(DEFAULT_DEMO_CODE['python']);
   const [running, setRunning] = useState(false);
@@ -172,84 +172,98 @@ export const HomePage: React.FC = () => {
   }, [demoCode, selectedLang]);
 
   return (
-    <div className="space-y-20 pb-20">
+    <div className="space-y-24 pb-24 mesh-gradient-bg">
       {/* Hero Section */}
-      <section className="relative pt-12 pb-8 overflow-hidden text-center max-w-5xl mx-auto px-4">
-        {/* Glow backdrop */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[300px] bg-gradient-to-tr from-brand-600/20 via-indigo-500/10 to-teal-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <section className="relative pt-16 pb-10 overflow-hidden text-center max-w-6xl mx-auto px-4">
+        {/* Glow ambient meshes */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[380px] bg-gradient-to-tr from-neon-blue/20 via-neon-purple/20 to-cyan-500/10 rounded-full blur-3xl pointer-events-none -z-10 animate-glow-pulse" />
 
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-semibold mb-6">
-          <Sparkles className="w-3.5 h-3.5 text-brand-400" />
-          <span>Upgraded with Practice Judge, Live Streaming & Classrooms</span>
+        {/* Feature badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-neon-blue/15 to-neon-purple/15 border border-purple-500/30 text-purple-300 text-xs font-bold mb-8 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5 text-neon-purple" />
+          <span>Next-Gen Online + Offline Hybrid AI Coding Environment</span>
         </div>
 
-        <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
+        {/* Hero Title */}
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1] font-sans">
           Your Code. Saved Online.<br />
-          <span className="bg-gradient-to-r from-brand-400 via-indigo-300 to-teal-300 bg-clip-text text-transparent">
-            Run Anywhere.
+          <span className="text-gradient-neon">
+            Run & Reason Anywhere.
           </span>
         </h1>
 
-        <p className="mt-6 text-lg sm:text-xl text-dark-300 max-w-3xl mx-auto leading-relaxed">
-          Store your programming files, organize by folder, run code in 11 languages, practice for contests, and share with your class — from any device.
+        <p className="mt-6 text-base sm:text-xl text-dark-300 max-w-3xl mx-auto leading-relaxed font-normal">
+          High-performance code library with 11 cloud compilers, interactive DSA visualizations, contest practice judge, and hybrid online & offline AI assistance.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+        {/* Call to Actions */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
             to="/programs"
-            className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-base shadow-lg shadow-brand-500/25 transition-all flex items-center gap-2 hover:scale-[1.02]"
+            className="px-7 py-3.5 rounded-2xl bg-gradient-to-r from-neon-blue to-neon-purple hover:from-brand-600 hover:to-purple-600 text-white font-bold text-sm shadow-xl shadow-brand-500/30 transition-all duration-300 flex items-center gap-2.5 hover:scale-105"
           >
-            <FolderPlus className="w-5 h-5" />
-            Explore Programs
+            <FolderPlus className="w-4 h-4" />
+            Explore Programs Library
           </Link>
 
-          {!user && (
-            <Link
-              to="/login"
-              className="px-6 py-3 rounded-xl bg-dark-800 hover:bg-dark-750 text-white font-semibold text-base border border-dark-700 transition-all flex items-center gap-2"
+          <button
+            onClick={toggleChat}
+            className="px-7 py-3.5 rounded-2xl bg-dark-900/90 hover:bg-dark-850 text-white font-bold text-sm border border-purple-500/30 shadow-lg shadow-purple-500/10 hover:shadow-neon-purple transition-all duration-300 flex items-center gap-2.5 hover:scale-105"
+          >
+            <Sparkles className="w-4 h-4 text-neon-purple" />
+            Ask CodeVault AI
+          </button>
+
+          <Link
+            to="/my-class"
+            className="px-7 py-3.5 rounded-2xl bg-dark-900/80 hover:bg-dark-850 text-dark-200 hover:text-white font-bold text-sm border border-[#1b223c] transition-all flex items-center gap-2.5"
+          >
+            <GraduationCap className="w-4 h-4 text-accent-amber" />
+            My Class (Interactive DSA)
+          </Link>
+        </div>
+
+        {/* Quick Platform Metrics */}
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
+          {[
+            { label: 'Cloud Sandboxes', val: '11 Compilers', icon: Terminal, color: 'text-cyan-400' },
+            { label: 'AI Intelligence', val: 'Nemotron + Offline', icon: Bot, color: 'text-purple-400' },
+            { label: 'DSA Traces', val: '15 Visualizers', icon: Layers, color: 'text-emerald-400' },
+            { label: 'Local Setup Needed', val: 'Zero Config', icon: Cpu, color: 'text-amber-400' },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="p-4 rounded-2xl bg-[#0e1222]/80 border border-[#1b223c] backdrop-blur-xl shadow-md hover:border-purple-500/30 transition-all"
             >
-              Get Started (Login)
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          )}
-
-          <Link
-            to="/playground"
-            className="px-6 py-3 rounded-xl bg-dark-800/90 hover:bg-dark-750 text-dark-200 hover:text-white font-semibold text-base border border-dark-700/80 transition-all flex items-center gap-2"
-          >
-            <Users className="w-5 h-5 text-accent-violet" />
-            Live Playground
-          </Link>
-
-          <Link
-            to="/creator"
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600/30 via-brand-600/30 to-cyan-600/30 hover:from-purple-600/40 hover:to-cyan-600/40 text-white font-semibold text-base border border-purple-500/40 transition-all flex items-center gap-2 shadow-lg shadow-purple-500/10"
-          >
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            Creator & Resources
-          </Link>
+              <stat.icon className={`w-5 h-5 ${stat.color} mb-2`} />
+              <div className="text-base sm:text-lg font-bold text-white font-sans">{stat.val}</div>
+              <div className="text-[11px] text-dark-400 font-medium">{stat.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Interactive Quick Runner Demo */}
       <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-3xl liquid-glass p-6 sm:p-8 shadow-2xl space-y-4 transition-colors">
+        <div className="rounded-3xl oky-glass p-6 sm:p-8 shadow-2xl space-y-5 transition-colors border border-[#232b4b]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-brand-500 dark:text-brand-400" />
-                Try Running Code Right Here
+              <h2 className="text-lg font-extrabold text-white flex items-center gap-2.5 font-sans">
+                <div className="w-7 h-7 rounded-xl bg-neon-blue/20 text-neon-blue flex items-center justify-center border border-neon-blue/30">
+                  <Terminal className="w-4 h-4" />
+                </div>
+                Live Cloud Execution Engine
               </h2>
-              <p className="text-xs text-slate-500 dark:text-dark-400">
-                Choose a language, click Run Code, and type inputs directly in the terminal just like a real IDE.
+              <p className="text-xs text-dark-400 mt-1">
+                Select a language, write code, and stream inputs directly to the interactive cloud sandbox.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <select
                 value={selectedLang}
                 onChange={(e) => handleLangChange(e.target.value)}
-                className="bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-slate-800 dark:text-dark-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-brand-500 font-mono transition-colors"
+                className="bg-dark-900 border border-[#232b4b] text-white text-xs rounded-xl px-3.5 py-2 outline-none focus:border-purple-500 font-mono transition-colors shadow-inner"
                 title="Select language"
               >
                 {LANGUAGES.map((l) => (
@@ -261,8 +275,8 @@ export const HomePage: React.FC = () => {
 
               <button
                 onClick={handleReset}
-                className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-300 text-xs font-semibold border border-slate-200 dark:border-dark-700 transition-all flex items-center gap-1.5"
-                title="Reset editor to template"
+                className="px-3.5 py-2 rounded-xl bg-dark-900 hover:bg-dark-850 text-dark-300 hover:text-white text-xs font-bold border border-[#1b223c] transition-all flex items-center gap-1.5"
+                title="Reset editor template"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset</span>
@@ -271,8 +285,8 @@ export const HomePage: React.FC = () => {
               {running ? (
                 <button
                   onClick={handleStop}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-500/20 transition-all flex items-center gap-1.5"
-                  title="Stop running program (Ctrl+Shift+K)"
+                  className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 transition-all flex items-center gap-2"
+                  title="Stop execution (Ctrl+Shift+K)"
                 >
                   <Square className="w-3.5 h-3.5 fill-white" />
                   <span>Stop</span>
@@ -280,7 +294,7 @@ export const HomePage: React.FC = () => {
               ) : (
                 <button
                   onClick={handleQuickRun}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition-all flex items-center gap-1.5 hover:scale-[1.02]"
+                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-neon-blue to-neon-purple hover:from-brand-600 hover:to-purple-600 text-white text-xs font-bold shadow-lg shadow-brand-500/25 transition-all flex items-center gap-2 hover:scale-105"
                   title="Run code (Ctrl+Enter)"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
@@ -291,16 +305,16 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="h-[380px]">
+            <div className="h-[390px] rounded-2xl overflow-hidden border border-[#232b4b]">
               <CodeEditor
                 code={demoCode}
                 language={selectedLang}
                 onChange={setDemoCode}
-                height="380px"
+                height="390px"
                 onRun={handleQuickRun}
               />
             </div>
-            <div className="h-[380px]">
+            <div className="h-[390px] rounded-2xl overflow-hidden border border-[#232b4b]">
               <OutputTerminal
                 ref={terminalRef}
                 result={result}
@@ -315,180 +329,96 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Feature Section 1: Practice & Check (Judge Mode) */}
-      <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-2xl border border-dark-700 bg-gradient-to-br from-dark-900 via-dark-850 to-dark-900 p-8 shadow-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
-                <Trophy className="w-3.5 h-3.5" />
-                <span>New Feature</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                Practice & Check
-              </h2>
-              <p className="text-dark-300 text-sm leading-relaxed">
-                Attach sample inputs and expected answers to any program. Instantly see if your solution passes every test case — exactly like a mini contest judge.
-              </p>
-              <ul className="space-y-2 text-xs text-dark-300">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Real-time per-testcase pass/fail comparison</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Hidden test cases for teacher assignments & contests</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Reuses ultra-fast SHA-256 build cache</span>
-                </li>
-              </ul>
-              <div className="pt-2">
-                <Link
-                  to="/programs/1"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-800 hover:bg-dark-750 text-white font-medium text-xs border border-dark-700 transition-colors"
-                >
-                  <span>Try Practice Mode with Binary Search</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
-                </Link>
-              </div>
-            </div>
+      {/* Feature Cards Grid (OkyAi style SaaS Cards) */}
+      <section className="max-w-6xl mx-auto px-4 space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-sans">
+            Engineered for Students, Creators & Engineers
+          </h2>
+          <p className="text-xs sm:text-sm text-dark-400">
+            A comprehensive developer toolkit built with next-gen AI and zero dependencies.
+          </p>
+        </div>
 
-            {/* Visual Card */}
-            <div className="p-5 rounded-xl bg-dark-950 border border-dark-700 shadow-inner space-y-3 font-mono text-xs">
-              <div className="flex items-center justify-between pb-2 border-b border-dark-750">
-                <span className="text-dark-400">Binary Search — Practice Checks</span>
-                <span className="text-emerald-400 font-bold">3 / 3 Passed ✓</span>
-              </div>
-              <div className="space-y-2">
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-emerald-500/30 flex items-center justify-between">
-                  <span className="text-emerald-400">Check 1: Sample</span>
-                  <span className="text-emerald-400">Passed (24 ms) ✓</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-emerald-500/30 flex items-center justify-between">
-                  <span className="text-emerald-400">Check 2: Edge Case</span>
-                  <span className="text-emerald-400">Passed (18 ms) ✓</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-emerald-500/30 flex items-center justify-between">
-                  <span className="text-emerald-400">Check 3: Hidden Test</span>
-                  <span className="text-emerald-400">Passed (21 ms) ✓</span>
-                </div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 1: Hybrid AI */}
+          <div className="p-6 rounded-3xl oky-glass-card space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-neon-blue to-neon-purple text-white flex items-center justify-center shadow-lg shadow-brand-500/20">
+              <Bot className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-white font-sans">CodeVault Hybrid AI</h3>
+            <p className="text-xs text-dark-300 leading-relaxed">
+              Powered by cloud NVIDIA Nemotron for deep reasoning, with full browser-side on-device Qwen fallback when you lose internet connection.
+            </p>
+            <div className="pt-2">
+              <button
+                onClick={toggleChat}
+                className="text-xs text-purple-400 hover:text-purple-300 font-bold inline-flex items-center gap-1.5"
+              >
+                Open Assistant <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Feature Section 2: Classrooms for Teachers & Students */}
-      <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-2xl border border-dark-700 bg-gradient-to-br from-dark-900 via-dark-850 to-dark-900 p-8 shadow-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            {/* Visual Leaderboard Mock */}
-            <div className="order-2 lg:order-1 p-5 rounded-xl bg-dark-950 border border-dark-700 shadow-inner space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-dark-750 text-xs">
-                <span className="font-semibold text-white">DSA Section A — Leaderboard</span>
-                <span className="px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 font-mono text-[11px]">
-                  Code: DSA-7F2K
-                </span>
-              </div>
-              <div className="space-y-2 text-xs">
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-dark-750 flex items-center justify-between">
-                  <span className="text-white font-medium">1. Asha R.</span>
-                  <span className="text-emerald-400 font-mono font-bold">3/3 Passed ✓</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-dark-750 flex items-center justify-between">
-                  <span className="text-white font-medium">2. Rohit K.</span>
-                  <span className="text-amber-400 font-mono font-bold">2/3 Passed</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-dark-750 flex items-center justify-between">
-                  <span className="text-dark-400">3. Meera S.</span>
-                  <span className="text-dark-500 font-mono">Not started</span>
-                </div>
-              </div>
+          {/* Card 2: Interactive DSA */}
+          <div className="p-6 rounded-3xl oky-glass-card space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20">
+              <GraduationCap className="w-6 h-6" />
             </div>
-
-            <div className="order-1 lg:order-2 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold">
-                <GraduationCap className="w-3.5 h-3.5" />
-                <span>Classroom Platform</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                Classrooms Without Spreadsheets
-              </h2>
-              <p className="text-dark-300 text-sm leading-relaxed">
-                Teachers can create classes with instant invite codes, assign coding problems with checks, and view student progress on a simple live leaderboard.
-              </p>
-              <div className="pt-2">
-                <Link
-                  to="/classrooms"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-xs shadow-md shadow-brand-500/20 transition-colors"
-                >
-                  <span>Explore My Class</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
+            <h3 className="text-lg font-bold text-white font-sans">My Class (Interactive DSA)</h3>
+            <p className="text-xs text-dark-300 leading-relaxed">
+              Step-by-step visualizers across sorting, searching, recursion, trees, and linked lists with real-time state inspect and adjustable speed.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/my-class"
+                className="text-xs text-amber-400 hover:text-amber-300 font-bold inline-flex items-center gap-1.5"
+              >
+                Explore 15 Lessons <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Feature Section 3: Creator & Curated Resources Spotlight */}
-      <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-dark-900 via-purple-950/20 to-dark-900 p-8 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-              <img
-                src="/team/rupanjan.jpg"
-                alt="Coder Babuu"
-                className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-lg shadow-purple-500/20"
-              />
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-semibold">
-                  <Sparkles className="w-3 h-3 text-amber-400" />
-                  <span>Creator & Free Resources</span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white">
-                  Curated Codes, DSA Notes & Assignments by Coder Babuu
-                </h3>
-                <p className="text-xs sm:text-sm text-dark-300 max-w-xl">
-                  Access free Python, C, C++, and DSA code repositories, downloadable lecture notes, and assignments directly on CodeVault.
-                </p>
-              </div>
+          {/* Card 3: Practice & Check Judge */}
+          <div className="p-6 rounded-3xl oky-glass-card space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <Trophy className="w-6 h-6" />
             </div>
-
-            <Link
-              to="/creator"
-              className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2 flex-shrink-0 hover:scale-[1.02]"
-            >
-              <span>Explore All Resources</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <h3 className="text-lg font-bold text-white font-sans">Practice & Check Judge</h3>
+            <p className="text-xs text-dark-300 leading-relaxed">
+              Test your solutions against sample and hidden test cases with millisecond execution timing, memory limits, and automated verdicts.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/programs"
+                className="text-xs text-emerald-400 hover:text-emerald-300 font-bold inline-flex items-center gap-1.5"
+              >
+                Practice Coding <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Supported Languages Grid */}
-      <section className="max-w-6xl mx-auto px-4">
-        <div className="text-center space-y-2 mb-8">
-          <h2 className="text-2xl font-bold text-white">
-            11 Supported Languages & Sandboxes
+      <section className="max-w-6xl mx-auto px-4 space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-extrabold text-white font-sans">
+            11 Supported Compilers & Runtimes
           </h2>
-          <p className="text-sm text-dark-300">
-            Real compilers and interpreters running with resource limits and instant caching.
+          <p className="text-xs text-dark-400">
+            Real compilers with isolated execution sandboxes and sub-second caching.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
           {LANGUAGES.map((lang) => (
             <div
               key={lang.id}
-              className={`p-4 rounded-xl border bg-dark-900/60 flex flex-col items-center justify-center text-center gap-2 hover:-translate-y-1 transition-all ${lang.color}`}
+              className={`p-4 rounded-2xl border bg-dark-900/70 backdrop-blur-md flex flex-col items-center justify-center text-center gap-2 hover:-translate-y-1.5 transition-all duration-200 shadow-md ${lang.color}`}
             >
               <span className="text-2xl">{lang.icon}</span>
-              <span className="font-semibold text-xs text-white">{lang.name}</span>
+              <span className="font-bold text-xs text-white">{lang.name}</span>
               <span className="font-mono text-[10px] text-dark-400">{lang.ext}</span>
             </div>
           ))}

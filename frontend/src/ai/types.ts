@@ -29,7 +29,10 @@ export interface ChatMessage {
   provider?: AIProviderId;
   model?: string;
   attachments?: CodeAttachment[];
-  createdAt: number;
+  attachment?: CodeAttachment;
+  createdAt?: number;
+  timestamp?: number;
+  isStreaming?: boolean;
   isError?: boolean;
 }
 
@@ -61,42 +64,60 @@ export interface OfflineAICapabilities {
   webGPU: boolean;
   wasm: boolean;
   persistentStorage: boolean;
-  storageEstimateMB?: number;
-  availableStorageMB?: number;
+  storageEstimateMB: number;
+  availableStorageMB: number;
   supported: boolean;
   reason?: string;
 }
-
-export type ModelDownloadStatus = 'not_downloaded' | 'downloading' | 'ready' | 'error' | 'updating';
 
 export interface OfflineModelState {
   modelId: string;
   modelName: string;
   quantization: string;
   sizeMB: number;
-  status: ModelDownloadStatus;
-  progress: number; // 0 to 100
+  status: 'not_downloaded' | 'downloading' | 'ready' | 'error';
+  progress: number;
   progressText?: string;
   downloadedAt?: number;
-  version: string;
-  lastError?: string;
+  version?: string;
+  error?: string;
 }
 
+export type WorkerRequestType = 'INIT' | 'DOWNLOAD' | 'GENERATE' | 'CANCEL' | 'TEST' | 'PURGE' | 'UNLOAD';
+
 export interface WorkerRequest {
-  type: 'INIT' | 'GENERATE' | 'CANCEL' | 'UNLOAD' | 'CHECK_STATUS';
+  id?: string;
   requestId?: string;
+  type: WorkerRequestType;
   modelId?: string;
+  request?: AIRequest;
+  prompt?: string;
   messages?: { role: string; content: string }[];
   maxTokens?: number;
   temperature?: number;
 }
 
+export type WorkerResponseType =
+  | 'INIT_PROGRESS'
+  | 'READY'
+  | 'TOKEN'
+  | 'COMPLETE'
+  | 'ERROR'
+  | 'UNLOADED'
+  | 'DOWNLOAD_PROGRESS'
+  | 'DOWNLOAD_COMPLETE'
+  | 'TEST_RESULT'
+  | 'INIT_COMPLETE';
+
 export interface WorkerResponse {
-  type: 'INIT_PROGRESS' | 'READY' | 'TOKEN' | 'COMPLETE' | 'ERROR' | 'UNLOADED';
+  id?: string;
   requestId?: string;
+  type: WorkerResponseType;
   progress?: number;
   progressText?: string;
   token?: string;
   fullText?: string;
+  fullResponse?: string;
   error?: string;
+  success?: boolean;
 }
