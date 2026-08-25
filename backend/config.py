@@ -3,10 +3,23 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BASE_DIR.parent
-DATA_DIR = ROOT_DIR / "data"
-DATA_DIR.mkdir(exist_ok=True)
-CACHE_DIR = DATA_DIR / "execution_cache"
-CACHE_DIR.mkdir(exist_ok=True)
+
+# Check if running in serverless environment (e.g. Vercel)
+IS_VERCEL = os.getenv("VERCEL", "0") == "1" or os.getenv("AWS_LAMBDA_FUNCTION_NAME") is not None
+if IS_VERCEL:
+    DATA_DIR = Path("/tmp") / "codevault_data"
+else:
+    DATA_DIR = ROOT_DIR / "data"
+
+try:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    CACHE_DIR = DATA_DIR / "execution_cache"
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    DATA_DIR = Path("/tmp") / "codevault_data"
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    CACHE_DIR = DATA_DIR / "execution_cache"
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Database
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATA_DIR / 'codevault.db'}")
