@@ -57,6 +57,18 @@ app.post(['/api/execute/stop', '/api/programs/execute/stop'], (req: Request, res
   });
 });
 
+// Playground session creation
+app.post('/api/playground', (req: Request, res: Response) => {
+  const roomId = `room-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+  res.status(200).json({
+    id: roomId,
+    title: req.body?.title || 'Collaborative Session',
+    language: req.body?.language || 'python',
+    source_code: req.body?.source_code || '# Collaborative Playground\nprint("Collaborating in real-time!")',
+    created_at: new Date().toISOString(),
+  });
+});
+
 // ==========================================
 // CodeVault AI Endpoints (Powered by Nemotron)
 // ==========================================

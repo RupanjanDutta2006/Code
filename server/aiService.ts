@@ -29,9 +29,7 @@ export interface AIChatRequest {
 }
 
 export const NVIDIA_CONFIG = {
-  apiKey:
-    process.env.NVIDIA_API_KEY ||
-    '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',
+  apiKey: process.env.NVIDIA_API_KEY || '',
   baseURL:
     process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1',
   model:

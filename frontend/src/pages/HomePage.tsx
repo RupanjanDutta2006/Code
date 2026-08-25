@@ -203,6 +203,22 @@ export const HomePage: React.FC = () => {
             Explore Programs
           </Link>
 
+          <Link
+            to="/my-class"
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold text-base shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 hover:scale-[1.02]"
+          >
+            <GraduationCap className="w-5 h-5 text-white" />
+            My Class (Visualizer)
+          </Link>
+
+          <Link
+            to="/playground"
+            className="px-6 py-3 rounded-xl bg-dark-800/90 hover:bg-dark-750 text-dark-200 hover:text-white font-semibold text-base border border-dark-700/80 transition-all flex items-center gap-2 hover:scale-[1.02]"
+          >
+            <Users className="w-5 h-5 text-accent-violet" />
+            Live Playground
+          </Link>
+
           {!user && (
             <Link
               to="/login"
@@ -212,14 +228,6 @@ export const HomePage: React.FC = () => {
               <ArrowRight className="w-4 h-4" />
             </Link>
           )}
-
-          <Link
-            to="/playground"
-            className="px-6 py-3 rounded-xl bg-dark-800/90 hover:bg-dark-750 text-dark-200 hover:text-white font-semibold text-base border border-dark-700/80 transition-all flex items-center gap-2"
-          >
-            <Users className="w-5 h-5 text-accent-violet" />
-            Live Playground
-          </Link>
 
           <Link
             to="/creator"
@@ -424,7 +432,7 @@ export const HomePage: React.FC = () => {
                   to="/classrooms"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-xs shadow-md shadow-brand-500/20 transition-colors"
                 >
-                  <span>Explore My Class</span>
+                  <span>Explore Classrooms</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

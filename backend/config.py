@@ -23,7 +23,7 @@ EXECUTION_MAX_MEMORY_MB = int(os.getenv("EXECUTION_MAX_MEMORY_MB", "256"))
 
 # AI Assist
 AI_PROVIDER = os.getenv("AI_PROVIDER", "nvidia")
-NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "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")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b")
 NVIDIA_REASONING_BUDGET = int(os.getenv("NVIDIA_REASONING_BUDGET", "16384"))

@@ -76,79 +76,29 @@ export const Navbar: React.FC = () => {
             Home
           </Link>
 
-          {isCreator ? (
-            <>
-              <Link
-                to="/my-programs"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/my-programs') 
-                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
-                }`}
-              >
-                <BookOpen className="w-4 h-4 text-brand-500 dark:text-brand-400" />
-                My Programs
-              </Link>
-              <Link
-                to="/import"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/import') 
-                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
-                }`}
-              >
-                <FolderPlus className="w-4 h-4 text-accent-cyan" />
-                Import Folder
-              </Link>
-              <Link
-                to="/create"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/create') 
-                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
-                }`}
-              >
-                <PlusCircle className="w-4 h-4 text-emerald-500 dark:text-accent-emerald" />
-                New Program
-              </Link>
-              <Link
-                to="/classrooms"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/classrooms') 
-                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
-                }`}
-              >
-                <GraduationCap className="w-4 h-4 text-accent-amber" />
-                Classrooms
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/programs"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/programs') 
-                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
-                }`}
-              >
-                <Layers className="w-4 h-4 text-brand-500 dark:text-brand-400" />
-                Programs
-              </Link>
-              <Link
-                to="/my-class"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive('/my-class') 
-                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
-                }`}
-              >
-                <GraduationCap className="w-4 h-4 text-accent-amber" />
-                My Class
-              </Link>
-            </>
-          )}
+          <Link
+            to="/programs"
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              isActive('/programs') 
+                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+            }`}
+          >
+            <Layers className="w-4 h-4 text-brand-500 dark:text-brand-400" />
+            Programs
+          </Link>
+
+          <Link
+            to="/my-class"
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              isActive('/my-class') 
+                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+            }`}
+          >
+            <GraduationCap className="w-4 h-4 text-accent-amber" />
+            My Class
+          </Link>
 
           <Link
             to="/playground"
@@ -161,6 +111,47 @@ export const Navbar: React.FC = () => {
             <Users className="w-4 h-4 text-accent-violet" />
             Playground
           </Link>
+
+          {isCreator && (
+            <>
+              <Link
+                to="/import"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  isActive('/import') 
+                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+                }`}
+              >
+                <FolderPlus className="w-4 h-4 text-accent-cyan" />
+                Import
+              </Link>
+              <Link
+                to="/create"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  isActive('/create') 
+                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+                }`}
+              >
+                <PlusCircle className="w-4 h-4 text-emerald-500 dark:text-accent-emerald" />
+                + New
+              </Link>
+            </>
+          )}
+
+          {(isTeacher || isCreator) && (
+            <Link
+              to="/classrooms"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                isActive('/classrooms') 
+                  ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
+                  : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+              }`}
+            >
+              <GraduationCap className="w-4 h-4 text-brand-500" />
+              Classrooms
+            </Link>
+          )}
 
           <Link
             to="/creator"

@@ -59,7 +59,7 @@ export const PlaygroundPage: React.FC = () => {
   const myClientId = useRef<string>(Math.random().toString(36).substring(2, 9));
   const myColor = useRef<string>(PEER_COLORS[Math.floor(Math.random() * PEER_COLORS.length)]);
 
-  // If no room ID provided, create a new one
+  // If no room ID provided, create or generate a new one
   useEffect(() => {
     if (!roomId) {
       const initRoom = async () => {
@@ -69,10 +69,16 @@ export const PlaygroundPage: React.FC = () => {
             language: 'python',
             source_code: '# Collaborative Playground\nprint("Collaborating in real-time!")',
           });
-          navigate(`/playground/${res.data.id}`, { replace: true });
+          if (res?.data?.id) {
+            navigate(`/playground/${res.data.id}`, { replace: true });
+            return;
+          }
         } catch (err) {
-          console.error('Failed to create playground:', err);
+          console.warn('Backend playground creation unavailable, generating client session:', err);
         }
+        const fallbackId = `room-${Math.random().toString(36).substring(2, 9)}`;
+        setCurrentRoomId(fallbackId);
+        navigate(`/playground/${fallbackId}`, { replace: true });
       };
       initRoom();
     } else {
