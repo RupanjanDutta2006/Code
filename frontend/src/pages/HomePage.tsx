@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
-  Code2, 
   Play, 
   Square,
   RotateCcw,
@@ -13,27 +12,28 @@ import {
   CheckCircle2, 
   Users, 
   Terminal, 
-  FileCode,
-  ShieldCheck,
-  Zap
+  Cpu,
+  Layers,
+  Bot
 } from 'lucide-react';
 import { CodeEditor } from '../components/CodeEditor';
 import { OutputTerminal, OutputTerminalHandle } from '../components/OutputTerminal';
-import { api, ExecuteResult } from '../services/api';
+import { ExecuteResult } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useAIChat } from '../context/AIChatContext';
 
 const LANGUAGES = [
-  { id: 'python', name: 'Python', ext: '.py', icon: '🐍', color: 'from-amber-500/20 to-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-  { id: 'cpp', name: 'C++', ext: '.cpp', icon: '⚡', color: 'from-blue-500/20 to-cyan-500/20 text-blue-400 border-blue-500/30' },
-  { id: 'c', name: 'C', ext: '.c', icon: '⚙️', color: 'from-slate-500/20 to-zinc-500/20 text-zinc-300 border-zinc-500/30' },
-  { id: 'java', name: 'Java', ext: '.java', icon: '☕', color: 'from-orange-500/20 to-red-500/20 text-orange-400 border-orange-500/30' },
-  { id: 'javascript', name: 'JavaScript', ext: '.js', icon: '🟨', color: 'from-yellow-500/20 to-amber-500/20 text-yellow-300 border-yellow-500/30' },
-  { id: 'typescript', name: 'TypeScript', ext: '.ts', icon: '🔷', color: 'from-blue-500/20 to-indigo-500/20 text-indigo-400 border-indigo-500/30' },
-  { id: 'go', name: 'Go', ext: '.go', icon: '🐹', color: 'from-cyan-500/20 to-teal-500/20 text-cyan-400 border-cyan-500/30' },
-  { id: 'rust', name: 'Rust', ext: '.rs', icon: '🦀', color: 'from-orange-500/20 to-amber-600/20 text-orange-400 border-orange-500/30' },
-  { id: 'kotlin', name: 'Kotlin', ext: '.kt', icon: '💜', color: 'from-purple-500/20 to-pink-500/20 text-purple-400 border-purple-500/30' },
-  { id: 'html', name: 'HTML/CSS', ext: '.html', icon: '🌐', color: 'from-rose-500/20 to-pink-500/20 text-rose-400 border-rose-500/30' },
-  { id: 'sql', name: 'SQL (SQLite)', ext: '.sql', icon: '🗄️', color: 'from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30' },
+  { id: 'python', name: 'Python', ext: '.py', icon: '🐍', color: 'border-yellow-500/30 dark:border-yellow-500/25 bg-yellow-500/5' },
+  { id: 'cpp', name: 'C++', ext: '.cpp', icon: '⚡', color: 'border-blue-500/30 dark:border-blue-500/25 bg-blue-500/5' },
+  { id: 'c', name: 'C', ext: '.c', icon: '⚙️', color: 'border-slate-400/30 dark:border-slate-500/25 bg-slate-500/5' },
+  { id: 'java', name: 'Java', ext: '.java', icon: '☕', color: 'border-orange-500/30 dark:border-orange-500/25 bg-orange-500/5' },
+  { id: 'javascript', name: 'JavaScript', ext: '.js', icon: '🟨', color: 'border-amber-500/30 dark:border-amber-500/25 bg-amber-500/5' },
+  { id: 'typescript', name: 'TypeScript', ext: '.ts', icon: '🔷', color: 'border-indigo-500/30 dark:border-indigo-500/25 bg-indigo-500/5' },
+  { id: 'go', name: 'Go', ext: '.go', icon: '🐹', color: 'border-cyan-500/30 dark:border-cyan-500/25 bg-cyan-500/5' },
+  { id: 'rust', name: 'Rust', ext: '.rs', icon: '🦀', color: 'border-orange-500/30 dark:border-orange-500/25 bg-orange-500/5' },
+  { id: 'kotlin', name: 'Kotlin', ext: '.kt', icon: '💜', color: 'border-purple-500/30 dark:border-purple-500/25 bg-purple-500/5' },
+  { id: 'html', name: 'HTML/CSS', ext: '.html', icon: '🌐', color: 'border-rose-500/30 dark:border-rose-500/25 bg-rose-500/5' },
+  { id: 'sql', name: 'SQL (SQLite)', ext: '.sql', icon: '🗄️', color: 'border-emerald-500/30 dark:border-emerald-500/25 bg-emerald-500/5' },
 ];
 
 const DEFAULT_DEMO_CODE: Record<string, string> = {
@@ -96,30 +96,29 @@ func main() {
     val languages = listOf("Python", "C++", "Java", "Kotlin", "Rust")
     println("Supported: " + languages.joinToString(", "))
 }`,
-  sql: `CREATE TABLE languages (name TEXT, speed TEXT);
-INSERT INTO languages VALUES ('C++', 'Ultra Fast'), ('Python', 'Super Productive'), ('Rust', 'Memory Safe');
-SELECT * FROM languages;`,
   html: `<!DOCTYPE html>
 <html>
 <head>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0f172a; color: white; text-align: center; padding: 30px; }
-    .card { background: #1e293b; padding: 25px; border-radius: 16px; display: inline-block; border: 1px solid #334155; }
-    h1 { color: #38bdf8; margin-top: 0; }
+    body { font-family: system-ui; text-align: center; padding: 40px; background: #0f172a; color: white; }
+    h1 { color: #38bdf8; }
+    .btn { background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>🚀 CodeVault Pro Live Preview</h1>
-    <p>Interactive HTML/CSS/JS rendering in real-time!</p>
-  </div>
+  <h1>CodeVault Pro Live HTML</h1>
+  <p>Interactive client-side web sandbox</p>
+  <button class="btn" onclick="alert('Hello from CodeVault Pro!')">Click Me</button>
 </body>
 </html>`,
+  sql: `CREATE TABLE languages (name TEXT, speed TEXT);
+INSERT INTO languages VALUES ('C++', 'Ultra Fast'), ('Python', 'Super Productive'), ('Rust', 'Memory Safe');
+SELECT * FROM languages;`,
 };
 
 export const HomePage: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const { toggleChat } = useAIChat();
   const [selectedLang, setSelectedLang] = useState('python');
   const [demoCode, setDemoCode] = useState(DEFAULT_DEMO_CODE['python']);
   const [running, setRunning] = useState(false);
@@ -172,92 +171,116 @@ export const HomePage: React.FC = () => {
   }, [demoCode, selectedLang]);
 
   return (
-    <div className="space-y-20 pb-20">
+    <div className="space-y-20 pb-24 mesh-gradient-bg transition-colors duration-200">
       {/* Hero Section */}
-      <section className="relative pt-12 pb-8 overflow-hidden text-center max-w-5xl mx-auto px-4">
-        {/* Glow backdrop */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[300px] bg-gradient-to-tr from-brand-600/20 via-indigo-500/10 to-teal-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <section className="relative pt-16 pb-10 overflow-hidden text-center max-w-6xl mx-auto px-4">
+        {/* Glow ambient meshes */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[380px] bg-gradient-to-tr from-light-blue/10 via-purple-500/10 to-cyan-500/10 dark:from-neon-blue/20 dark:via-neon-purple/20 dark:to-cyan-500/10 rounded-full blur-3xl pointer-events-none -z-10 animate-glow-pulse" />
 
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-semibold mb-6">
-          <Sparkles className="w-3.5 h-3.5 text-brand-400" />
-          <span>Upgraded with Practice Judge, Live Streaming & Classrooms</span>
+        {/* Feature badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-light-blueSoft dark:bg-gradient-to-r dark:from-neon-blue/15 dark:to-neon-purple/15 border border-light-blueBorder/50 dark:border-purple-500/30 text-light-blue dark:text-purple-300 text-xs font-bold mb-8 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5 text-light-blue dark:text-neon-purple" />
+          <span>Next-Gen Online + Offline Hybrid AI Coding Environment</span>
         </div>
 
-        <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
+        {/* Hero Title */}
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-light-textStrong dark:text-white tracking-tight leading-[1.1] font-sans">
           Your Code. Saved Online.<br />
-          <span className="bg-gradient-to-r from-brand-400 via-indigo-300 to-teal-300 bg-clip-text text-transparent">
-            Run Anywhere.
+          <span className="text-gradient-neon">
+            Run & Reason Anywhere.
           </span>
         </h1>
 
-        <p className="mt-6 text-lg sm:text-xl text-dark-300 max-w-3xl mx-auto leading-relaxed">
-          Store your programming files, organize by folder, run code in 11 languages, practice for contests, and share with your class — from any device.
+        <p className="mt-6 text-base sm:text-xl text-light-textSecondary dark:text-dark-300 max-w-3xl mx-auto leading-relaxed font-normal">
+          High-performance code library with 11 cloud compilers, interactive DSA visualizations, contest practice judge, and hybrid online & offline AI assistance.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+        {/* Call to Actions */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
             to="/programs"
-            className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-base shadow-lg shadow-brand-500/25 transition-all flex items-center gap-2 hover:scale-[1.02]"
+            className="px-7 py-3.5 rounded-2xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:hover:from-brand-600 dark:hover:to-purple-600 text-white font-bold text-sm shadow-md hover:shadow-lg dark:shadow-xl dark:shadow-brand-500/30 transition-all duration-200 flex items-center gap-2.5 hover:scale-105"
           >
-            <FolderPlus className="w-5 h-5" />
+            <FolderPlus className="w-4 h-4" />
             Explore Programs
           </Link>
 
           <Link
             to="/my-class"
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold text-base shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 hover:scale-[1.02]"
+            className="px-7 py-3.5 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/80 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-sm border border-light-border dark:border-[#1b223c] shadow-card-light transition-all flex items-center gap-2.5 hover:scale-105"
           >
-            <GraduationCap className="w-5 h-5 text-white" />
-            My Class (Visualizer)
+            <GraduationCap className="w-4 h-4 text-amber-500 dark:text-accent-amber" />
+            My Class (Interactive DSA)
           </Link>
 
           <Link
             to="/playground"
-            className="px-6 py-3 rounded-xl bg-dark-800/90 hover:bg-dark-750 text-dark-200 hover:text-white font-semibold text-base border border-dark-700/80 transition-all flex items-center gap-2 hover:scale-[1.02]"
+            className="px-7 py-3.5 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/80 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-sm border border-light-border dark:border-[#1b223c] shadow-card-light transition-all flex items-center gap-2.5 hover:scale-105"
           >
-            <Users className="w-5 h-5 text-accent-violet" />
+            <Users className="w-4 h-4 text-purple-600 dark:text-accent-violet" />
             Live Playground
           </Link>
+
+          <button
+            onClick={toggleChat}
+            className="px-7 py-3.5 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/90 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-sm border border-light-borderStrong dark:border-purple-500/30 shadow-card-light dark:shadow-lg dark:shadow-purple-500/10 hover:border-light-blueBorder dark:hover:shadow-neon-purple transition-all duration-200 flex items-center gap-2.5 hover:scale-105"
+          >
+            <Sparkles className="w-4 h-4 text-light-blue dark:text-neon-purple" />
+            Ask CodeVault AI
+          </button>
 
           {!user && (
             <Link
               to="/login"
-              className="px-6 py-3 rounded-xl bg-dark-800 hover:bg-dark-750 text-white font-semibold text-base border border-dark-700 transition-all flex items-center gap-2"
+              className="px-7 py-3.5 rounded-2xl bg-light-secondary dark:bg-dark-800 text-light-textStrong dark:text-white font-bold text-sm border border-light-border dark:border-dark-700 transition-all flex items-center gap-2 hover:scale-105"
             >
-              Get Started (Login)
+              Get Started
               <ArrowRight className="w-4 h-4" />
             </Link>
           )}
+        </div>
 
-          <Link
-            to="/creator"
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600/30 via-brand-600/30 to-cyan-600/30 hover:from-purple-600/40 hover:to-cyan-600/40 text-white font-semibold text-base border border-purple-500/40 transition-all flex items-center gap-2 shadow-lg shadow-purple-500/10"
-          >
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            Creator & Resources
-          </Link>
+        {/* Quick Platform Metrics */}
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
+          {[
+            { label: 'Cloud Sandboxes', val: '11 Compilers', icon: Terminal, color: 'text-light-blue dark:text-cyan-400' },
+            { label: 'AI Intelligence', val: 'Nemotron + Offline', icon: Bot, color: 'text-purple-600 dark:text-purple-400' },
+            { label: 'DSA Traces', val: '15 Visualizers', icon: Layers, color: 'text-emerald-600 dark:text-emerald-400' },
+            { label: 'Local Setup Needed', val: 'Zero Config', icon: Cpu, color: 'text-amber-600 dark:text-amber-400' },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="p-4 rounded-2xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#1b223c] shadow-card-light dark:shadow-md hover:border-light-blueBorder dark:hover:border-purple-500/30 transition-all"
+            >
+              <stat.icon className={`w-5 h-5 ${stat.color} mb-2`} />
+              <div className="text-base sm:text-lg font-bold text-light-textStrong dark:text-white font-sans">{stat.val}</div>
+              <div className="text-[11px] text-light-textSecondary dark:text-dark-400 font-medium">{stat.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Interactive Quick Runner Demo */}
       <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-3xl liquid-glass p-6 sm:p-8 shadow-2xl space-y-4 transition-colors">
+        <div className="rounded-3xl bg-white dark:bg-dark-900/80 p-6 sm:p-8 shadow-card-light dark:shadow-2xl space-y-5 transition-colors border border-light-border dark:border-[#232b4b]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-brand-500 dark:text-brand-400" />
-                Try Running Code Right Here
+              <h2 className="text-lg font-extrabold text-light-textStrong dark:text-white flex items-center gap-2.5 font-sans">
+                <div className="w-7 h-7 rounded-xl bg-light-blueSoft text-light-blue dark:bg-neon-blue/20 dark:text-neon-blue flex items-center justify-center border border-light-blueBorder/50 dark:border-neon-blue/30">
+                  <Terminal className="w-4 h-4" />
+                </div>
+                Live Cloud Execution Engine
               </h2>
-              <p className="text-xs text-slate-500 dark:text-dark-400">
-                Choose a language, click Run Code, and type inputs directly in the terminal just like a real IDE.
+              <p className="text-xs text-light-textSecondary dark:text-dark-400 mt-1">
+                Select a language, write code, and stream inputs directly to the interactive cloud sandbox.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <select
                 value={selectedLang}
                 onChange={(e) => handleLangChange(e.target.value)}
-                className="bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-slate-800 dark:text-dark-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-brand-500 font-mono transition-colors"
+                className="bg-light-secondary dark:bg-dark-900 border border-light-borderStrong dark:border-[#232b4b] text-light-textStrong dark:text-white text-xs rounded-xl px-3.5 py-2 outline-none focus:border-light-blue dark:focus:border-purple-500 font-mono transition-colors shadow-inner"
                 title="Select language"
               >
                 {LANGUAGES.map((l) => (
@@ -269,8 +292,8 @@ export const HomePage: React.FC = () => {
 
               <button
                 onClick={handleReset}
-                className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-300 text-xs font-semibold border border-slate-200 dark:border-dark-700 transition-all flex items-center gap-1.5"
-                title="Reset editor to template"
+                className="px-3.5 py-2 rounded-xl bg-light-secondary dark:bg-dark-900 hover:bg-white dark:hover:bg-dark-850 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white text-xs font-bold border border-light-border dark:border-[#1b223c] transition-all flex items-center gap-1.5 shadow-sm"
+                title="Reset editor template"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset</span>
@@ -279,8 +302,8 @@ export const HomePage: React.FC = () => {
               {running ? (
                 <button
                   onClick={handleStop}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-500/20 transition-all flex items-center gap-1.5"
-                  title="Stop running program (Ctrl+Shift+K)"
+                  className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md shadow-rose-500/25 transition-all flex items-center gap-2"
+                  title="Stop execution (Ctrl+Shift+K)"
                 >
                   <Square className="w-3.5 h-3.5 fill-white" />
                   <span>Stop</span>
@@ -288,7 +311,7 @@ export const HomePage: React.FC = () => {
               ) : (
                 <button
                   onClick={handleQuickRun}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition-all flex items-center gap-1.5 hover:scale-[1.02]"
+                  className="px-6 py-2 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple text-white text-xs font-bold shadow-md dark:shadow-lg dark:shadow-brand-500/25 transition-all flex items-center gap-2 hover:scale-105"
                   title="Run code (Ctrl+Enter)"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
@@ -299,16 +322,16 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="h-[380px]">
+            <div className="h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-sm">
               <CodeEditor
                 code={demoCode}
                 language={selectedLang}
                 onChange={setDemoCode}
-                height="380px"
+                height="390px"
                 onRun={handleQuickRun}
               />
             </div>
-            <div className="h-[380px]">
+            <div className="h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-sm">
               <OutputTerminal
                 ref={terminalRef}
                 result={result}
@@ -323,6 +346,7 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
+<<<<<<< HEAD
       {/* Feature Section 1: Practice & Check (Judge Mode) */}
       <section className="max-w-6xl mx-auto px-4">
         <div className="rounded-2xl border border-dark-700 bg-gradient-to-br from-dark-900 via-dark-850 to-dark-900 p-8 shadow-xl">
@@ -483,22 +507,110 @@ export const HomePage: React.FC = () => {
         <div className="text-center space-y-2 mb-8">
           <h2 className="text-2xl font-bold text-white">
             11 Supported Languages & Sandboxes
+=======
+      {/* Feature Cards Grid (SaaS Cards) */}
+      <section className="max-w-6xl mx-auto px-4 space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-light-textStrong dark:text-white font-sans">
+            Engineered for Students, Creators & Engineers
+>>>>>>> origin/main
           </h2>
-          <p className="text-sm text-dark-300">
-            Real compilers and interpreters running with resource limits and instant caching.
+          <p className="text-xs sm:text-sm text-light-textSecondary dark:text-dark-400">
+            A comprehensive developer toolkit built with next-gen AI and zero dependencies.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 1: Hybrid AI */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#232b4b] shadow-card-light dark:shadow-md hover:border-light-blueBorder dark:hover:border-purple-500/40 transition-all space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-light-blueSoft dark:bg-gradient-to-tr dark:from-neon-blue dark:to-neon-purple text-light-blue dark:text-white flex items-center justify-center shadow-sm dark:shadow-brand-500/20 border border-light-blueBorder/40 dark:border-transparent">
+              <Bot className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-light-textStrong dark:text-white font-sans">CodeVault Hybrid AI</h3>
+            <p className="text-xs text-light-textSecondary dark:text-dark-300 leading-relaxed">
+              Powered by cloud NVIDIA Nemotron for deep reasoning, with full browser-side on-device Qwen fallback when you lose internet connection.
+            </p>
+            <div className="pt-2">
+              <button
+                onClick={toggleChat}
+                className="text-xs text-light-blue dark:text-purple-400 hover:underline font-bold inline-flex items-center gap-1.5"
+              >
+                Open Assistant <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Card 2: Interactive DSA */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#232b4b] shadow-card-light dark:shadow-md hover:border-amber-300 dark:hover:border-amber-500/40 transition-all space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-gradient-to-tr dark:from-amber-500 dark:to-orange-500 text-amber-600 dark:text-white flex items-center justify-center shadow-sm dark:shadow-amber-500/20 border border-amber-200 dark:border-transparent">
+              <GraduationCap className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-light-textStrong dark:text-white font-sans">My Class (Interactive DSA)</h3>
+            <p className="text-xs text-light-textSecondary dark:text-dark-300 leading-relaxed">
+              Step-by-step visualizers across sorting, searching, recursion, trees, and linked lists with real-time state inspect and adjustable speed.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/my-class"
+                className="text-xs text-amber-600 dark:text-amber-400 hover:underline font-bold inline-flex items-center gap-1.5"
+              >
+                Explore 15 Lessons <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Card 3: Practice & Check Judge */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#232b4b] shadow-card-light dark:shadow-md hover:border-emerald-300 dark:hover:border-emerald-500/40 transition-all space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-gradient-to-tr dark:from-emerald-500 dark:to-teal-500 text-emerald-600 dark:text-white flex items-center justify-center shadow-sm dark:shadow-emerald-500/20 border border-emerald-200 dark:border-transparent">
+              <Trophy className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-light-textStrong dark:text-white font-sans">Practice & Check Judge</h3>
+            <p className="text-xs text-light-textSecondary dark:text-dark-300 leading-relaxed">
+              Test your solutions against sample and hidden test cases with millisecond execution timing, memory limits, and automated verdicts.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/programs"
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-bold inline-flex items-center gap-1.5"
+              >
+                Practice Coding <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Languages Sandbox Grid */}
+      <section className="max-w-6xl mx-auto px-4 space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-light-textStrong dark:text-white font-sans">
+            11 Universal Compilers Supported
+          </h2>
+          <p className="text-xs sm:text-sm text-light-textSecondary dark:text-dark-400">
+            Write, compile, and execute standard algorithms across all major industry languages.
           </p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {LANGUAGES.map((lang) => (
-            <div
+            <button
               key={lang.id}
-              className={`p-4 rounded-xl border bg-dark-900/60 flex flex-col items-center justify-center text-center gap-2 hover:-translate-y-1 transition-all ${lang.color}`}
+              onClick={() => handleLangChange(lang.id)}
+              className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between group shadow-card-light ${
+                selectedLang === lang.id
+                  ? 'bg-light-blueSoft border-light-blueBorder dark:bg-purple-950/40 dark:border-purple-500/60 shadow-sm'
+                  : 'bg-white dark:bg-dark-900/60 border-light-border dark:border-[#1b223c] hover:border-light-blueBorder dark:hover:border-[#232b4b] hover:bg-light-secondary dark:hover:bg-dark-850'
+              }`}
             >
-              <span className="text-2xl">{lang.icon}</span>
-              <span className="font-semibold text-xs text-white">{lang.name}</span>
-              <span className="font-mono text-[10px] text-dark-400">{lang.ext}</span>
-            </div>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl group-hover:scale-110 transition-transform">{lang.icon}</span>
+                <span className="text-[10px] font-mono font-bold text-light-textMuted dark:text-dark-500">{lang.ext}</span>
+              </div>
+              <div className="mt-3">
+                <div className="text-xs font-bold text-light-textStrong dark:text-white font-sans">{lang.name}</div>
+                <div className="text-[10px] text-light-textMuted dark:text-dark-400 font-medium">Cloud Sandbox</div>
+              </div>
+            </button>
           ))}
         </div>
       </section>

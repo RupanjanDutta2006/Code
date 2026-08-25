@@ -41,3 +41,8 @@ Thumbs.db
 Code_Vault_V1/
 Code v latest 8/
 scratch/
+
+# Local CodeVault development environment & Cache
+Cache/
+../Cache/
+

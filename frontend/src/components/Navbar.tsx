@@ -4,12 +4,10 @@ import {
   Code2, 
   FolderPlus, 
   PlusCircle, 
-  CheckCircle2, 
   GraduationCap, 
   BookOpen, 
   LogOut, 
   LogIn, 
-  User, 
   Layers, 
   Menu, 
   X,
@@ -18,7 +16,6 @@ import {
   Users,
   Sun,
   Moon,
-  Zap,
   Bot
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -27,50 +24,56 @@ import { useTheme } from '../context/ThemeContext';
 import { useAIChat } from '../context/AIChatContext';
 
 export const Navbar: React.FC = () => {
-  const { user, logout, isTeacher, isCreator } = useAuth();
+  const { user, logout, isCreator } = useAuth();
   const { isOnline, queuedRuns } = useOffline();
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
-  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const { toggleChat } = useAIChat();
+  const { toggleChat, healthStatus, offlineState } = useAIChat();
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
   return (
-    <nav className="sticky top-0 z-50 liquid-glass border-b border-slate-200/80 dark:border-dark-700/80 px-4 sm:px-6 py-3 transition-colors duration-200">
+    <nav className="sticky top-0 z-50 bg-white/95 dark:bg-dark-950/90 backdrop-blur-md border-b border-[#E5E9F0] dark:border-[#1e2746]/80 px-4 sm:px-6 py-3 transition-colors duration-200 shadow-[0_1px_3px_rgba(16,24,40,0.04)]">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform duration-200">
-            <Code2 className="w-5 h-5" />
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="relative">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-light-blue via-indigo-600 to-purple-600 dark:from-neon-blue dark:via-brand-600 dark:to-neon-purple flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-all duration-300">
+              <Code2 className="w-5 h-5" />
+            </div>
+            {/* Subtle glow aura */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-light-blue to-purple-600 rounded-2xl blur opacity-25 dark:opacity-40 group-hover:opacity-60 transition duration-300 -z-10" />
           </div>
           <div>
-            <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-              CodeVault <span className="text-xs px-1.5 py-0.5 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 font-semibold border border-brand-500/20 dark:border-brand-500/30">PRO</span>
+            <span className="font-extrabold text-lg tracking-tight text-light-textStrong dark:text-white flex items-center gap-1.5 font-sans">
+              CodeVault <span className="text-[10px] px-2 py-0.5 rounded-full bg-light-blueSoft text-light-blue dark:bg-purple-500/20 dark:text-purple-300 font-bold border border-light-blueBorder/40 dark:border-purple-500/30">PRO</span>
             </span>
-            <span className="text-[10px] text-slate-500 dark:text-dark-400 block -mt-1 font-medium">Student Code Library & Compiler</span>
+            <span className="text-[10px] text-light-textMuted dark:text-dark-400 block -mt-1 font-medium">Next-Gen Code & AI Platform</span>
           </div>
         </Link>
 
         {/* Offline Badge */}
         {!isOnline && (
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-medium">
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-medium animate-pulse">
             <WifiOff className="w-3.5 h-3.5" />
             <span>Offline Mode {queuedRuns.length > 0 && `(${queuedRuns.length} queued)`}</span>
           </div>
         )}
 
         {/* Desktop Navigation Links */}
-        <div className="hidden lg:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1 bg-light-secondary dark:bg-dark-900/60 p-1.5 rounded-2xl border border-light-border dark:border-[#1b223c]">
           <Link
             to="/"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              isActive('/') 
-                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive('/') && location.pathname === '/'
+                ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
+                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
             }`}
           >
             Home
@@ -78,37 +81,37 @@ export const Navbar: React.FC = () => {
 
           <Link
             to="/programs"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
               isActive('/programs') 
-                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+                ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
+                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
             }`}
           >
-            <Layers className="w-4 h-4 text-brand-500 dark:text-brand-400" />
+            <Layers className="w-3.5 h-3.5 text-brand-500 dark:text-brand-400" />
             Programs
           </Link>
 
           <Link
             to="/my-class"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
               isActive('/my-class') 
-                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+                ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
+                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
             }`}
           >
-            <GraduationCap className="w-4 h-4 text-accent-amber" />
+            <GraduationCap className="w-3.5 h-3.5 text-amber-500 dark:text-accent-amber" />
             My Class
           </Link>
 
           <Link
             to="/playground"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
               isActive('/playground') 
-                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+                ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
+                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
             }`}
           >
-            <Users className="w-4 h-4 text-accent-violet" />
+            <Users className="w-3.5 h-3.5 text-purple-600 dark:text-accent-violet" />
             Playground
           </Link>
 
@@ -116,298 +119,179 @@ export const Navbar: React.FC = () => {
             <>
               <Link
                 to="/import"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
                   isActive('/import') 
-                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+                    ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
+                    : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
                 }`}
               >
-                <FolderPlus className="w-4 h-4 text-accent-cyan" />
+                <FolderPlus className="w-3.5 h-3.5 text-accent-cyan" />
                 Import
               </Link>
               <Link
                 to="/create"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
                   isActive('/create') 
-                    ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                    : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+                    ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
+                    : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
                 }`}
               >
-                <PlusCircle className="w-4 h-4 text-emerald-500 dark:text-accent-emerald" />
+                <PlusCircle className="w-3.5 h-3.5 text-accent-emerald" />
                 + New
               </Link>
             </>
           )}
 
-          {(isTeacher || isCreator) && (
+          {(user?.role === 'teacher' || isCreator) && (
             <Link
               to="/classrooms"
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
                 isActive('/classrooms') 
-                  ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                  : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+                  ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
+                  : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
               }`}
             >
-              <GraduationCap className="w-4 h-4 text-brand-500" />
+              <GraduationCap className="w-3.5 h-3.5 text-accent-amber" />
               Classrooms
             </Link>
           )}
 
           <Link
             to="/creator"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
               isActive('/creator') 
-                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
+                ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
+                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             Creator
-          </Link>
-
-          <Link
-            to="/about"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              isActive('/about') 
-                ? 'text-brand-600 dark:text-white bg-slate-100 dark:bg-dark-800' 
-                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
-            }`}
-          >
-            About
-          </Link>
-
-          <Link
-            to="/contact"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              isActive('/contact') 
-                ? 'text-emerald-600 dark:text-emerald-400 bg-slate-100 dark:bg-dark-800' 
-                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800/60'
-            }`}
-          >
-            Contact
           </Link>
         </div>
 
-        {/* User Auth Action Buttons & Theme Switcher & AI Button */}
-        <div className="hidden lg:flex items-center gap-2.5">
-          {/* AI Chat Button */}
+        {/* Right Actions: CodeVault AI trigger + Theme toggle + Auth */}
+        <div className="flex items-center gap-2.5">
+          
+          {/* Quick AI Assistant Trigger in Navbar */}
           <button
             onClick={toggleChat}
-            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600/90 to-teal-600/90 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 border border-emerald-400/30 transition-all hover:scale-105 active:scale-95"
-            title="Open CodeVault AI Chat"
+            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-light-blueSoft dark:bg-gradient-to-r dark:from-purple-950/50 dark:to-dark-900 border border-light-blueBorder/50 dark:border-purple-500/40 text-light-blue dark:text-purple-300 text-xs font-bold shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 group"
+            title="Open CodeVault AI Assistant"
           >
-            <Zap className="w-3.5 h-3.5 fill-current" />
+            <div className="relative">
+              <Sparkles className="w-3.5 h-3.5 text-light-blue dark:text-neon-purple group-hover:rotate-12 transition-transform" />
+              <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
+                offlineState.status === 'ready' 
+                  ? 'bg-cyan-500' 
+                  : healthStatus === 'ONLINE_HEALTHY' 
+                  ? 'bg-emerald-500' 
+                  : 'bg-amber-500'
+              } animate-pulse`} />
+            </div>
             <span>CodeVault AI</span>
           </button>
 
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl border border-slate-200 dark:border-dark-700 bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-yellow-400 hover:scale-105 transition-all shadow-sm"
-            title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            className="p-2 rounded-2xl bg-light-secondary dark:bg-dark-900 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white border border-light-border dark:border-[#1b223c] transition-all hover:scale-105 shadow-sm"
+            title={isDark ? "Switch to Light Theme" : "Switch to Dark Theme"}
           >
-            {isDark ? <Sun className="w-4 h-4 fill-yellow-400/20 text-yellow-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-light-blue" />}
           </button>
 
+          {/* User Profile / Auth State */}
           {user ? (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5 pl-2 py-1 pr-2.5 rounded-xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-dark-700">
-                {user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.full_name || user.username}
-                    className="w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-dark-600 shadow-sm"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xs">
-                    {user.username.substring(0, 2).toUpperCase()}
-                  </div>
-                )}
-                <div className="text-left">
-                  <div className="text-xs font-semibold text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
-                    <span>{user.full_name || user.username}</span>
-                    {user.provider && (
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-dark-700 text-slate-600 dark:text-dark-300 font-mono font-normal uppercase">
-                        {user.provider}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-slate-500 dark:text-dark-400 uppercase font-medium">
-                    {user.role} {user.phone_number ? `• ${user.phone_number}` : ''}
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-center gap-2.5 pl-1">
+              <span className="hidden md:block text-xs font-semibold text-light-textNormal dark:text-dark-200">
+                {user.username}
+              </span>
               <button
                 onClick={logout}
-                className="p-2 rounded-lg text-slate-500 dark:text-dark-400 hover:text-rose-600 dark:hover:text-accent-rose hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
-                title="Log out"
+                className="p-2 rounded-2xl bg-light-secondary dark:bg-dark-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-light-textMuted dark:text-dark-400 hover:text-rose-600 dark:hover:text-rose-400 border border-light-border dark:border-[#1b223c] hover:border-rose-300 dark:hover:border-rose-500/30 transition-all shadow-sm"
+                title="Log Out"
               >
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link
-                to="/login"
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-800 dark:text-white text-sm font-medium border border-slate-200 dark:border-dark-700 transition-all flex items-center gap-1.5"
-              >
-                <LogIn className="w-4 h-4 text-slate-500 dark:text-dark-300" />
-                Login
-              </Link>
-              <Link
-                to="/login?tab=register"
-                className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium shadow-md shadow-brand-500/20 transition-all"
-              >
-                Sign Up
-              </Link>
-            </div>
+            <Link
+              to="/login"
+              className="px-4 py-2 rounded-2xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 text-white text-xs font-bold shadow-sm shadow-brand-500/20 hover:scale-105 transition-all flex items-center gap-1.5"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Login</span>
+            </Link>
           )}
-        </div>
 
-        {/* Mobile Menu & Theme Button */}
-        <div className="flex lg:hidden items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg border border-slate-200 dark:border-dark-700 bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-yellow-400 transition-colors"
-            title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-          >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5 text-indigo-600" />}
-          </button>
-          
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
+            className="lg:hidden p-2 rounded-2xl bg-light-secondary dark:bg-dark-900 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white border border-light-border dark:border-[#1b223c]"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden mt-3 pt-3 border-t border-slate-200 dark:border-dark-800 space-y-2 animate-slide-up">
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              toggleChat();
-            }}
-            className="w-full px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600/90 to-teal-600/90 text-white font-bold text-sm flex items-center justify-between shadow-md shadow-emerald-500/20"
-          >
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 fill-current" />
-              <span>CodeVault AI Chat</span>
-            </div>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20">Ask AI</span>
-          </button>
-
+        <div className="lg:hidden mt-3 pt-3 border-t border-light-border dark:border-[#1b223c] space-y-1 animate-slide-down">
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
+            className={`block px-4 py-2 rounded-xl text-xs font-semibold ${
+              isActive('/') && location.pathname === '/' 
+                ? 'bg-light-blueSoft text-light-blue dark:bg-dark-800 dark:text-white' 
+                : 'text-light-textNormal dark:text-dark-300 hover:bg-light-secondary dark:hover:bg-dark-850'
+            }`}
           >
             Home
           </Link>
           <Link
             to="/programs"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
+            className={`block px-4 py-2 rounded-xl text-xs font-semibold ${
+              isActive('/programs') 
+                ? 'bg-light-blueSoft text-light-blue dark:bg-dark-800 dark:text-white' 
+                : 'text-light-textNormal dark:text-dark-300 hover:bg-light-secondary dark:hover:bg-dark-850'
+            }`}
           >
-            Programs Library
-          </Link>
-          <Link
-            to="/playground"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
-          >
-            Live Playground
+            Programs
           </Link>
           <Link
             to="/my-class"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
+            className={`block px-4 py-2 rounded-xl text-xs font-semibold ${
+              isActive('/my-class') 
+                ? 'bg-light-blueSoft text-light-blue dark:bg-dark-800 dark:text-white' 
+                : 'text-light-textNormal dark:text-dark-300 hover:bg-light-secondary dark:hover:bg-dark-850'
+            }`}
           >
-            My Class (Interactive)
+            My Class (Interactive DSA)
           </Link>
           <Link
-            to="/create"
+            to="/playground"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
+            className={`block px-4 py-2 rounded-xl text-xs font-semibold ${
+              isActive('/playground') 
+                ? 'bg-light-blueSoft text-light-blue dark:bg-dark-800 dark:text-white' 
+                : 'text-light-textNormal dark:text-dark-300 hover:bg-light-secondary dark:hover:bg-dark-850'
+            }`}
           >
-            + Create Program
+            Live Playground
           </Link>
           <Link
             to="/creator"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center gap-2"
+            className={`block px-4 py-2 rounded-xl text-xs font-semibold ${
+              isActive('/creator') 
+                ? 'bg-light-blueSoft text-light-blue dark:bg-dark-800 dark:text-white' 
+                : 'text-light-textNormal dark:text-dark-300 hover:bg-light-secondary dark:hover:bg-dark-850'
+            }`}
           >
-            <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            Creator & Resources
+            Creator
           </Link>
-          <Link
-            to="/about"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800"
-          >
-            About & Docs
-          </Link>
-          <Link
-            to="/contact"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800 text-emerald-600 dark:text-emerald-400"
-          >
-            Contact & Team
-          </Link>
-
-          <div className="pt-2 border-t border-slate-200 dark:border-dark-800">
-            {user ? (
-              <div className="flex items-center justify-between px-3 py-2">
-                <div className="flex items-center gap-2.5">
-                  {user.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.full_name || user.username}
-                      className="w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-dark-600 shadow-sm"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xs">
-                      {user.username.substring(0, 2).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-xs font-semibold text-slate-900 dark:text-white block">
-                      {user.full_name || user.username}
-                    </span>
-                    <span className="text-[10px] text-slate-500 dark:text-dark-400 uppercase">
-                      {user.role} {user.provider ? `(${user.provider})` : ''}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => { logout(); setMobileMenuOpen(false); }}
-                  className="px-3 py-1 rounded-lg text-xs text-rose-600 dark:text-accent-rose bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 font-medium"
-                >
-                  Log out
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2 p-2">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-center py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-800 dark:text-white text-xs font-medium border border-slate-200 dark:border-dark-700"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/login?tab=register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-center py-2 rounded-xl bg-brand-600 text-white text-xs font-medium"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
         </div>
       )}
     </nav>

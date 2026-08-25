@@ -158,3 +158,32 @@ def test_api_execute_timeout():
     assert data["status"] == "timeout"
     assert "Time Limit Exceeded" in data["stderr"]
     assert data["error_type"] == "TimeLimitExceeded"
+
+def test_api_ai_health():
+    response = client.get("/api/ai/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert "NVIDIA Nemotron" in data["primary_provider"]
+
+def test_api_ai_chat():
+    response = client.post("/api/ai/chat", json={
+        "messages": [
+            {"role": "user", "content": "Explain binary search complexity."}
+        ]
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert "provider" in data
+    assert len(data["content"]) > 0
+
+def test_api_ai_explain():
+    response = client.post("/api/ai/explain", json={
+        "source_code": "def binary_search(arr, target): pass",
+        "language": "python"
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert "provider" in data
+    assert "explanation" in data
+

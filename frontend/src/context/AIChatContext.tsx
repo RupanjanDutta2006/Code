@@ -1,14 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { API_BASE_URL } from '../services/api';
+import {
+  ChatMessage,
+  AIProviderMode,
+  AIHealthStatus,
+  OfflineModelState,
+  CodeAttachment,
+} from '../ai/types';
+import { AIController } from '../ai/AIController';
+import { AIAvailabilityManager } from '../ai/network/AIAvailabilityManager';
+import { OfflineModelManager } from '../ai/offline/OfflineModelManager';
 
-export interface AIChatMessage {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: number;
-  isStreaming?: boolean;
-  isError?: boolean;
-}
+const CHAT_STORAGE_KEY = 'codevault_ai_chat_history_v2';
 
 export interface WorkspaceContext {
   fileName?: string;
@@ -20,366 +22,286 @@ export interface WorkspaceContext {
 }
 
 interface AIChatContextType {
+  messages: ChatMessage[];
   isOpen: boolean;
-  messages: AIChatMessage[];
-  isStreaming: boolean;
-  workspaceContext: WorkspaceContext;
+  setIsOpen: (open: boolean) => void;
+  toggleChat: () => void;
   openChat: (initialPrompt?: string, customContext?: Partial<WorkspaceContext>) => void;
   closeChat: () => void;
-  toggleChat: () => void;
-  sendMessage: (prompt: string, customContext?: Partial<WorkspaceContext>) => Promise<void>;
-  abortGeneration: () => void;
-  newChat: () => void;
-  clearChat: () => void;
+  isGenerating: boolean;
+  isStreaming: boolean;
+  providerMode: AIProviderMode;
+  setProviderMode: (mode: AIProviderMode) => void;
+  healthStatus: AIHealthStatus;
+  offlineState: OfflineModelState;
+  activeAttachment: CodeAttachment | null;
+  setActiveAttachment: (attachment: CodeAttachment | null) => void;
+  workspaceContext: WorkspaceContext;
   setWorkspaceContext: (ctx: Partial<WorkspaceContext>) => void;
-  askAboutSelection: (
-    selectedText: string,
-    action: 'explain' | 'fix' | 'optimize' | 'comments' | 'tests'
-  ) => void;
+  askAboutSelection: (selectedCodeOrAction: string, action?: string) => void;
+  sendMessage: (content: string, customAttachment?: CodeAttachment) => Promise<void>;
+  stopGeneration: () => void;
+  abortGeneration: () => void;
+  clearHistory: () => void;
+  clearChat: () => void;
+  newChat: () => void;
+  downloadOfflineAI: () => Promise<void>;
+  removeOfflineAI: () => Promise<void>;
+  testOfflineAI: () => Promise<string>;
 }
-
-const STORAGE_KEY = 'codevault_ai_chat_history_v2';
-
-const INITIAL_GREETING: AIChatMessage = {
-  id: 'greeting-1',
-  role: 'assistant',
-  content: `Hello! I'm **CodeVault AI**, your AI Computer Science tutor and coding assistant.
-
-I can help you:
-- 🔍 **Explain code** and break down algorithms step-by-step
-- 🐛 **Debug errors** and fix compilation / runtime issues
-- ⚡ **Analyze Big-O complexity** and optimize data structures
-- 🧪 **Generate edge-case test cases**
-
-How can I help you with your code today?`,
-  timestamp: Date.now(),
-};
 
 const AIChatContext = createContext<AIChatContextType | undefined>(undefined);
 
 export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<AIChatMessage[]>(() => {
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {}
-    return [INITIAL_GREETING];
+      const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [providerMode, setProviderModeState] = useState<AIProviderMode>('auto');
+  const [healthStatus, setHealthStatus] = useState<AIHealthStatus>('ONLINE_CHECKING');
+  const [offlineState, setOfflineState] = useState<OfflineModelState>(
+    OfflineModelManager.getInstance().getState()
+  );
+  const [activeAttachment, setActiveAttachment] = useState<CodeAttachment | null>(null);
   const [workspaceContext, setWorkspaceContextState] = useState<WorkspaceContext>({});
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const lastSendTimeRef = useRef<number>(0);
 
-  // Sync with LocalStorage
+  const controller = useRef(AIController.getInstance()).current;
+  const availabilityManager = useRef(AIAvailabilityManager.getInstance()).current;
+  const offlineManager = useRef(OfflineModelManager.getInstance()).current;
+
+  // Persist chat history
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    } catch (e) {}
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+    } catch {
+      // Ignore quota errors
+    }
   }, [messages]);
 
-  const setWorkspaceContext = useCallback((ctx: Partial<WorkspaceContext>) => {
+  // Subscribe to health and offline state updates
+  useEffect(() => {
+    const unsubHealth = availabilityManager.subscribe((st) => setHealthStatus(st));
+    const unsubOffline = offlineManager.subscribe((st) => setOfflineState(st));
+    return () => {
+      unsubHealth();
+      unsubOffline();
+    };
+  }, [availabilityManager, offlineManager]);
+
+  const setProviderMode = (mode: AIProviderMode) => {
+    setProviderModeState(mode);
+    controller.setMode(mode);
+  };
+
+  const toggleChat = () => setIsOpen((prev) => !prev);
+  const closeChat = () => setIsOpen(false);
+
+  const setWorkspaceContext = (ctx: Partial<WorkspaceContext>) => {
     setWorkspaceContextState((prev) => ({ ...prev, ...ctx }));
-  }, []);
+  };
 
-  const openChat = useCallback((initialPrompt?: string, customContext?: Partial<WorkspaceContext>) => {
+  const openChat = (initialPrompt?: string, customContext?: Partial<WorkspaceContext>) => {
+    if (customContext?.code) {
+      setActiveAttachment({
+        type: 'code',
+        title: `${customContext.language?.toUpperCase() || 'CODE'} Snippet`,
+        content: customContext.code,
+        language: customContext.language,
+      });
+    }
     setIsOpen(true);
-    if (customContext) {
-      setWorkspaceContextState((prev) => ({ ...prev, ...customContext }));
-    }
     if (initialPrompt) {
-      setTimeout(() => {
-        sendMessage(initialPrompt, customContext);
-      }, 50);
+      sendMessage(initialPrompt);
     }
-  }, []);
+  };
 
-  const closeChat = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
-  const toggleChat = useCallback(() => {
-    setIsOpen((prev) => !prev);
-  }, []);
-
-  const abortGeneration = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    setIsStreaming(false);
-    setMessages((prev) =>
-      prev.map((msg) => (msg.isStreaming ? { ...msg, isStreaming: false } : msg))
-    );
-  }, []);
-
-  const newChat = useCallback(() => {
-    abortGeneration();
-    setMessages([
-      {
-        id: `greeting-${Date.now()}`,
-        role: 'assistant',
-        content: `Started a new session with **CodeVault AI**! What coding challenge or algorithm would you like to work on?`,
-        timestamp: Date.now(),
-      },
-    ]);
-  }, [abortGeneration]);
-
-  const clearChat = useCallback(() => {
-    abortGeneration();
-    setMessages([INITIAL_GREETING]);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch (e) {}
-  }, [abortGeneration]);
+  const clearHistory = () => {
+    setMessages([]);
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+  };
 
   const sendMessage = useCallback(
-    async (promptText: string, customContext?: Partial<WorkspaceContext>) => {
-      const now = Date.now();
-      // Debounce protection against rapid double-clicks (<400ms)
-      if (now - lastSendTimeRef.current < 400 || isStreaming) return;
-      if (!promptText.trim()) return;
+    async (content: string, customAttachment?: CodeAttachment) => {
+      if (!content.trim() || isGenerating) return;
 
-      lastSendTimeRef.current = now;
-
-      const activeCtx = { ...workspaceContext, ...customContext };
-      const userMessage: AIChatMessage = {
-        id: `user-${now}`,
+      const attachment = customAttachment || activeAttachment || undefined;
+      const userMsg: ChatMessage = {
+        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
         role: 'user',
-        content: promptText,
-        timestamp: now,
+        content,
+        timestamp: Date.now(),
+        attachment,
       };
 
-      const assistantMessageId = `assistant-${now + 1}`;
-      const assistantPlaceholder: AIChatMessage = {
-        id: assistantMessageId,
+      const assistantMsgId = 'msg_' + (Date.now() + 1) + '_' + Math.random().toString(36).substring(2, 6);
+      const assistantMsg: ChatMessage = {
+        id: assistantMsgId,
         role: 'assistant',
         content: '',
-        timestamp: now + 1,
+        timestamp: Date.now(),
         isStreaming: true,
       };
 
-      setMessages((prev) => [...prev, userMessage, assistantPlaceholder]);
-      setIsStreaming(true);
+      setMessages((prev) => [...prev, userMsg, assistantMsg]);
+      setIsGenerating(true);
 
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      const historyPayload = messages
-        .filter((m) => !m.isError && (m.role === 'user' || m.role === 'assistant'))
-        .slice(-10)
-        .map((m) => ({ role: m.role, content: m.content }));
-
-      historyPayload.push({ role: 'user', content: promptText });
-
-      let codeContext = activeCtx.selectedCode || activeCtx.code;
-      let fullPromptContext = '';
-      if (activeCtx.compilerError) {
-        fullPromptContext += `\n[Compiler Error / Output]:\n${activeCtx.compilerError}\n`;
-      }
-
-      const streamEndpoint = `${API_BASE_URL}/api/ai/chat/stream`;
+      const historyToSend = messages.slice(-10);
 
       try {
-        const response = await fetch(streamEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messages: historyPayload,
-            source_code: codeContext,
-            language: activeCtx.language || 'c',
-            context: fullPromptContext,
-          }),
-          signal: controller.signal,
+        const stream = controller.sendMessage({
+          messages: [...historyToSend, userMsg],
+          activeCode: attachment?.content || workspaceContext.code,
+          language: attachment?.language || workspaceContext.language,
+          lastError: workspaceContext.compilerError,
         });
 
-        // 1. Rate Limit Error Handling
-        if (response.status === 429) {
-          const errData = await response.json().catch(() => ({}));
-          const rateMsg = errData.message || "You're sending messages too quickly. Please wait a moment and try again.";
+        for await (const chunk of stream) {
           setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMessageId
-                ? { ...msg, content: `⏳ **Rate Limit**: ${rateMsg}`, isStreaming: false, isError: true }
-                : msg
-            )
-          );
-          return;
-        }
-
-        // 2. Client Bad Request (e.g. message too large)
-        if (response.status === 400) {
-          const errData = await response.json().catch(() => ({}));
-          const errMsg = errData.message || 'Your message or code is too large. Please shorten it.';
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMessageId
-                ? { ...msg, content: `⚠️ ${errMsg}`, isStreaming: false, isError: true }
-                : msg
-            )
-          );
-          return;
-        }
-
-        // 3. Fallback to standard endpoint if streaming response stream is missing
-        if (!response.ok || !response.body) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let accumulated = '';
-        let done = false;
-
-        while (!done) {
-          const { value, done: readerDone } = await reader.read();
-          done = readerDone;
-          if (value) {
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
-            for (const line of lines) {
-              if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
-                try {
-                  const data = JSON.parse(line.slice(6));
-                  if (data.token) {
-                    accumulated += data.token;
-                    setMessages((prev) =>
-                      prev.map((msg) =>
-                        msg.id === assistantMessageId
-                          ? { ...msg, content: accumulated, isStreaming: true }
-                          : msg
-                      )
-                    );
+            prev.map((m) =>
+              m.id === assistantMsgId
+                ? {
+                    ...m,
+                    content: m.content + chunk.token,
+                    provider: chunk.provider,
+                    isStreaming: true,
                   }
-                } catch (e) {}
-              }
-            }
-          }
+                : m
+            )
+          );
         }
 
         setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessageId
-              ? { ...msg, content: accumulated || 'No response generated.', isStreaming: false }
-              : msg
-          )
+          prev.map((m) => (m.id === assistantMsgId ? { ...m, isStreaming: false } : m))
         );
       } catch (err: any) {
-        if (err.name === 'AbortError') {
-          console.log('[CodeVault AI] Chat generation stopped by user.');
-        } else {
-          console.error('[CodeVault AI] Stream failed, attempting standard API fallback:', err);
-          try {
-            const fallbackRes = await fetch(`${API_BASE_URL}/api/ai/chat`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                messages: historyPayload,
-                source_code: codeContext,
-                language: activeCtx.language || 'c',
-              }),
-            });
-
-            if (fallbackRes.status === 429) {
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === assistantMessageId
-                    ? {
-                        ...msg,
-                        content: "⏳ **Rate Limit**: You're sending messages too quickly. Please wait a moment and try again.",
-                        isStreaming: false,
-                        isError: true,
-                      }
-                    : msg
-                )
-              );
-              return;
-            }
-
-            const data = await fallbackRes.json();
-            const reply = data.response || data.explanation || 'CodeVault AI analyzed your request.';
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId
-                  ? { ...msg, content: reply, isStreaming: false }
-                  : msg
-              )
-            );
-          } catch (fallbackErr) {
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId
-                  ? {
-                      ...msg,
-                      content:
-                        '⚠️ **CodeVault AI is temporarily unavailable.** Please try again in a moment.',
-                      isStreaming: false,
-                      isError: true,
-                    }
-                  : msg
-              )
-            );
-          }
-        }
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantMsgId
+              ? {
+                  ...m,
+                  content:
+                    m.content.trim().length > 0
+                      ? m.content + `\n\n*(Error: ${err.message})*`
+                      : `Sorry, I encountered an error: ${err.message}. Please check your connection or switch AI provider modes in settings.`,
+                  isStreaming: false,
+                  isError: true,
+                }
+              : m
+          )
+        );
       } finally {
-        setIsStreaming(false);
-        abortControllerRef.current = null;
+        setIsGenerating(false);
       }
     },
-    [isStreaming, messages, workspaceContext]
+    [messages, isGenerating, activeAttachment, workspaceContext, controller]
   );
 
   const askAboutSelection = useCallback(
-    (
-      selectedText: string,
-      action: 'explain' | 'fix' | 'optimize' | 'comments' | 'tests'
-    ) => {
+    (selectedCodeOrAction: string, action?: string) => {
+      let selectedText = '';
+      let targetAction = '';
+
+      if (action) {
+        selectedText = selectedCodeOrAction;
+        targetAction = action;
+      } else {
+        selectedText = workspaceContext.selectedCode || workspaceContext.code || '';
+        targetAction = selectedCodeOrAction;
+      }
+
+      if (!selectedText) {
+        openChat('How can I help you with your code?');
+        return;
+      }
+
       let prompt = '';
-      switch (action) {
+      switch (targetAction) {
         case 'explain':
-          prompt = `Explain what this specific block of code does:\n\`\`\`\n${selectedText}\n\`\`\``;
+          prompt = `Explain this ${workspaceContext.language || 'code'} snippet line by line:\n\`\`\`\n${selectedText}\n\`\`\``;
           break;
         case 'fix':
-          prompt = `Find any bugs or potential issues in this code snippet and provide the corrected version:\n\`\`\`\n${selectedText}\n\`\`\``;
+          prompt = `Find any bugs, syntax errors, or logical flaws in this code and suggest a fix:\n\`\`\`\n${selectedText}\n\`\`\`\n${
+            workspaceContext.compilerError ? `Compiler Error: ${workspaceContext.compilerError}` : ''
+          }`;
           break;
         case 'optimize':
-          prompt = `How can I optimize the time and space complexity of this code?\n\`\`\`\n${selectedText}\n\`\`\``;
+          prompt = `How can I optimize the performance and readability of this code?\n\`\`\`\n${selectedText}\n\`\`\``;
           break;
         case 'comments':
-          prompt = `Add clean, educational comments explaining every key line of this code:\n\`\`\`\n${selectedText}\n\`\`\``;
+          prompt = `Add clean explanatory comments to this code:\n\`\`\`\n${selectedText}\n\`\`\``;
+          break;
+        case 'complexity':
+          prompt = `Analyze the Time Complexity and Space Complexity (Big-O) of this algorithm with detailed justification:\n\`\`\`\n${selectedText}\n\`\`\``;
           break;
         case 'tests':
           prompt = `Generate comprehensive edge-case test cases (inputs and expected outputs) for this code:\n\`\`\`\n${selectedText}\n\`\`\``;
           break;
+        default:
+          prompt = `Analyze this code snippet:\n\`\`\`\n${selectedText}\n\`\`\``;
+          break;
       }
 
-      openChat(prompt, { selectedCode: selectedText });
+      openChat(prompt, { code: selectedText, language: workspaceContext.language });
     },
-    [openChat]
+    [workspaceContext]
   );
+
+  const stopGeneration = () => {
+    controller.stopGeneration();
+    setIsGenerating(false);
+    setMessages((prev) =>
+      prev.map((m) => (m.isStreaming ? { ...m, isStreaming: false } : m))
+    );
+  };
+
+  const downloadOfflineAI = async () => {
+    await offlineManager.downloadModel();
+  };
+
+  const removeOfflineAI = async () => {
+    await offlineManager.removeModel();
+  };
+
+  const testOfflineAI = async () => {
+    return await offlineManager.testOfflineAI();
+  };
 
   return (
     <AIChatContext.Provider
       value={{
-        isOpen,
         messages,
-        isStreaming,
-        workspaceContext,
+        isOpen,
+        setIsOpen,
+        toggleChat,
         openChat,
         closeChat,
-        toggleChat,
-        sendMessage,
-        abortGeneration,
-        newChat,
-        clearChat,
+        isGenerating,
+        isStreaming: isGenerating,
+        providerMode,
+        setProviderMode,
+        healthStatus,
+        offlineState,
+        activeAttachment,
+        setActiveAttachment,
+        workspaceContext,
         setWorkspaceContext,
         askAboutSelection,
+        sendMessage,
+        stopGeneration,
+        abortGeneration: stopGeneration,
+        clearHistory,
+        clearChat: clearHistory,
+        newChat: clearHistory,
+        downloadOfflineAI,
+        removeOfflineAI,
+        testOfflineAI,
       }}
     >
       {children}

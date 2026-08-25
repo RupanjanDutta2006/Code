@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Play, 
-  Square,
-  RotateCcw,
+  Square, 
+  RotateCcw, 
   Copy, 
   Check, 
   History, 
@@ -11,15 +11,12 @@ import {
   Users, 
   Save, 
   ArrowLeft, 
-  CheckCircle2, 
   Folder, 
   User, 
   Clock, 
-  Layers, 
-  Sparkles,
-  Lock,
-  Globe,
-  Share2
+  Lock, 
+  Globe, 
+  Share2 
 } from 'lucide-react';
 import { api, Program, ExecuteResult } from '../services/api';
 import { CodeEditor } from '../components/CodeEditor';
@@ -99,7 +96,6 @@ export const ProgramDetailPage: React.FC = () => {
     if (terminalRef.current) {
       setRunning(true);
       terminalRef.current.startInteractive(sourceCode, program.language);
-      // Record analytics run event asynchronously
       api.post('/api/analytics/events', {
         event_type: 'run',
         program_id: program.id,
@@ -181,7 +177,7 @@ export const ProgramDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="py-24 text-center text-dark-400 font-medium">
+      <div className="py-24 text-center text-light-textMuted dark:text-dark-400 font-semibold animate-pulse">
         Loading program workspace...
       </div>
     );
@@ -189,7 +185,7 @@ export const ProgramDetailPage: React.FC = () => {
 
   if (!program) {
     return (
-      <div className="py-24 text-center text-dark-300">
+      <div className="py-24 text-center text-light-textSecondary dark:text-dark-300">
         Program not found or private.
       </div>
     );
@@ -198,46 +194,46 @@ export const ProgramDetailPage: React.FC = () => {
   const isAuthor = user?.id === program.user_id;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8 mesh-gradient-bg min-h-screen transition-colors duration-200">
       {/* Top Breadcrumb & Metadata Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-dark-700/80">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 pb-5 border-b border-light-border dark:border-[#1b223c]">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
             <Link
               to="/programs"
-              className="p-1.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
+              className="p-2 rounded-xl text-light-textMuted hover:text-light-textStrong hover:bg-light-secondary dark:text-dark-400 dark:hover:text-white dark:hover:bg-dark-850 border border-light-border dark:border-transparent dark:hover:border-[#1b223c] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <h1 className="text-xl sm:text-3xl font-extrabold text-light-textStrong dark:text-white tracking-tight font-sans">
               {program.title}
             </h1>
-            <span className="px-2.5 py-0.5 rounded-lg bg-brand-500/15 text-brand-300 border border-brand-500/30 text-xs font-mono font-bold uppercase">
+            <span className="px-3 py-1 rounded-xl bg-light-blueSoft text-light-blue border border-light-blueBorder/40 dark:bg-purple-500/15 dark:text-purple-300 dark:border-purple-500/30 text-xs font-mono font-bold uppercase">
               {program.language}
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-xs text-dark-400">
-            <span className="flex items-center gap-1">
-              <Folder className="w-3.5 h-3.5 text-dark-500" />
+          <div className="flex flex-wrap items-center gap-4 text-xs text-light-textSecondary dark:text-dark-400">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Folder className="w-3.5 h-3.5 text-light-blue dark:text-indigo-400" />
               {program.category}
             </span>
-            <span className="flex items-center gap-1">
-              <User className="w-3.5 h-3.5 text-dark-500" />
+            <span className="flex items-center gap-1.5 font-medium">
+              <User className="w-3.5 h-3.5 text-light-blue dark:text-indigo-400" />
               By {program.author_username || 'Anonymous'}
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-dark-500" />
+            <span className="flex items-center gap-1.5 font-medium">
+              <Clock className="w-3.5 h-3.5 text-light-blue dark:text-indigo-400" />
               Updated {new Date(program.updated_at).toLocaleDateString()}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5 font-medium">
               {program.is_public ? (
-                <span className="text-emerald-400 flex items-center gap-1">
-                  <Globe className="w-3 h-3" /> Public
+                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <Globe className="w-3.5 h-3.5" /> Public
                 </span>
               ) : (
-                <span className="text-amber-400 flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> Private
+                <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <Lock className="w-3.5 h-3.5" /> Private
                 </span>
               )}
             </span>
@@ -245,12 +241,12 @@ export const ProgramDetailPage: React.FC = () => {
         </div>
 
         {/* Action Buttons Toolbar */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {isAuthor && (
             <button
               onClick={handleSaveProgram}
               disabled={saving}
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
             >
               {saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
               <span>{saveSuccess ? 'Saved!' : 'Save Version'}</span>
@@ -259,76 +255,76 @@ export const ProgramDetailPage: React.FC = () => {
 
           <button
             onClick={handleCopyCode}
-            className="px-3 py-1.5 rounded-xl bg-dark-850 hover:bg-dark-800 text-dark-200 text-xs font-medium border border-dark-700 transition-colors flex items-center gap-1.5"
+            className="px-4 py-2 rounded-2xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong dark:bg-dark-900 dark:hover:bg-dark-850 dark:text-dark-200 dark:hover:text-white text-xs font-bold border border-light-border dark:border-[#1b223c] transition-colors flex items-center gap-1.5 shadow-card-light"
             title="Copy code to clipboard"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Copied' : 'Copy Code'}</span>
           </button>
 
           <button
             onClick={() => setShowVersions(true)}
-            className="px-3 py-1.5 rounded-xl bg-dark-850 hover:bg-dark-800 text-dark-200 text-xs font-medium border border-dark-700 transition-colors flex items-center gap-1.5"
+            className="px-4 py-2 rounded-2xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong dark:bg-dark-900 dark:hover:bg-dark-850 dark:text-dark-200 dark:hover:text-white text-xs font-bold border border-light-border dark:border-[#1b223c] transition-colors flex items-center gap-1.5 shadow-card-light"
           >
-            <History className="w-3.5 h-3.5 text-brand-400" />
+            <History className="w-4 h-4 text-light-blue dark:text-purple-400" />
             <span>Past Versions ({program.versions?.length || 1})</span>
           </button>
 
           {isAuthor && (
             <button
               onClick={() => setShowStats(true)}
-              className="px-3 py-1.5 rounded-xl bg-dark-850 hover:bg-dark-800 text-dark-200 text-xs font-medium border border-dark-700 transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 rounded-2xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong dark:bg-dark-900 dark:hover:bg-dark-850 dark:text-dark-200 dark:hover:text-white text-xs font-bold border border-light-border dark:border-[#1b223c] transition-colors flex items-center gap-1.5 shadow-card-light"
             >
-              <BarChart3 className="w-3.5 h-3.5 text-accent-cyan" />
+              <BarChart3 className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
               <span>Stats</span>
             </button>
           )}
 
           <button
             onClick={handleCopyToPlayground}
-            className="px-3.5 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-medium border border-indigo-500/40 transition-colors flex items-center gap-1.5"
+            className="px-4 py-2 rounded-2xl bg-light-blueSoft hover:bg-light-blue/15 text-light-blue dark:bg-purple-600/20 dark:hover:bg-purple-600/30 dark:text-purple-300 text-xs font-bold border border-light-blueBorder/40 dark:border-purple-500/40 transition-colors flex items-center gap-1.5"
           >
-            <Users className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Copy to Playground</span>
+            <Users className="w-4 h-4 text-light-blue dark:text-purple-400" />
+            <span>Playground</span>
           </button>
         </div>
       </div>
 
       {/* Main Workspace (Editor + Output) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column: Code Editor & Input */}
-        <div className="space-y-4">
+        {/* Left Column: Code Editor */}
+        <div className="space-y-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-dark-300 uppercase tracking-wider font-mono">
+            <span className="text-xs font-bold text-light-textSecondary dark:text-dark-300 uppercase tracking-wider font-mono">
               Source Code
             </span>
-            <span className="text-[11px] text-dark-400 font-mono">
-              Press <kbd className="px-1 py-0.5 bg-dark-800 border border-dark-700 rounded text-dark-300">Ctrl+Enter</kbd> to run
+            <span className="text-[11px] text-light-textMuted dark:text-dark-400 font-mono">
+              Press <kbd className="px-1.5 py-0.5 bg-light-secondary dark:bg-dark-900 border border-light-border dark:border-[#1b223c] rounded text-light-blue dark:text-purple-300">Ctrl+Enter</kbd> to run
             </span>
           </div>
 
-          <div className="h-[530px]">
+          <div className="h-[540px] rounded-3xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-card-light dark:shadow-2xl">
             <CodeEditor
               code={sourceCode}
               language={program.language}
               onChange={setSourceCode}
-              height="530px"
+              height="540px"
               onRun={handleRunCode}
             />
           </div>
         </div>
 
-        {/* Right Column: Output Terminal & Run Action */}
-        <div className="space-y-4">
+        {/* Right Column: Output Terminal & Actions */}
+        <div className="space-y-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-dark-300 uppercase tracking-wider font-mono">
+            <span className="text-xs font-bold text-light-textSecondary dark:text-dark-300 uppercase tracking-wider font-mono">
               Execution Output
             </span>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={handleResetCode}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-300 text-xs font-semibold border border-slate-200 dark:border-dark-700 transition-all flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-light-secondary dark:bg-dark-900 hover:bg-white dark:hover:bg-dark-850 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white text-xs font-bold border border-light-border dark:border-[#1b223c] transition-all flex items-center gap-1.5 shadow-card-light"
                 title="Reset code to original version"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -347,17 +343,17 @@ export const ProgramDetailPage: React.FC = () => {
               ) : (
                 <button
                   onClick={handleRunCode}
-                  className="px-5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition-all flex items-center gap-1.5 hover:scale-[1.02]"
+                  className="px-5 py-1.5 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:hover:from-brand-600 dark:hover:to-purple-600 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 hover:scale-105"
                   title="Run code (Ctrl+Enter)"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
-                  <span>Run Code</span>
+                  <span>Run Program</span>
                 </button>
               )}
             </div>
           </div>
 
-          <div className="h-[530px]">
+          <div className="h-[540px] rounded-3xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-card-light dark:shadow-2xl">
             <OutputTerminal
               ref={terminalRef}
               result={result}
@@ -371,35 +367,29 @@ export const ProgramDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Practice & Check Judge Mode Section */}
-      <section className="pt-2">
-        <PracticeJudge
-          programId={program.id}
-          testCases={program.test_cases || []}
-          sourceCode={sourceCode}
-          language={program.language}
-        />
-      </section>
+      {/* Practice & Contest Judge Panel */}
+      <PracticeJudge
+        programId={program.id}
+        sourceCode={sourceCode}
+        language={program.language}
+        testCases={program.test_cases || []}
+      />
 
-      {/* AI Assist Panel */}
-      <section className="pt-2">
-        <AIAssistPanel
-          sourceCode={sourceCode}
-          language={program.language}
-          lastError={result?.error}
-          onCopyToPlayground={(suggested) => {
-            setSourceCode(suggested);
-          }}
-        />
-      </section>
+      {/* CodeVault AI Assist Panel */}
+      <AIAssistPanel
+        sourceCode={sourceCode}
+        language={program.language}
+        lastError={result?.error}
+        onCopyToPlayground={(code) => setSourceCode(code)}
+      />
 
-      {/* Past Versions Modal */}
+      {/* Version History Modal */}
       {showVersions && (
         <VersionHistory
           programId={program.id}
           language={program.language}
           onClose={() => setShowVersions(false)}
-          onRestoreVersion={(restoredCode) => setSourceCode(restoredCode)}
+          onRestoreVersion={(code: string) => setSourceCode(code)}
         />
       )}
 

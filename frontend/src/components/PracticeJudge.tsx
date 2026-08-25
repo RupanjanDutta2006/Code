@@ -98,21 +98,18 @@ export const PracticeJudge: React.FC<PracticeJudgeProps> = ({
 
     try {
       const customBaseUrl = import.meta.env.VITE_API_BASE_URL;
-      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
       let judgeResult: JudgeSubmitResult;
 
-      if (isLocalDev || customBaseUrl) {
+      if (customBaseUrl) {
         try {
-          const res = await api.post<JudgeSubmitResult>(`/api/programs/${programId}/submit`, {
+          const res = await api.post<JudgeSubmitResult>('/api/judge/submit', {
             program_id: programId,
             source_code: sourceCode,
             language,
             classroom_id: classroomId,
           });
           judgeResult = res.data;
-        } catch (e) {
-          // Fallback to Universal Judge
+        } catch {
           judgeResult = await runLocalJudge();
         }
       } else {
@@ -140,15 +137,15 @@ export const PracticeJudge: React.FC<PracticeJudgeProps> = ({
   };
 
   return (
-    <div className="w-full rounded-xl border border-dark-700 bg-dark-900 overflow-hidden shadow-lg p-5">
+    <div className="w-full rounded-2xl border border-light-border dark:border-dark-700 bg-white dark:bg-dark-900 overflow-hidden shadow-card-light dark:shadow-lg p-5 transition-colors duration-200">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-dark-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-light-border dark:border-dark-700">
         <div>
           <div className="flex items-center gap-2">
-            <ListChecks className="w-5 h-5 text-accent-emerald" />
-            <h3 className="font-semibold text-white text-base">Practice & Check</h3>
+            <ListChecks className="w-5 h-5 text-emerald-600 dark:text-accent-emerald" />
+            <h3 className="font-bold text-light-textStrong dark:text-white text-base">Practice & Check</h3>
           </div>
-          <p className="text-xs text-dark-300 mt-0.5">
+          <p className="text-xs text-light-textSecondary dark:text-dark-300 mt-0.5">
             {testCases.length} sample check{testCases.length !== 1 ? 's' : ''} available. Test your solution against all checks.
           </p>
         </div>
@@ -156,7 +153,7 @@ export const PracticeJudge: React.FC<PracticeJudgeProps> = ({
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-sm shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {submitting ? (
             <>
@@ -174,26 +171,26 @@ export const PracticeJudge: React.FC<PracticeJudgeProps> = ({
 
       {/* Aggregate Results Banner */}
       {result && (
-        <div className="mt-4 p-4 rounded-xl bg-dark-850 border border-dark-700 animate-slide-up">
+        <div className="mt-4 p-4 rounded-xl bg-light-secondary dark:bg-dark-850 border border-light-border dark:border-dark-700 animate-slide-up">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {result.verdict === 'Accepted' ? (
-                <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
                   <Trophy className="w-5 h-5" />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-500/20 border border-rose-300 dark:border-rose-500/40 text-rose-700 dark:text-rose-400 flex items-center justify-center">
                   <XCircle className="w-5 h-5" />
                 </div>
               )}
               <div>
-                <div className="text-base font-bold text-white flex items-center gap-2">
+                <div className="text-base font-bold text-light-textStrong dark:text-white flex items-center gap-2">
                   <span>Result:</span>
-                  <span className={result.verdict === 'Accepted' ? 'text-emerald-400' : 'text-rose-400'}>
+                  <span className={result.verdict === 'Accepted' ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}>
                     {result.verdict}
                   </span>
                 </div>
-                <div className="text-xs text-dark-300">
+                <div className="text-xs text-light-textSecondary dark:text-dark-300">
                   {result.passed_count} of {result.total_count} checks passed
                 </div>
               </div>
@@ -201,7 +198,7 @@ export const PracticeJudge: React.FC<PracticeJudgeProps> = ({
 
             <div className="text-right">
               <span className={`text-lg font-bold font-mono ${
-                result.passed_count === result.total_count ? 'text-emerald-400' : 'text-amber-400'
+                result.passed_count === result.total_count ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
               }`}>
                 {result.passed_count}/{result.total_count} Passed
               </span>
@@ -218,61 +215,61 @@ export const PracticeJudge: React.FC<PracticeJudgeProps> = ({
             return (
               <div
                 key={c.case_index}
-                className="rounded-xl border border-dark-700/80 bg-dark-850/60 overflow-hidden transition-all"
+                className="rounded-xl border border-light-border dark:border-dark-700/80 bg-light-secondary dark:bg-dark-850/60 overflow-hidden transition-all"
               >
                 <button
                   onClick={() => setExpandedCase(isExpanded ? null : c.case_index)}
-                  className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-dark-800/60 transition-colors"
+                  className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-white dark:hover:bg-dark-800/60 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     {c.status === 'Passed' ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                     ) : c.status === 'Time Limit Exceeded' ? (
-                      <Clock className="w-5 h-5 text-amber-400" />
+                      <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-rose-400" />
+                      <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
                     )}
                     <div>
-                      <div className="text-sm font-semibold text-white">
+                      <div className="text-sm font-bold text-light-textStrong dark:text-white">
                         Check {c.case_index}: {c.status} {c.status === 'Passed' && '✓'}
                       </div>
-                      <div className="text-[11px] text-dark-400 font-mono">
+                      <div className="text-[11px] text-light-textMuted dark:text-dark-400 font-mono">
                         Time: {c.execution_time_ms} ms {c.is_sample ? '• Sample' : '• Hidden'}
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-dark-400">
+                  <div className="text-light-textMuted dark:text-dark-400">
                     {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-2 border-t border-dark-700/60 bg-dark-900/80 space-y-3 text-xs font-mono animate-fade-in">
+                  <div className="px-4 pb-4 pt-2 border-t border-light-border dark:border-dark-700/60 bg-white dark:bg-dark-900/80 space-y-3 text-xs font-mono animate-fade-in">
                     <div>
-                      <span className="text-dark-400 block mb-1">Input:</span>
-                      <pre className="p-2.5 rounded-lg bg-dark-950 border border-dark-700 text-dark-200 overflow-x-auto whitespace-pre-wrap">
+                      <span className="text-light-textSecondary dark:text-dark-400 block mb-1">Input:</span>
+                      <pre className="p-2.5 rounded-lg bg-light-secondary dark:bg-dark-950 border border-light-border dark:border-dark-700 text-light-textStrong dark:text-dark-200 overflow-x-auto whitespace-pre-wrap">
                         {c.input_data || '(None / standard)'}
                       </pre>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
-                        <span className="text-emerald-400 block mb-1">Expected Output:</span>
-                        <pre className="p-2.5 rounded-lg bg-dark-950 border border-dark-700 text-dark-200 overflow-x-auto whitespace-pre-wrap">
+                        <span className="text-emerald-700 dark:text-emerald-400 block mb-1 font-bold">Expected Output:</span>
+                        <pre className="p-2.5 rounded-lg bg-light-secondary dark:bg-dark-950 border border-light-border dark:border-dark-700 text-light-textStrong dark:text-dark-200 overflow-x-auto whitespace-pre-wrap">
                           {c.expected_output}
                         </pre>
                       </div>
                       <div>
-                        <span className={c.status === 'Passed' ? 'text-emerald-400' : 'text-rose-400' + ' block mb-1'}>
+                        <span className={(c.status === 'Passed' ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400') + ' block mb-1 font-bold'}>
                           Your Output:
                         </span>
-                        <pre className="p-2.5 rounded-lg bg-dark-950 border border-dark-700 text-dark-200 overflow-x-auto whitespace-pre-wrap">
+                        <pre className="p-2.5 rounded-lg bg-light-secondary dark:bg-dark-950 border border-light-border dark:border-dark-700 text-light-textStrong dark:text-dark-200 overflow-x-auto whitespace-pre-wrap">
                           {c.actual_output || '(Empty output)'}
                         </pre>
                       </div>
                     </div>
                     {c.error_message && (
-                      <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300">
+                      <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300">
                         {c.error_message}
                       </div>
                     )}
@@ -285,15 +282,15 @@ export const PracticeJudge: React.FC<PracticeJudgeProps> = ({
           testCases.map((tc, idx) => (
             <div
               key={tc.id || idx}
-              className="p-3 rounded-xl border border-dark-700/70 bg-dark-850/50 flex items-center justify-between text-xs"
+              className="p-3 rounded-xl border border-light-border dark:border-dark-700/70 bg-light-secondary dark:bg-dark-850/50 flex items-center justify-between text-xs"
             >
               <div className="flex items-center gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-dark-500"></span>
-                <span className="text-dark-200 font-medium font-mono">
+                <span className="w-2 h-2 rounded-full bg-light-blue dark:bg-dark-500"></span>
+                <span className="text-light-textNormal dark:text-dark-200 font-medium font-mono">
                   Check {idx + 1} {tc.is_sample ? '(Sample)' : '(Hidden)'}
                 </span>
               </div>
-              <div className="text-dark-400 font-mono">
+              <div className="text-light-textMuted dark:text-dark-400 font-mono">
                 Click above to test
               </div>
             </div>

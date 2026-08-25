@@ -274,6 +274,24 @@ class AnalyticsResponse(BaseModel):
     trend_30_days: List[Dict[str, Any]]
 
 # AI Assist
+class AIChatMessage(BaseModel):
+    role: str # "user", "assistant", "system"
+    content: str
+
+class AIChatRequest(BaseModel):
+    messages: List[AIChatMessage]
+    system_prompt: Optional[str] = None
+    language: Optional[str] = None
+    source_code: Optional[str] = None
+    error_message: Optional[str] = None
+
+class AIChatResponse(BaseModel):
+    provider: str
+    message: str
+    content: str
+    model: Optional[str] = None
+    disclaimer: str = "Powered by CodeVault AI. Verify code before production use."
+
 class AIExplainRequest(BaseModel):
     source_code: str
     language: str

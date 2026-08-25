@@ -35,24 +35,24 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ programId, onClo
   }, [programId]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh] transition-colors duration-200">
         {/* Header */}
-        <div className="px-6 py-4 bg-dark-850 border-b border-dark-700 flex items-center justify-between">
+        <div className="px-6 py-4 bg-light-secondary dark:bg-dark-850 border-b border-light-border dark:border-dark-700 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-light-blueSoft dark:bg-brand-500/20 text-light-blue dark:text-brand-400 flex items-center justify-center border border-light-blueBorder/40 dark:border-transparent">
               <BarChart3 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Program Statistics & Activity</h2>
-              <p className="text-xs text-dark-300">
+              <h2 className="text-base font-bold text-light-textStrong dark:text-white">Program Statistics & Activity</h2>
+              <p className="text-xs text-light-textSecondary dark:text-dark-300">
                 {stats?.title || 'Program Analytics'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
+            className="p-2 rounded-xl text-light-textMuted dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white hover:bg-light-secondary dark:hover:bg-dark-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -61,66 +61,66 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ programId, onClo
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto">
           {loading ? (
-            <div className="py-12 text-center text-dark-400">Loading analytics...</div>
+            <div className="py-12 text-center text-light-textMuted dark:text-dark-400">Loading analytics...</div>
           ) : stats ? (
             <>
               {/* Stat Metric Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-4 rounded-xl bg-dark-850 border border-dark-700 flex flex-col">
-                  <div className="flex items-center gap-2 text-dark-400 text-xs font-medium">
-                    <Eye className="w-4 h-4 text-accent-cyan" />
+                <div className="p-4 rounded-2xl bg-light-secondary dark:bg-dark-850 border border-light-border dark:border-dark-700 flex flex-col shadow-card-light">
+                  <div className="flex items-center gap-2 text-light-textSecondary dark:text-dark-400 text-xs font-medium">
+                    <Eye className="w-4 h-4 text-cyan-600 dark:text-accent-cyan" />
                     <span>Total Views</span>
                   </div>
-                  <div className="text-2xl font-bold font-mono text-white mt-2">
+                  <div className="text-2xl font-bold font-mono text-light-textStrong dark:text-white mt-2">
                     {stats.views}
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-dark-850 border border-dark-700 flex flex-col">
-                  <div className="flex items-center gap-2 text-dark-400 text-xs font-medium">
-                    <Play className="w-4 h-4 text-accent-emerald" />
+                <div className="p-4 rounded-2xl bg-light-secondary dark:bg-dark-850 border border-light-border dark:border-dark-700 flex flex-col shadow-card-light">
+                  <div className="flex items-center gap-2 text-light-textSecondary dark:text-dark-400 text-xs font-medium">
+                    <Play className="w-4 h-4 text-emerald-600 dark:text-accent-emerald" />
                     <span>Total Runs</span>
                   </div>
-                  <div className="text-2xl font-bold font-mono text-white mt-2">
+                  <div className="text-2xl font-bold font-mono text-light-textStrong dark:text-white mt-2">
                     {stats.runs}
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-dark-850 border border-dark-700 flex flex-col">
-                  <div className="flex items-center gap-2 text-dark-400 text-xs font-medium">
-                    <Copy className="w-4 h-4 text-brand-400" />
+                <div className="p-4 rounded-2xl bg-light-secondary dark:bg-dark-850 border border-light-border dark:border-dark-700 flex flex-col shadow-card-light">
+                  <div className="flex items-center gap-2 text-light-textSecondary dark:text-dark-400 text-xs font-medium">
+                    <Copy className="w-4 h-4 text-light-blue dark:text-brand-400" />
                     <span>Copies Made</span>
                   </div>
-                  <div className="text-2xl font-bold font-mono text-white mt-2">
+                  <div className="text-2xl font-bold font-mono text-light-textStrong dark:text-white mt-2">
                     {stats.copies}
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-dark-850 border border-dark-700 flex flex-col">
-                  <div className="flex items-center gap-2 text-dark-400 text-xs font-medium">
-                    <Clock className="w-4 h-4 text-accent-amber" />
+                <div className="p-4 rounded-2xl bg-light-secondary dark:bg-dark-850 border border-light-border dark:border-dark-700 flex flex-col shadow-card-light">
+                  <div className="flex items-center gap-2 text-light-textSecondary dark:text-dark-400 text-xs font-medium">
+                    <Clock className="w-4 h-4 text-amber-600 dark:text-accent-amber" />
                     <span>Last Executed</span>
                   </div>
-                  <div className="text-sm font-semibold text-dark-200 mt-2 truncate">
+                  <div className="text-sm font-semibold text-light-textStrong dark:text-dark-200 mt-2 truncate">
                     {stats.last_run_at ? new Date(stats.last_run_at).toLocaleDateString() : 'Never'}
                   </div>
                 </div>
               </div>
 
               {/* 30-Day Activity Trend Chart */}
-              <div className="p-5 rounded-xl bg-dark-850 border border-dark-700">
+              <div className="p-5 rounded-2xl bg-light-secondary dark:bg-dark-850 border border-light-border dark:border-dark-700 shadow-card-light">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-brand-400" />
-                    <h3 className="text-sm font-semibold text-white">30-Day Activity Trend</h3>
+                    <TrendingUp className="w-4 h-4 text-light-blue dark:text-brand-400" />
+                    <h3 className="text-sm font-bold text-light-textStrong dark:text-white">30-Day Activity Trend</h3>
                   </div>
                   <div className="flex items-center gap-3 text-xs">
-                    <span className="flex items-center gap-1.5 text-dark-300">
-                      <span className="w-2.5 h-2.5 rounded-full bg-brand-500 inline-block"></span>
+                    <span className="flex items-center gap-1.5 text-light-textSecondary dark:text-dark-300">
+                      <span className="w-2.5 h-2.5 rounded-full bg-light-blue inline-block"></span>
                       Views
                     </span>
-                    <span className="flex items-center gap-1.5 text-dark-300">
-                      <span className="w-2.5 h-2.5 rounded-full bg-accent-emerald inline-block"></span>
+                    <span className="flex items-center gap-1.5 text-light-textSecondary dark:text-dark-300">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
                       Runs
                     </span>
                   </div>
@@ -131,21 +131,21 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ programId, onClo
                     <AreaChart data={stats.trend_30_days} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#2D6ED1" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="#2D6ED1" stopOpacity={0}/>
                         </linearGradient>
                         <linearGradient id="colorRuns" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
                           <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#21262d" />
-                      <XAxis dataKey="date" stroke="#484f58" tick={{ fill: '#8b949e', fontSize: 10 }} />
-                      <YAxis stroke="#484f58" tick={{ fill: '#8b949e', fontSize: 10 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E9F0" />
+                      <XAxis dataKey="date" stroke="#98A2B3" tick={{ fill: '#667085', fontSize: 10 }} />
+                      <YAxis stroke="#98A2B3" tick={{ fill: '#667085', fontSize: 10 }} />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#161b22', borderColor: '#30363d', borderRadius: '8px', color: '#f0f6fc' }}
+                        contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#E5E9F0', borderRadius: '12px', color: '#1D2433', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                       />
-                      <Area type="monotone" dataKey="views" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
+                      <Area type="monotone" dataKey="views" stroke="#2D6ED1" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
                       <Area type="monotone" dataKey="runs" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorRuns)" />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -153,7 +153,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ programId, onClo
               </div>
             </>
           ) : (
-            <div className="py-12 text-center text-dark-400">
+            <div className="py-12 text-center text-light-textMuted dark:text-dark-400">
               No stats found or permission denied.
             </div>
           )}

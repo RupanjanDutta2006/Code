@@ -73,14 +73,16 @@ app.post('/api/playground', (req: Request, res: Response) => {
 // CodeVault AI Endpoints (Powered by Nemotron)
 // ==========================================
 
-// AI Health Diagnostic
-app.get('/api/ai/health', (_req: Request, res: Response) => {
+// AI Health Diagnostic (Safe - no secrets exposed)
+app.get(['/api/ai/health', '/api/ai-health'], (_req: Request, res: Response) => {
   res.json({
     service: 'CodeVault AI',
     configured: Boolean(NVIDIA_CONFIG.apiKey),
+    online_available: Boolean(NVIDIA_CONFIG.apiKey),
     provider: 'nemotron',
     model: NVIDIA_CONFIG.model,
     status: 'ready',
+    version: '2.1.0',
   });
 });
 
@@ -181,9 +183,11 @@ app.post('/api/ai/chat/stream', async (req: Request, res: Response) => {
     return;
   }
 
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
+  // Set SSE HTTP Headers
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders?.();
 
   try {
@@ -202,32 +206,89 @@ app.post('/api/ai/chat/stream', async (req: Request, res: Response) => {
         res.end();
       },
       (err: any) => {
-        res.write(`data: ${JSON.stringify({ error: err.message || 'Stream error' })}\n\n`);
+        console.error('[Streaming Error]:', err.message);
+        res.write(`data: ${JSON.stringify({ error: err.message || 'Stream generation failed' })}\n\n`);
         res.end();
       }
     );
+  } catch (err: any) {
+    console.error('[Unhandled SSE Error]:', err.message);
+    res.write(`data: ${JSON.stringify({ error: err.message || 'Internal server error' })}\n\n`);
+    res.end();
   } finally {
     releaseRateLimit(clientId);
   }
 });
 
-// AI Config Info
-app.get('/api/ai/config', (_req: Request, res: Response) => {
-  res.json({
-    provider: 'nvidia',
-    model: NVIDIA_CONFIG.model,
-    baseURL: NVIDIA_CONFIG.baseURL,
-    reasoningBudget: NVIDIA_CONFIG.reasoningBudget,
-    enableThinking: NVIDIA_CONFIG.enableThinking,
-    temperature: NVIDIA_CONFIG.temperature,
-    topP: NVIDIA_CONFIG.topP,
-    maxTokens: NVIDIA_CONFIG.maxTokens,
-  });
+// ==========================================
+// Developer GitHub Authorization Endpoints
+// ==========================================
+import { GitHubService } from './githubService';
+
+app.get('/api/github/status', (_req: Request, res: Response) => {
+  res.json(GitHubService.getStatus());
 });
 
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+app.get('/api/github/auth-url', (req: Request, res: Response) => {
+  const role = req.query.role === 'contributor' ? 'contributor' : 'main';
+  try {
+    const result = GitHubService.createAuthUrl(role);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/github/callback', async (req: Request, res: Response) => {
+  const { code, state, error, error_description } = req.query;
+  const frontendUrl = process.env.FRONTEND_DEV_URL || 'http://localhost:5173/developer/github-connect';
+
+  if (error) {
+    return res.redirect(`${frontendUrl}?status=error&message=${encodeURIComponent(String(error_description || error))}`);
+  }
+
+  if (!code || !state) {
+    return res.redirect(`${frontendUrl}?status=error&message=Missing+code+or+state+parameter`);
+  }
+
+  try {
+    const result = await GitHubService.handleCallback(String(code), String(state));
+    return res.redirect(result.redirect_url);
+  } catch (err: any) {
+    return res.redirect(`${frontendUrl}?status=error&message=${encodeURIComponent(err.message)}`);
+  }
+});
+
+app.post('/api/github/select-repo', (req: Request, res: Response) => {
+  const { role, repo_full_name } = req.body;
+  try {
+    const result = GitHubService.selectRepo(role === 'contributor' ? 'contributor' : 'main', repo_full_name);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/github/disconnect', (req: Request, res: Response) => {
+  const { role } = req.body;
+  res.json(GitHubService.disconnect(role === 'contributor' ? 'contributor' : 'main'));
+});
+
+app.get('/api/github/test-connection', async (req: Request, res: Response) => {
+  const role = req.query.role === 'contributor' ? 'contributor' : 'main';
+  const result = await GitHubService.testConnection(role);
+  res.json(result);
+});
+
+// Start Server if run directly
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`🚀 CodeVault Server listening on http://localhost:${PORT}`);
+    console.log(`=========================================`);
+    console.log(`🚀 CodeVault Server running on port ${PORT}`);
+    console.log(`⚡ Compiler: Wandbox Universal Engine`);
+    console.log(`🤖 AI Service: NVIDIA Nemotron (${NVIDIA_CONFIG.model})`);
+    console.log(`🔐 Key Configured: ${Boolean(NVIDIA_CONFIG.apiKey)}`);
+    console.log(`=========================================`);
   });
 }
 

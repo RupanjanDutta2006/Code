@@ -1,12 +1,11 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { OfflineProvider } from './context/OfflineContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AIChatProvider } from './context/AIChatContext';
 import { Navbar } from './components/Navbar';
-import { AIChatDrawer } from './components/AIChatDrawer';
-import { AIChatFloatingButton } from './components/AIChatFloatingButton';
+import { CodeVaultAIChat } from './components/CodeVaultAIChat';
 import { HomePage } from './pages/HomePage';
 import { ProgramsPage } from './pages/ProgramsPage';
 import { ProgramDetailPage } from './pages/ProgramDetailPage';
@@ -22,6 +21,7 @@ import { CreatorPage } from './pages/CreatorPage';
 import { ContactPage } from './pages/ContactPage';
 import { MyClassPage } from './pages/MyClassPage';
 import { InteractiveClassPage } from './pages/InteractiveClassPage';
+import { DeveloperGitHubConnectPage } from './pages/DeveloperGitHubConnectPage';
 
 export const App: React.FC = () => {
   return (
@@ -30,7 +30,7 @@ export const App: React.FC = () => {
         <OfflineProvider>
           <AIChatProvider>
             <BrowserRouter>
-              <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-100 selection:bg-brand-500 selection:text-white transition-colors duration-200 relative">
+              <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-200 selection:bg-neon-purple selection:text-white transition-colors duration-200 relative">
                 <Navbar />
                 
                 <main className="flex-1">
@@ -51,28 +51,28 @@ export const App: React.FC = () => {
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/creator" element={<CreatorPage />} />
                     <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/developer/github-connect" element={<DeveloperGitHubConnectPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
 
-                {/* Global AI Chat Drawer & Floating Trigger */}
-                <AIChatDrawer />
-                <AIChatFloatingButton />
+                {/* Global Unified CodeVault AI Chat Trigger & Drawer */}
+                <CodeVaultAIChat />
 
                 {/* Footer */}
-                <footer className="border-t border-slate-200 dark:border-dark-800/80 bg-white/70 dark:bg-dark-900/60 py-6 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-sm transition-colors duration-200">
-                  <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+                <footer className="border-t border-slate-200/80 dark:border-[#1b223c] bg-white/70 dark:bg-dark-950/80 py-8 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-xl transition-colors duration-200">
+                  <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <span className="font-semibold text-slate-900 dark:text-white">CodeVault Pro</span> — Empowering students & teachers with modern code tooling.
+                      <span className="font-bold text-slate-900 dark:text-white">CodeVault Pro</span> — Next-Gen AI Code Platform & Interactive Learning Studio.
                     </div>
                     <div className="flex items-center gap-4 text-slate-400 dark:text-dark-400">
-                      <a href="/about" className="hover:text-slate-900 dark:hover:text-white transition-colors">Documentation</a>
+                      <Link to="/about" className="hover:text-purple-400 transition-colors">Documentation</Link>
                       <span>•</span>
-                      <a href="/creator" className="hover:text-brand-500 dark:hover:text-brand-400 transition-colors font-medium">Creator</a>
+                      <Link to="/creator" className="hover:text-purple-400 transition-colors font-medium">Creator</Link>
                       <span>•</span>
-                      <a href="/contact" className="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors font-medium">Contact & Team</a>
+                      <Link to="/contact" className="hover:text-cyan-400 transition-colors font-medium">Contact & Team</Link>
                       <span>•</span>
-                      <span>11 Compilers</span>
+                      <Link to="/developer/github-connect" className="hover:text-emerald-400 transition-colors font-mono text-[11px] text-dark-500">GitHub Connect</Link>
                     </div>
                   </div>
                 </footer>
@@ -86,4 +86,3 @@ export const App: React.FC = () => {
 };
 
 export default App;
-

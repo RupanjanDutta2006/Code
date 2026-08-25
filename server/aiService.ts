@@ -33,7 +33,7 @@ export const NVIDIA_CONFIG = {
   baseURL:
     process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1',
   model:
-    process.env.NVIDIA_MODEL || 'nvidia/nemotron-3.5-lightning-30b-a3b',
+    process.env.NVIDIA_MODEL || 'nvidia/llama-3.1-nemotron-70b-instruct',
   reasoningBudget: Number(process.env.NVIDIA_REASONING_BUDGET || 16384),
   enableThinking: process.env.NVIDIA_ENABLE_THINKING !== 'false',
   temperature: Number(process.env.NVIDIA_TEMPERATURE || 0.7),
@@ -72,6 +72,10 @@ async function callNvidiaNim(messages: ChatMessage[], maxTokensOverride?: number
   const apiKey = NVIDIA_CONFIG.apiKey;
   const baseURL = NVIDIA_CONFIG.baseURL;
   const model = NVIDIA_CONFIG.model;
+
+  if (!apiKey) {
+    throw new Error('CONFIG_ERROR: NVIDIA_API_KEY is not configured on server.');
+  }
 
   console.log(`[CodeVault AI] Calling NVIDIA NIM API (model=${model}, messages=${messages.length})...`);
 
@@ -171,6 +175,12 @@ export async function streamChatWithNemotron(
   onError: (err: any) => void
 ): Promise<void> {
   const messages = buildMessagesPayload(req);
+
+  const apiKey = NVIDIA_CONFIG.apiKey;
+  if (!apiKey) {
+    onError(new Error('CONFIG_ERROR: NVIDIA_API_KEY is not configured on server.'));
+    return;
+  }
 
   console.log(`[CodeVault AI] Streaming request started (model=${NVIDIA_CONFIG.model})...`);
 
