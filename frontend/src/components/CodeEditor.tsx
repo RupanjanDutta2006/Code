@@ -43,13 +43,23 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const { askAboutSelection, setWorkspaceContext } = useAIChat();
   const monacoLang = MONACO_LANG_MAP[language.toLowerCase()] || 'plaintext';
 
-  // Keep global workspace context updated
+  const lastContextRef = React.useRef<{ code: string; language: string; fileName: string }>({ code: '', language: '', fileName: '' });
+
+  // Keep global workspace context updated without re-render loop
   React.useEffect(() => {
-    setWorkspaceContext({
-      code,
-      language,
-      fileName: fileName || `main.${language === 'python' ? 'py' : language === 'cpp' ? 'cpp' : language}`,
-    });
+    const currentName = fileName || `main.${language === 'python' ? 'py' : language === 'cpp' ? 'cpp' : language}`;
+    if (
+      lastContextRef.current.code !== code ||
+      lastContextRef.current.language !== language ||
+      lastContextRef.current.fileName !== currentName
+    ) {
+      lastContextRef.current = { code, language, fileName: currentName };
+      setWorkspaceContext({
+        code,
+        language,
+        fileName: currentName,
+      });
+    }
   }, [code, language, fileName, setWorkspaceContext]);
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {

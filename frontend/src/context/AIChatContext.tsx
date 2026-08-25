@@ -95,19 +95,19 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [availabilityManager, offlineManager]);
 
-  const setProviderMode = (mode: AIProviderMode) => {
+  const setProviderMode = useCallback((mode: AIProviderMode) => {
     setProviderModeState(mode);
     controller.setMode(mode);
-  };
+  }, [controller]);
 
-  const toggleChat = () => setIsOpen((prev) => !prev);
-  const closeChat = () => setIsOpen(false);
+  const toggleChat = useCallback(() => setIsOpen((prev) => !prev), []);
+  const closeChat = useCallback(() => setIsOpen(false), []);
 
-  const setWorkspaceContext = (ctx: Partial<WorkspaceContext>) => {
+  const setWorkspaceContext = useCallback((ctx: Partial<WorkspaceContext>) => {
     setWorkspaceContextState((prev) => ({ ...prev, ...ctx }));
-  };
+  }, []);
 
-  const openChat = (initialPrompt?: string, customContext?: Partial<WorkspaceContext>) => {
+  const openChat = useCallback((initialPrompt?: string, customContext?: Partial<WorkspaceContext>) => {
     if (customContext?.code) {
       setActiveAttachment({
         type: 'code',
@@ -120,12 +120,12 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (initialPrompt) {
       sendMessage(initialPrompt);
     }
-  };
+  }, []);
 
-  const clearHistory = () => {
+  const clearHistory = useCallback(() => {
     setMessages([]);
     localStorage.removeItem(CHAT_STORAGE_KEY);
-  };
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string, customAttachment?: CodeAttachment) => {
@@ -253,25 +253,25 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     [workspaceContext]
   );
 
-  const stopGeneration = () => {
+  const stopGeneration = useCallback(() => {
     controller.stopGeneration();
     setIsGenerating(false);
     setMessages((prev) =>
       prev.map((m) => (m.isStreaming ? { ...m, isStreaming: false } : m))
     );
-  };
+  }, [controller]);
 
-  const downloadOfflineAI = async () => {
+  const downloadOfflineAI = useCallback(async () => {
     await offlineManager.downloadModel();
-  };
+  }, [offlineManager]);
 
-  const removeOfflineAI = async () => {
+  const removeOfflineAI = useCallback(async () => {
     await offlineManager.removeModel();
-  };
+  }, [offlineManager]);
 
-  const testOfflineAI = async () => {
+  const testOfflineAI = useCallback(async () => {
     return await offlineManager.testOfflineAI();
-  };
+  }, [offlineManager]);
 
   return (
     <AIChatContext.Provider
