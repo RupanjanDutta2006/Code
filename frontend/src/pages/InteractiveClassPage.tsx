@@ -99,15 +99,24 @@ export const InteractiveClassPage: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [speed, setSpeed] = useState<PlaybackSpeed>('normal');
 
-  // Reset playback when steps change
+  // Layout & Fullscreen detection
+  const layout = useDeviceLayout();
+  const { isFullscreen, enterFullscreen, exitFullscreen } = useLearningFullscreen();
+
+  // Reset playback when steps change (e.g. preset changed)
   useEffect(() => {
     setCurrentStepIndex(0);
     setIsPlaying(false);
   }, [steps]);
 
-  // Animation Timer Loop with dynamic event-aware delay
+  // Auto-play animation timer loop
   useEffect(() => {
     if (!isPlaying) return;
+
+    if (currentStepIndex >= steps.length - 1) {
+      setIsPlaying(false);
+      return;
+    }
 
     const currentStep = steps[currentStepIndex];
     const delay = getStepDelay(speed, currentStep?.event);
@@ -123,36 +132,35 @@ export const InteractiveClassPage: React.FC = () => {
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [isPlaying, currentStepIndex, speed, steps]);
+  }, [isPlaying, currentStepIndex, steps, speed]);
 
-  if (!program) {
-    return null;
+  if (!program || steps.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-light-textMuted dark:text-dark-400 font-semibold animate-pulse">
+        Loading interactive algorithm session...
+      </div>
+    );
   }
 
-  const currentStep: LearningStep = steps[currentStepIndex] || steps[0] || {
-    id: 1,
-    event: 'INIT',
-    action: 'Loading...',
-    description: '',
-    state: null,
+  const currentStep = steps[currentStepIndex] || steps[0];
+  const currentImplementation = program.implementations[selectedLanguage as keyof typeof program.implementations];
+  const resolvedLineNumber = currentStep.codeLine;
+
+  // Handle Preset selection
+  const handleSelectPreset = (preset: PresetInput) => {
+    setIsPlaying(false);
+    setSelectedPresetLabel(preset.label);
+    setCurrentInput(preset.value);
   };
 
-  const currentImplementation =
-    program.implementations[selectedLanguage as keyof typeof program.implementations] ||
-    program.implementations.cpp ||
-    program.implementations.c ||
-    program.implementations.python;
+  // Handle Custom Input
+  const handleCustomInput = (val: any) => {
+    setIsPlaying(false);
+    setSelectedPresetLabel('Custom');
+    setCurrentInput(val);
+  };
 
-  // Resolve active line for current language based on step event
-  const resolvedLineNumber = useMemo(() => {
-    if (!currentImplementation || !currentStep) return undefined;
-    const mapped = currentImplementation.lineMap?.[currentStep.event];
-    if (typeof mapped === 'number') return mapped;
-    if (Array.isArray(mapped) && mapped.length > 0) return mapped[0];
-    return currentStep.codeLine;
-  }, [currentImplementation, currentStep]);
-
-  // Visualizer Switcher
+  // Render Visualizer by simulation type
   const renderVisualizer = () => {
     switch (program.simulationType) {
       case 'array':
@@ -174,29 +182,13 @@ export const InteractiveClassPage: React.FC = () => {
     }
   };
 
-  const handleSelectPreset = (preset: PresetInput) => {
-    setSelectedPresetLabel(preset.label);
-    setCurrentInput(preset.value);
-    setIsPlaying(false);
-    setCurrentStepIndex(0);
-  };
-
-  const handleCustomInput = (val: any) => {
-    setSelectedPresetLabel('Custom');
-    setCurrentInput(val);
-    setIsPlaying(false);
-    setCurrentStepIndex(0);
-  };
-
-  const layout = useDeviceLayout();
-  const { isFullscreen, enterFullscreen, exitFullscreen } = useLearningFullscreen();
-
+  // Practice in Code Studio
   const handlePracticeInCompiler = () => {
-    // Navigate to playground with preloaded source code
-    navigate('/playground', {
+    navigate('/programs', {
       state: {
-        preloadedCode: currentImplementation?.sourceCode,
-        preloadedLang: selectedLanguage,
+        templateCode: currentImplementation?.sourceCode,
+        language: selectedLanguage,
+        title: `Practice: ${program.title}`,
       },
     });
   };
@@ -242,7 +234,7 @@ export const InteractiveClassPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen py-6 px-3 sm:px-6 max-w-[1600px] mx-auto space-y-6 relative">
+    <div className="min-h-screen py-6 px-3 sm:px-6 max-w-[1600px] mx-auto space-y-6 relative mesh-gradient-bg transition-colors duration-200">
       {/* Mobile Landscape Onboarding / Rotation Guidance */}
       <MobileLandscapeOnboarding
         isMobile={layout.isMobile}
@@ -252,12 +244,12 @@ export const InteractiveClassPage: React.FC = () => {
       />
 
       {/* Top Breadcrumb & Actions Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-dark-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-light-border dark:border-dark-800">
         {/* Left Title & Meta */}
         <div className="flex items-center gap-3">
           <Link
             to="/my-class"
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-200 transition-colors"
+            className="p-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-200 transition-colors shadow-card-light"
             title="Back to My Class Catalog"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -265,14 +257,14 @@ export const InteractiveClassPage: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl font-black text-light-textStrong dark:text-white font-sans">
                 {program.title}
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-600 dark:text-brand-400 text-xs font-mono font-bold uppercase">
+              <span className="px-2.5 py-0.5 rounded-full bg-light-blueSoft border border-light-blueBorder/40 text-light-blue dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 text-xs font-mono font-bold uppercase">
                 {program.difficulty}
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-dark-400 mt-0.5">
+            <p className="text-xs text-light-textSecondary dark:text-dark-400 mt-0.5">
               {program.conceptSummary}
             </p>
           </div>
@@ -280,7 +272,7 @@ export const InteractiveClassPage: React.FC = () => {
 
         {/* Right Complexity, Fullscreen & Practice Button */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-dark-700 text-xs font-mono text-slate-600 dark:text-dark-300">
+          <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white dark:bg-dark-800/80 border border-light-border dark:border-dark-700 text-xs font-mono text-light-textSecondary dark:text-dark-300 shadow-card-light">
             <span>Time: <b>{program.timeComplexity.average}</b></span>
             <span>•</span>
             <span>Space: <b>{program.spaceComplexity}</b></span>
@@ -288,7 +280,7 @@ export const InteractiveClassPage: React.FC = () => {
 
           <button
             onClick={() => enterFullscreen()}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-600 dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors"
+            className="p-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-card-light"
             title="Open Fullscreen Landscape Mode"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -297,7 +289,7 @@ export const InteractiveClassPage: React.FC = () => {
 
           <button
             onClick={() => setShowAboutModal(!showAboutModal)}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-600 dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors"
+            className="p-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-card-light"
           >
             <Info className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">About</span>
@@ -305,7 +297,7 @@ export const InteractiveClassPage: React.FC = () => {
 
           <button
             onClick={handlePracticeInCompiler}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-transform active:scale-95"
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-transform active:scale-95"
           >
             <span>Practice in Code</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -315,23 +307,23 @@ export const InteractiveClassPage: React.FC = () => {
 
       {/* About Collapsible Details */}
       {showAboutModal && (
-        <div className="rounded-2xl liquid-glass p-4 text-xs sm:text-sm text-slate-700 dark:text-dark-200 space-y-2 border border-slate-200 dark:border-dark-700 shadow-xl animate-in fade-in duration-150">
-          <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-brand-500" />
+        <div className="rounded-2xl bg-white dark:bg-dark-900 p-4 text-xs sm:text-sm text-light-textStrong dark:text-dark-200 space-y-2 border border-light-border dark:border-dark-700 shadow-card-light dark:shadow-xl animate-in fade-in duration-150">
+          <h3 className="font-bold text-light-textStrong dark:text-white flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-light-blue dark:text-brand-500" />
             About {program.title}
           </h3>
-          <p className="leading-relaxed">{program.description}</p>
+          <p className="leading-relaxed text-light-textSecondary dark:text-dark-300">{program.description}</p>
           <div className="flex flex-wrap gap-2 pt-1 font-mono text-[11px]">
-            <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-dark-800">Best: {program.timeComplexity.best || 'O(1)'}</span>
-            <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-dark-800">Average: {program.timeComplexity.average}</span>
-            <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-dark-800">Worst: {program.timeComplexity.worst}</span>
-            <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-dark-800">Space: {program.spaceComplexity}</span>
+            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-dark-800 dark:border-transparent">Best: {program.timeComplexity.best || 'O(1)'}</span>
+            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-dark-800 dark:border-transparent">Average: {program.timeComplexity.average}</span>
+            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-dark-800 dark:border-transparent">Worst: {program.timeComplexity.worst}</span>
+            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-dark-800 dark:border-transparent">Space: {program.spaceComplexity}</span>
           </div>
         </div>
       )}
 
       {/* Presets & Input Selector Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl liquid-glass border border-slate-200 dark:border-dark-700">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 shadow-card-light">
         <PresetSelector
           presets={program.presets}
           selectedPresetLabel={selectedPresetLabel}
@@ -339,7 +331,7 @@ export const InteractiveClassPage: React.FC = () => {
           onCustomInput={program.simulationType === 'array' ? handleCustomInput : undefined}
           simulationType={program.simulationType}
         />
-        <div className="text-xs font-mono text-slate-400 dark:text-dark-400">
+        <div className="text-xs font-mono text-light-textMuted dark:text-dark-400">
           {steps.length} total simulation steps
         </div>
       </div>
@@ -374,7 +366,7 @@ export const InteractiveClassPage: React.FC = () => {
         {/* RIGHT COLUMN: 7 Columns on Desktop */}
         <div className="lg:col-span-7 flex flex-col space-y-5">
           {/* Visual Simulation Canvas */}
-          <div className="rounded-3xl liquid-glass border border-slate-300 dark:border-dark-700/80 p-4 sm:p-6 shadow-2xl min-h-[380px] flex items-center justify-center relative overflow-hidden">
+          <div className="rounded-3xl bg-white dark:bg-dark-900/90 border border-light-border dark:border-dark-700/80 p-4 sm:p-6 shadow-card-light dark:shadow-2xl min-h-[380px] flex items-center justify-center relative overflow-hidden">
             {renderVisualizer()}
           </div>
 

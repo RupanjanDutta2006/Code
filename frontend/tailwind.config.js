@@ -8,6 +8,22 @@ export default {
   theme: {
     extend: {
       colors: {
+        light: {
+          bg: '#F6F7F9',
+          surface: '#FFFFFF',
+          secondary: '#F8FAFC',
+          border: '#E5E9F0',
+          borderStrong: '#D8DEE8',
+          borderSubtle: '#EEF0F4',
+          textStrong: '#1D2433',
+          textNormal: '#35363D',
+          textSecondary: '#667085',
+          textMuted: '#98A2B3',
+          blue: '#2D6ED1',
+          blueHover: '#245CBD',
+          blueSoft: '#EEF5FF',
+          blueBorder: '#65A1EF',
+        },
         dark: {
           950: '#040308', // Deepest OkyAi obsidian black
           900: '#080a14', // Deep navy black
@@ -55,6 +71,9 @@ export default {
         mono: ['Fira Code', 'JetBrains Mono', 'Consolas', 'monospace'],
       },
       boxShadow: {
+        'subtle': '0 1px 3px rgba(16, 24, 40, 0.04), 0 1px 2px rgba(16, 24, 40, 0.03)',
+        'card-light': '0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04)',
+        'card-hover-light': '0 8px 24px -4px rgba(16, 24, 40, 0.08), 0 2px 6px -1px rgba(16, 24, 40, 0.04)',
         'neon-blue': '0 0 25px -4px rgba(52, 18, 253, 0.45)',
         'neon-purple': '0 0 25px -4px rgba(136, 10, 204, 0.45)',
         'neon-cyan': '0 0 25px -4px rgba(0, 240, 255, 0.35)',

@@ -100,8 +100,8 @@ export const CodeVaultAIChat: React.FC = () => {
   const renderStatusBadge = () => {
     if (offlineState.status === 'downloading') {
       return (
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold animate-pulse">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-semibold animate-pulse">
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
           <span>Preparing Offline AI ({offlineState.progress}%)</span>
         </div>
       );
@@ -109,8 +109,8 @@ export const CodeVaultAIChat: React.FC = () => {
 
     if (healthStatus === 'ONLINE_HEALTHY' && providerMode !== 'offline') {
       return (
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/80 animate-pulse" />
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
           <span>Online (NVIDIA Nemotron)</span>
         </div>
       );
@@ -118,15 +118,15 @@ export const CodeVaultAIChat: React.FC = () => {
 
     if (offlineState.status === 'ready') {
       return (
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/80" />
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-50 dark:bg-cyan-500/15 border border-cyan-300 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-xs font-semibold shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-cyan-500 dark:bg-cyan-400" />
           <span>Offline Mode (CodeVault AI)</span>
         </div>
       );
     }
 
     return (
-      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-semibold">
+      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-500/15 border border-rose-300 dark:border-rose-500/30 text-rose-700 dark:text-rose-400 text-xs font-semibold">
         <WifiOff className="w-3.5 h-3.5" />
         <span>Offline AI Unavailable</span>
       </div>
@@ -146,18 +146,18 @@ export const CodeVaultAIChat: React.FC = () => {
             const blockId = `${id}_code_${index}`;
 
             return (
-              <div key={index} className="rounded-2xl overflow-hidden border border-[#232b4b] bg-dark-950/90 my-2.5 shadow-lg">
-                <div className="flex items-center justify-between px-4 py-2 bg-dark-900/90 border-b border-[#1b223c] text-xs font-mono text-dark-300">
-                  <span className="text-indigo-400 font-semibold">{lang || 'code'}</span>
+              <div key={index} className="rounded-2xl overflow-hidden border border-light-border dark:border-[#232b4b] bg-light-secondary dark:bg-dark-950/90 my-2.5 shadow-sm dark:shadow-lg">
+                <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-dark-900/90 border-b border-light-border dark:border-[#1b223c] text-xs font-mono text-light-textSecondary dark:text-dark-300">
+                  <span className="text-light-blue dark:text-indigo-400 font-semibold">{lang || 'code'}</span>
                   <button
                     onClick={() => handleCopy(code, blockId)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-dark-800 hover:bg-dark-750 text-dark-200 hover:text-white transition-colors border border-[#1b223c]"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-light-secondary dark:bg-dark-800 hover:bg-white dark:hover:bg-dark-750 text-light-textNormal dark:text-dark-200 hover:text-light-textStrong dark:hover:text-white transition-colors border border-light-border dark:border-[#1b223c]"
                   >
-                    {copiedId === blockId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedId === blockId ? <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedId === blockId ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <pre className="p-4 overflow-x-auto font-mono text-xs text-indigo-100/90 leading-relaxed">
+                <pre className="p-4 overflow-x-auto font-mono text-xs text-light-textStrong dark:text-indigo-100/90 leading-relaxed">
                   <code>{code}</code>
                 </pre>
               </div>
@@ -174,30 +174,30 @@ export const CodeVaultAIChat: React.FC = () => {
       {/* Floating Toggle Button (Always visible on bottom right with futuristic glow) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 p-4 rounded-3xl bg-gradient-to-r from-neon-blue via-brand-600 to-neon-purple text-white shadow-2xl shadow-brand-500/40 hover:shadow-neon-purple hover:scale-110 active:scale-95 transition-all duration-300 flex items-center gap-3 group border border-white/20 backdrop-blur-xl"
+        className="fixed bottom-6 right-6 z-40 p-4 rounded-3xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:via-brand-600 dark:to-neon-purple text-white shadow-xl hover:shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 flex items-center gap-3 group border border-white/30 backdrop-blur-xl"
         title="Open CodeVault AI"
       >
         <div className="relative">
           <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-dark-950 shadow-sm" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white dark:border-dark-950 shadow-sm" />
         </div>
         <span className="font-bold text-sm hidden sm:inline tracking-wide font-sans">CodeVault AI</span>
       </button>
 
       {/* Main AI Chat Modal / Drawer */}
       {isOpen && (
-        <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[500px] lg:w-[540px] bg-[#080a14]/95 backdrop-blur-2xl border-l border-purple-500/20 shadow-2xl flex flex-col animate-slide-left">
+        <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[500px] lg:w-[540px] bg-light-bg dark:bg-[#080a14]/95 backdrop-blur-2xl border-l border-light-border dark:border-purple-500/20 shadow-2xl flex flex-col animate-slide-left transition-colors duration-200">
           
           {/* Header */}
-          <div className="px-6 py-5 border-b border-[#1b223c] flex items-center justify-between bg-dark-950/90">
+          <div className="px-6 py-5 border-b border-light-border dark:border-[#1b223c] flex items-center justify-between bg-white dark:bg-dark-950/90">
             <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-neon-blue via-brand-600 to-neon-purple text-white flex items-center justify-center shadow-lg shadow-brand-500/30">
+              <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-light-blue via-indigo-600 to-purple-600 dark:from-neon-blue dark:via-brand-600 dark:to-neon-purple text-white flex items-center justify-center shadow-md shadow-brand-500/25">
                 <Sparkles className="w-5 h-5" />
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-blue to-neon-purple rounded-2xl blur-sm opacity-50 -z-10" />
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-light-blue to-purple-600 rounded-2xl blur-sm opacity-30 dark:opacity-50 -z-10" />
               </div>
               <div>
-                <h3 className="font-extrabold text-white text-base flex items-center gap-2 font-sans tracking-tight">
-                  CodeVault AI <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">PRO</span>
+                <h3 className="font-extrabold text-light-textStrong dark:text-white text-base flex items-center gap-2 font-sans tracking-tight">
+                  CodeVault AI <span className="text-[10px] px-2 py-0.5 rounded-full bg-light-blueSoft text-light-blue dark:bg-purple-500/20 dark:text-purple-300 border border-light-blueBorder/40 dark:border-purple-500/30">PRO</span>
                 </h3>
                 <div className="mt-1">{renderStatusBadge()}</div>
               </div>
@@ -206,8 +206,8 @@ export const CodeVaultAIChat: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className={`p-2.5 rounded-2xl text-dark-300 hover:text-white hover:bg-dark-850 transition-colors border border-transparent hover:border-[#1b223c] ${
-                  showSettings ? 'bg-dark-850 text-white border-[#1b223c]' : ''
+                className={`p-2.5 rounded-2xl text-light-textSecondary dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-light-secondary dark:hover:bg-dark-850 transition-colors border border-transparent hover:border-light-border dark:hover:border-[#1b223c] ${
+                  showSettings ? 'bg-light-secondary dark:bg-dark-850 text-light-blue dark:text-white border-light-border dark:border-[#1b223c]' : ''
                 }`}
                 title="AI Settings & Offline Package"
               >
@@ -217,7 +217,7 @@ export const CodeVaultAIChat: React.FC = () => {
               <button
                 onClick={clearHistory}
                 disabled={messages.length === 0 || isGenerating}
-                className="p-2.5 rounded-2xl text-dark-400 hover:text-rose-400 hover:bg-dark-850 transition-colors disabled:opacity-40"
+                className="p-2.5 rounded-2xl text-light-textMuted dark:text-dark-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-light-secondary dark:hover:bg-dark-850 transition-colors disabled:opacity-40"
                 title="Clear Chat History"
               >
                 <Trash2 className="w-4 h-4" />
@@ -225,7 +225,7 @@ export const CodeVaultAIChat: React.FC = () => {
 
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-2.5 rounded-2xl text-dark-400 hover:text-white hover:bg-dark-850 transition-colors"
+                className="p-2.5 rounded-2xl text-light-textMuted dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white hover:bg-light-secondary dark:hover:bg-dark-850 transition-colors"
                 title="Close Drawer"
               >
                 <X className="w-5 h-5" />
@@ -235,15 +235,15 @@ export const CodeVaultAIChat: React.FC = () => {
 
           {/* Settings Sub-Panel */}
           {showSettings && (
-            <div className="p-5 bg-dark-950/95 border-b border-[#1b223c] space-y-4 animate-slide-down">
+            <div className="p-5 bg-white dark:bg-dark-950/95 border-b border-light-border dark:border-[#1b223c] space-y-4 animate-slide-down">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <HardDrive className="w-4 h-4 text-neon-purple" />
+                <span className="text-xs font-bold text-light-textStrong dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <HardDrive className="w-4 h-4 text-light-blue dark:text-neon-purple" />
                   CodeVault Hybrid AI Settings
                 </span>
                 <button
                   onClick={() => setShowSettings(false)}
-                  className="text-xs text-dark-400 hover:text-white font-medium"
+                  className="text-xs text-light-blue dark:text-dark-400 hover:underline font-semibold"
                 >
                   Done
                 </button>
@@ -251,7 +251,7 @@ export const CodeVaultAIChat: React.FC = () => {
 
               {/* Mode Selector */}
               <div>
-                <label className="text-xs text-dark-300 font-semibold block mb-2">Routing Mode:</label>
+                <label className="text-xs text-light-textSecondary dark:text-dark-300 font-semibold block mb-2">Routing Mode:</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(['auto', 'online', 'offline'] as const).map((mode) => (
                     <button
@@ -259,8 +259,8 @@ export const CodeVaultAIChat: React.FC = () => {
                       onClick={() => setProviderMode(mode)}
                       className={`px-3.5 py-2 rounded-xl text-xs font-bold capitalize border transition-all ${
                         providerMode === mode
-                          ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white border-purple-400 shadow-md shadow-brand-500/30'
-                          : 'bg-dark-900 text-dark-300 border-[#1b223c] hover:bg-dark-850 hover:text-white'
+                          ? 'bg-light-blue text-white border-light-blue shadow-sm dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:border-purple-400 dark:shadow-md dark:shadow-brand-500/30'
+                          : 'bg-light-secondary text-light-textNormal border-light-border hover:bg-white hover:text-light-textStrong dark:bg-dark-900 dark:text-dark-300 dark:border-[#1b223c] dark:hover:bg-dark-850 dark:hover:text-white'
                       }`}
                     >
                       {mode === 'auto' ? 'Auto (Smart)' : mode}
@@ -270,79 +270,76 @@ export const CodeVaultAIChat: React.FC = () => {
               </div>
 
               {/* Offline AI Package Card */}
-              <div className="p-4 rounded-2xl bg-dark-900 border border-[#232b4b] space-y-3.5 shadow-inner">
+              <div className="p-4 rounded-2xl bg-light-secondary dark:bg-dark-900 border border-light-border dark:border-[#232b4b] space-y-3.5 shadow-sm dark:shadow-inner">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Cpu className="w-4 h-4 text-cyan-400" />
+                    <h4 className="text-xs font-bold text-light-textStrong dark:text-white flex items-center gap-1.5">
+                      <Cpu className="w-4 h-4 text-light-blue dark:text-cyan-400" />
                       CodeVault Offline AI Model
                     </h4>
-                    <p className="text-[11px] text-dark-400 mt-1 leading-relaxed">
-                      On-device Qwen Coder 0.5B (4-bit quantized • ~{offlineState.sizeMB} MB). Runs 100% locally.
+                    <p className="text-[11px] text-light-textSecondary dark:text-dark-400 mt-1 leading-relaxed">
+                      Runs 100% on-device inside a Web Worker. Zero data leaves your laptop.
                     </p>
                   </div>
-                  {offlineState.status === 'ready' && (
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-                      Ready
-                    </span>
-                  )}
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-light-blueSoft text-light-blue border border-light-blueBorder/40 dark:bg-dark-800 dark:text-cyan-300 dark:border-cyan-500/30">
+                    Qwen2.5-Coder 0.5B
+                  </span>
                 </div>
 
-                {/* Device Capability Overview */}
+                {/* Capability Detector */}
                 {capabilities && (
-                  <div className="grid grid-cols-2 gap-2 text-[10px] text-dark-300 bg-dark-950/80 p-3 rounded-xl border border-[#1b223c]">
-                    <div>
-                      WebGPU: <strong className={capabilities.webGPU ? 'text-emerald-400' : 'text-amber-400'}>
-                        {capabilities.webGPU ? 'Hardware Accelerated' : 'CPU WASM Fallback'}
-                      </strong>
+                  <div className="p-3 rounded-xl bg-white dark:bg-dark-950 border border-light-border dark:border-dark-800 space-y-1.5 font-mono text-[11px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-light-textSecondary dark:text-dark-400">WebGPU Acceleration:</span>
+                      <span className={capabilities.webGPU ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-amber-600 dark:text-amber-400 font-bold'}>
+                        {capabilities.webGPU ? 'Supported ✓' : 'WASM CPU Fallback'}
+                      </span>
                     </div>
-                    <div>
-                      Storage Quota: <strong className="text-white">{capabilities.availableStorageMB || 2048} MB</strong>
-                    </div>
-                  </div>
-                )}
-
-                {/* Download Progress Bar */}
-                {offlineState.status === 'downloading' && (
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-[11px] text-dark-300">
-                      <span>{offlineState.progressText || 'Downloading model weights...'}</span>
-                      <span className="font-mono text-cyan-400 font-bold">{offlineState.progress}%</span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-dark-800 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-500 via-neon-blue to-neon-purple transition-all duration-300 rounded-full shadow-sm"
-                        style={{ width: `${offlineState.progress}%` }}
-                      />
+                    <div className="flex items-center justify-between">
+                      <span className="text-light-textSecondary dark:text-dark-400">Storage Available:</span>
+                      <span className="text-light-textNormal dark:text-dark-200">
+                        {capabilities.availableStorageMB > 0 ? `${capabilities.availableStorageMB} MB quota` : 'Unlimited OPFS'}
+                      </span>
                     </div>
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {offlineState.status !== 'ready' && offlineState.status !== 'downloading' && (
+                {/* Offline Actions */}
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {offlineState.status === 'not_downloaded' || offlineState.status === 'error' ? (
                     <button
                       onClick={downloadOfflineAI}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-neon-blue to-neon-purple hover:from-brand-600 hover:to-purple-600 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-brand-500/25"
+                      className="flex-1 py-2 px-3 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-1.5"
                     >
                       <DownloadCloud className="w-4 h-4" />
-                      Download Offline AI (~{offlineState.sizeMB} MB)
+                      <span>Download Offline AI (~380 MB)</span>
                     </button>
-                  )}
-
-                  {offlineState.status === 'ready' && (
+                  ) : offlineState.status === 'downloading' ? (
+                    <div className="w-full space-y-2">
+                      <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-300 font-medium">
+                        <span>Downloading Model Weights...</span>
+                        <span className="font-mono font-bold">{offlineState.progress}%</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-light-border dark:bg-dark-800 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-light-blue to-purple-600 dark:from-cyan-500 dark:to-neon-purple transition-all duration-300"
+                          style={{ width: `${offlineState.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
                     <>
                       <button
                         onClick={handleRunOfflineTest}
                         disabled={testing}
-                        className="px-4 py-2 rounded-xl bg-dark-850 hover:bg-dark-800 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition-all flex items-center gap-1.5"
+                        className="flex-1 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-600/20 dark:hover:bg-emerald-600/30 dark:text-emerald-300 dark:border-emerald-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
                       >
-                        <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-cyan-400" />
                         {testing ? 'Testing...' : 'Test Offline AI'}
                       </button>
                       <button
                         onClick={removeOfflineAI}
-                        className="px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold transition-all"
+                        className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30 text-xs font-semibold transition-all"
                       >
                         Remove Package
                       </button>
@@ -351,7 +348,7 @@ export const CodeVaultAIChat: React.FC = () => {
                 </div>
 
                 {testStatus && (
-                  <div className="text-[11px] font-mono p-2.5 rounded-xl bg-dark-950 text-cyan-300 border border-[#1b223c]">
+                  <div className="text-[11px] font-mono p-2.5 rounded-xl bg-white dark:bg-dark-950 text-light-textStrong dark:text-cyan-300 border border-light-border dark:border-[#1b223c]">
                     {testStatus}
                   </div>
                 )}
@@ -361,15 +358,15 @@ export const CodeVaultAIChat: React.FC = () => {
 
           {/* Active Context Attachment Pill */}
           {activeAttachment && (
-            <div className="px-5 py-2.5 bg-gradient-to-r from-purple-950/40 to-dark-900 border-b border-purple-500/20 flex items-center justify-between text-xs text-purple-300">
+            <div className="px-5 py-2.5 bg-light-blueSoft dark:bg-gradient-to-r dark:from-purple-950/40 dark:to-dark-900 border-b border-light-blueBorder/30 dark:border-purple-500/20 flex items-center justify-between text-xs text-light-blue dark:text-purple-300">
               <div className="flex items-center gap-2 truncate">
-                <Code2 className="w-4 h-4 shrink-0 text-neon-purple" />
+                <Code2 className="w-4 h-4 shrink-0 text-light-blue dark:text-neon-purple" />
                 <span className="font-bold">{activeAttachment.title}:</span>
-                <span className="truncate text-dark-300">{activeAttachment.content.substring(0, 50)}...</span>
+                <span className="truncate text-light-textNormal dark:text-dark-300">{activeAttachment.content.substring(0, 50)}...</span>
               </div>
               <button
                 onClick={() => setActiveAttachment(null)}
-                className="text-dark-400 hover:text-white p-1"
+                className="text-light-textMuted dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white p-1"
                 title="Remove attached context"
               >
                 <X className="w-4 h-4" />
@@ -378,15 +375,15 @@ export const CodeVaultAIChat: React.FC = () => {
           )}
 
           {/* Chat Messages Body */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-light-bg dark:bg-transparent">
             {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-dark-400 space-y-4">
-                <div className="relative w-14 h-14 rounded-3xl bg-gradient-to-tr from-neon-blue via-brand-600 to-neon-purple text-white flex items-center justify-center shadow-xl shadow-brand-500/30">
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-light-textMuted dark:text-dark-400 space-y-4">
+                <div className="relative w-14 h-14 rounded-3xl bg-gradient-to-tr from-light-blue via-indigo-600 to-purple-600 dark:from-neon-blue dark:via-brand-600 dark:to-neon-purple text-white flex items-center justify-center shadow-md dark:shadow-xl dark:shadow-brand-500/30">
                   <Sparkles className="w-7 h-7" />
-                  <div className="absolute -inset-1 bg-gradient-to-r from-neon-blue to-neon-purple rounded-3xl blur-md opacity-40 -z-10" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-light-blue to-purple-600 rounded-3xl blur-md opacity-30 dark:opacity-40 -z-10" />
                 </div>
-                <h4 className="font-extrabold text-white text-base tracking-tight font-sans">Welcome to CodeVault AI</h4>
-                <p className="text-xs text-dark-300 max-w-xs leading-relaxed">
+                <h4 className="font-extrabold text-light-textStrong dark:text-white text-base tracking-tight font-sans">Welcome to CodeVault AI</h4>
+                <p className="text-xs text-light-textSecondary dark:text-dark-300 max-w-xs leading-relaxed">
                   Your high-performance programming assistant. Powered by online NVIDIA Nemotron with browser-side offline fallback.
                 </p>
 
@@ -401,7 +398,7 @@ export const CodeVaultAIChat: React.FC = () => {
                     <button
                       key={idx}
                       onClick={() => sendMessage(s)}
-                      className="w-full text-left p-3 rounded-2xl bg-[#0e1222]/80 hover:bg-[#141a2e] border border-[#1b223c] text-xs text-dark-200 hover:text-white transition-all duration-200 shadow-sm hover:border-purple-500/30"
+                      className="w-full text-left p-3 rounded-2xl bg-white hover:bg-light-secondary border border-light-border text-xs text-light-textNormal hover:text-light-textStrong dark:bg-[#0e1222]/80 dark:hover:bg-[#141a2e] dark:border-[#1b223c] dark:text-dark-200 dark:hover:text-white transition-all duration-200 shadow-sm hover:border-light-blueBorder dark:hover:border-purple-500/30"
                     >
                       💡 {s}
                     </button>
@@ -417,10 +414,10 @@ export const CodeVaultAIChat: React.FC = () => {
                   } space-y-1.5`}
                 >
                   {/* Sender / Provider Label */}
-                  <div className="text-[10px] text-dark-400 px-1 font-semibold flex items-center gap-2">
+                  <div className="text-[10px] text-light-textMuted dark:text-dark-400 px-1 font-semibold flex items-center gap-2">
                     <span>{msg.role === 'user' ? 'You' : 'CodeVault AI'}</span>
                     {msg.provider && (
-                      <span className="px-2 py-0.5 rounded-full bg-dark-850 text-indigo-300 font-mono text-[9px] border border-[#1b223c]">
+                      <span className="px-2 py-0.5 rounded-full bg-light-secondary text-light-blue dark:bg-dark-850 dark:text-indigo-300 font-mono text-[9px] border border-light-border dark:border-[#1b223c]">
                         {msg.provider === 'nemotron' ? 'NVIDIA Nemotron' : 'Offline AI'}
                       </span>
                     )}
@@ -428,12 +425,12 @@ export const CodeVaultAIChat: React.FC = () => {
 
                   {/* Message Bubble */}
                   <div
-                    className={`max-w-[88%] rounded-3xl p-4 shadow-md ${
+                    className={`max-w-[88%] rounded-3xl p-4 shadow-sm ${
                       msg.role === 'user'
-                        ? 'bg-gradient-to-tr from-neon-blue to-neon-purple text-white rounded-br-none shadow-brand-500/20'
+                        ? 'bg-light-blueSoft border border-light-blueBorder/50 text-light-textStrong rounded-br-none dark:bg-gradient-to-tr dark:from-neon-blue dark:to-neon-purple dark:text-white dark:shadow-brand-500/20'
                         : msg.isError
-                        ? 'bg-rose-950/50 border border-rose-500/40 text-rose-200 rounded-bl-none'
-                        : 'bg-[#0e1222]/90 border border-[#232b4b] text-dark-100 rounded-bl-none shadow-lg'
+                        ? 'bg-rose-50 border border-rose-200 text-rose-800 rounded-bl-none dark:bg-rose-950/50 dark:border-rose-500/40 dark:text-rose-200'
+                        : 'bg-white border border-light-border text-light-textStrong rounded-bl-none shadow-sm dark:bg-[#0e1222]/90 dark:border-[#232b4b] dark:text-dark-100 dark:shadow-lg'
                     }`}
                   >
                     {renderMessageContent(msg.content, msg.id)}
@@ -444,79 +441,56 @@ export const CodeVaultAIChat: React.FC = () => {
 
             {/* Generating typing indicator */}
             {isGenerating && (
-              <div className="flex items-center gap-2.5 text-xs text-indigo-400 animate-pulse pl-2 font-medium">
-                <span className="w-2.5 h-2.5 rounded-full bg-neon-purple animate-ping" />
+              <div className="flex items-center gap-2.5 text-xs text-light-blue dark:text-indigo-400 animate-pulse pl-2 font-medium">
+                <span className="w-2.5 h-2.5 rounded-full bg-light-blue dark:bg-neon-purple animate-ping" />
                 <span>CodeVault AI is reasoning...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input & Action Bar */}
-          <div className="p-4 border-t border-[#1b223c] bg-dark-950/95 space-y-2.5">
-            
-            {/* Quick Action Chips */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-              <button
-                onClick={() => sendMessage('Explain the time and space complexity of this logic.')}
-                disabled={isGenerating}
-                className="px-3 py-1.5 rounded-xl bg-dark-900 hover:bg-dark-850 border border-[#1b223c] text-dark-300 hover:text-white text-[11px] font-semibold whitespace-nowrap transition-colors"
-              >
-                ⏱ Complexity
-              </button>
-              <button
-                onClick={() => sendMessage('Find potential edge cases or bugs in this implementation.')}
-                disabled={isGenerating}
-                className="px-3 py-1.5 rounded-xl bg-dark-900 hover:bg-dark-850 border border-[#1b223c] text-dark-300 hover:text-white text-[11px] font-semibold whitespace-nowrap transition-colors"
-              >
-                🔍 Edge Cases
-              </button>
-              <button
-                onClick={() => sendMessage('Break down this algorithm step by step.')}
-                disabled={isGenerating}
-                className="px-3 py-1.5 rounded-xl bg-dark-900 hover:bg-dark-850 border border-[#1b223c] text-dark-300 hover:text-white text-[11px] font-semibold whitespace-nowrap transition-colors"
-              >
-                🧩 Step by Step
-              </button>
-            </div>
-
-            {/* Textarea Form */}
-            <form onSubmit={handleSend} className="relative flex items-end gap-2">
+          {/* Composer Bottom Input Area */}
+          <div className="p-4 bg-white dark:bg-dark-950/95 border-t border-light-border dark:border-[#1b223c]">
+            <form onSubmit={handleSend} className="relative">
               <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask CodeVault AI (Shift+Enter for newline)..."
-                rows={1}
+                placeholder="Ask anything about DSA, code syntax, or bug fixes..."
+                rows={2}
                 disabled={isGenerating}
-                className="flex-1 bg-[#0e1222] border border-[#232b4b] rounded-2xl px-4 py-3 text-xs sm:text-sm text-white placeholder-dark-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none max-h-32 disabled:opacity-50 transition-colors"
+                className="w-full p-3.5 pr-24 rounded-2xl bg-light-secondary dark:bg-dark-900 border border-light-borderStrong dark:border-[#232b4b] text-light-textStrong dark:text-white placeholder-light-textMuted dark:placeholder-dark-500 text-xs font-mono outline-none focus:border-light-blue dark:focus:border-purple-500 focus:bg-white dark:focus:bg-dark-900 transition-all resize-none shadow-inner"
               />
 
-              {isGenerating ? (
-                <button
-                  type="button"
-                  onClick={stopGeneration}
-                  className="p-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white shadow-lg transition-colors flex items-center justify-center shrink-0"
-                  title="Stop Generation"
-                >
-                  <Square className="w-4 h-4 fill-white" />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={!input.trim()}
-                  className="p-3 rounded-2xl bg-gradient-to-r from-neon-blue to-neon-purple hover:from-brand-600 hover:to-purple-600 text-white shadow-lg shadow-brand-500/25 disabled:opacity-40 disabled:hover:bg-brand-600 transition-all flex items-center justify-center shrink-0 hover:scale-105"
-                  title="Send Message"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              )}
+              <div className="absolute right-2.5 bottom-3 flex items-center gap-1.5">
+                {isGenerating ? (
+                  <button
+                    type="button"
+                    onClick={stopGeneration}
+                    className="p-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white shadow-md transition-all flex items-center gap-1 text-xs font-bold"
+                    title="Stop AI Generation"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-white" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!input.trim()}
+                    className="p-2.5 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple text-white shadow-md transition-all disabled:opacity-40 disabled:hover:scale-100 hover:scale-105 active:scale-95"
+                    title="Send Message"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </form>
 
-            <div className="flex items-center justify-between text-[10px] text-dark-500 px-1 font-mono">
-              <span>CodeVault Pro Hybrid AI Engine</span>
-              <span>Online: Nemotron • Offline: Local Qwen</span>
+            <div className="flex items-center justify-between text-[11px] text-light-textMuted dark:text-dark-400 mt-2 px-1">
+              <span className="flex items-center gap-1 font-mono">
+                ⚡ Mode: <strong className="text-light-textNormal dark:text-dark-200 capitalize">{providerMode}</strong>
+              </span>
+              <span className="font-mono">Press <kbd className="px-1.5 py-0.5 bg-light-secondary dark:bg-dark-850 border border-light-border dark:border-dark-750 rounded text-light-textNormal dark:text-dark-300">Enter</kbd> to send</span>
             </div>
           </div>
         </div>

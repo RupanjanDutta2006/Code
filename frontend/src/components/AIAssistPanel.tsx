@@ -96,47 +96,47 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
   };
 
   return (
-    <div className="w-full rounded-3xl border border-[#232b4b] oky-glass overflow-hidden shadow-2xl transition-all">
+    <div className="w-full rounded-3xl border border-light-border dark:border-[#232b4b] bg-white dark:bg-dark-900 overflow-hidden shadow-card-light dark:shadow-2xl transition-all">
       {/* Accordion Toggle Header */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-5 py-4 flex items-center justify-between bg-dark-950/90 hover:bg-[#0e1222] transition-colors text-left"
+        className="w-full px-5 py-4 flex items-center justify-between bg-white hover:bg-light-secondary dark:bg-dark-950/90 dark:hover:bg-[#0e1222] transition-colors text-left"
       >
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-neon-blue to-neon-purple text-white flex items-center justify-center shadow-lg shadow-brand-500/25">
+          <div className="w-10 h-10 rounded-2xl bg-light-blueSoft dark:bg-gradient-to-tr dark:from-neon-blue dark:to-neon-purple text-light-blue dark:text-white flex items-center justify-center shadow-sm dark:shadow-brand-500/25 border border-light-blueBorder/40 dark:border-transparent">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <span className="font-extrabold text-white text-sm flex items-center gap-2 font-sans">
+            <span className="font-extrabold text-light-textStrong dark:text-white text-sm flex items-center gap-2 font-sans">
               CodeVault AI Assistant
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-light-blueSoft text-light-blue dark:bg-purple-500/20 dark:text-purple-300 font-bold border border-light-blueBorder/40 dark:border-purple-500/30">
                 Hybrid AI
               </span>
             </span>
-            <span className="text-xs text-dark-400 block mt-0.5">
+            <span className="text-xs text-light-textSecondary dark:text-dark-400 block mt-0.5">
               Explain logic, diagnose compiler errors, and get line-by-line guidance.
             </span>
           </div>
         </div>
 
-        <div className="text-dark-400">
+        <div className="text-light-textMuted dark:text-dark-400">
           {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </div>
       </button>
 
       {/* Panel Content Body */}
       {isOpen && (
-        <div className="p-5 border-t border-[#1b223c] space-y-4 bg-dark-950/95 animate-slide-up">
+        <div className="p-5 border-t border-light-border dark:border-[#1b223c] space-y-4 bg-light-bg dark:bg-dark-950/95 animate-slide-up">
           {/* Action Tabs */}
-          <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-[#1b223c]">
+          <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-light-border dark:border-[#1b223c]">
             <div className="flex items-center gap-2">
               <button
                 onClick={handleExplain}
                 disabled={loading}
                 className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
                   activeTab === 'explain'
-                    ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white border-purple-400 shadow-md shadow-brand-500/25'
-                    : 'bg-dark-900 text-dark-300 border-[#1b223c] hover:bg-dark-850 hover:text-white'
+                    ? 'bg-light-blue border-light-blue text-white shadow-sm dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:border-purple-400'
+                    : 'bg-white text-light-textNormal border-light-border hover:bg-light-secondary hover:text-light-textStrong dark:bg-dark-900 dark:text-dark-300 dark:border-[#1b223c] dark:hover:bg-dark-850 dark:hover:text-white'
                 } disabled:opacity-50`}
               >
                 <HelpCircle className="w-3.5 h-3.5" />
@@ -148,28 +148,28 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                 disabled={loading}
                 className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
                   activeTab === 'fix'
-                    ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white border-purple-400 shadow-md shadow-brand-500/25'
-                    : 'bg-dark-900 text-dark-300 border-[#1b223c] hover:bg-dark-850 hover:text-white'
+                    ? 'bg-light-blue border-light-blue text-white shadow-sm dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:border-purple-400'
+                    : 'bg-white text-light-textNormal border-light-border hover:bg-light-secondary hover:text-light-textStrong dark:bg-dark-900 dark:text-dark-300 dark:border-[#1b223c] dark:hover:bg-dark-850 dark:hover:text-white'
                 } disabled:opacity-50`}
               >
-                <Wrench className="w-3.5 h-3.5 text-amber-400" />
+                <Wrench className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                 <span>Diagnose & Fix</span>
               </button>
             </div>
 
             <button
               onClick={handleOpenFullChat}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-[#141a2e] hover:bg-[#1b223c] text-white border border-purple-500/30 flex items-center gap-2 transition-all hover:scale-105 shadow-md shadow-purple-500/10"
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-[#141a2e] hover:bg-light-secondary dark:hover:bg-[#1b223c] text-light-textStrong dark:text-white border border-light-borderStrong dark:border-purple-500/30 flex items-center gap-2 transition-all hover:scale-105 shadow-card-light"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+              <MessageSquare className="w-3.5 h-3.5 text-light-blue dark:text-purple-400" />
               <span>Full Chat in CodeVault AI</span>
             </button>
           </div>
 
           {/* Loading Indicator */}
           {loading && (
-            <div className="py-8 flex flex-col items-center justify-center gap-2 text-purple-300 text-xs font-medium">
-              <Loader2 className="w-6 h-6 animate-spin text-neon-purple" />
+            <div className="py-8 flex flex-col items-center justify-center gap-2 text-light-blue dark:text-purple-300 text-xs font-medium">
+              <Loader2 className="w-6 h-6 animate-spin text-light-blue dark:text-neon-purple" />
               <span>CodeVault AI is reasoning with deep analysis...</span>
             </div>
           )}
@@ -178,28 +178,28 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           {response && !loading && (
             <div className="space-y-4">
               {response.explanation && (
-                <div className="p-4 rounded-2xl bg-[#0e1222] border border-[#232b4b] text-xs sm:text-sm text-dark-200 leading-relaxed whitespace-pre-wrap font-sans">
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#0e1222] border border-light-border dark:border-[#232b4b] text-xs sm:text-sm text-light-textStrong dark:text-dark-200 leading-relaxed whitespace-pre-wrap font-sans shadow-card-light">
                   {response.explanation}
                 </div>
               )}
 
               {response.suggested_code && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-dark-300">
-                    <span className="font-bold text-white">Suggested Fix:</span>
+                  <div className="flex items-center justify-between text-xs text-light-textSecondary dark:text-dark-300">
+                    <span className="font-bold text-light-textStrong dark:text-white">Suggested Fix:</span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleCopyCode(response.suggested_code!)}
-                        className="px-3 py-1 rounded-xl bg-dark-900 hover:bg-dark-850 border border-[#1b223c] text-xs text-dark-200 hover:text-white flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1 rounded-xl bg-white dark:bg-dark-900 hover:bg-light-secondary dark:hover:bg-dark-850 border border-light-border dark:border-[#1b223c] text-xs text-light-textNormal dark:text-dark-200 hover:text-light-textStrong dark:hover:text-white flex items-center gap-1.5 transition-colors shadow-card-light"
                       >
-                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>{copied ? 'Copied' : 'Copy'}</span>
                       </button>
 
                       {onCopyToPlayground && (
                         <button
                           onClick={() => onCopyToPlayground(response.suggested_code!)}
-                          className="px-3 py-1 rounded-xl bg-gradient-to-r from-neon-blue to-neon-purple text-white text-xs font-bold shadow-sm"
+                          className="px-3 py-1 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple text-white text-xs font-bold shadow-sm"
                         >
                           Apply to Editor
                         </button>
@@ -216,7 +216,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
               )}
 
               {response.disclaimer && (
-                <div className="text-[10px] text-dark-500 font-mono italic">
+                <div className="text-[10px] text-light-textMuted dark:text-dark-500 font-mono italic">
                   {response.disclaimer}
                 </div>
               )}
