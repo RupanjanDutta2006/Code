@@ -22,7 +22,7 @@ Write-Host "📦 1. Staging modified files..." -ForegroundColor Yellow
 Write-Host "📝 2. Creating commit: '$Message'..." -ForegroundColor Yellow
 & $gitPath commit -m $Message
 
-Write-Host "🚀 3. Pushing changes to https://github.com/RupanjanDutta2006/Code..." -ForegroundColor Green
+Write-Host "🚀 3. Pushing changes to https://github.com/RupanjanDutta2006/Code-Vault_Pro..." -ForegroundColor Green
 & $gitPath push -u origin main
 
 if ($LASTEXITCODE -eq 0) {

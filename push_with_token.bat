@@ -1,7 +1,7 @@
 @echo off
 setlocal
 echo ===================================================
-echo   Sync Entire Project to https://github.com/RupanjanDutta2006/Code
+echo   Sync Entire Project to https://github.com/RupanjanDutta2006/Code-Vault_Pro
 echo ===================================================
 echo.
 
@@ -12,13 +12,13 @@ if "%TOKEN%"=="" (
     git push -u origin main --force
 ) else (
     echo Pushing with provided token...
-    git push https://%TOKEN%@github.com/RupanjanDutta2006/Code.git main --force
+    git push https://%TOKEN%@github.com/RupanjanDutta2006/Code-Vault_Pro.git main --force
 )
 
 echo.
 if %ERRORLEVEL% equ 0 (
     echo ===================================================
-    echo  [SUCCESS] All files uploaded to https://github.com/RupanjanDutta2006/Code
+    echo  [SUCCESS] All files uploaded to https://github.com/RupanjanDutta2006/Code-Vault_Pro
     echo  Ready for Vercel deployment!
     echo ===================================================
 ) else (
