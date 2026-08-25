@@ -208,6 +208,66 @@ app.post('/api/ai/chat/stream', async (req: Request, res: Response) => {
   }
 });
 
+// ==========================================
+// Developer GitHub Authorization Endpoints
+// ==========================================
+import { GitHubService } from './githubService';
+
+app.get('/api/github/status', (_req: Request, res: Response) => {
+  res.json(GitHubService.getStatus());
+});
+
+app.get('/api/github/auth-url', (req: Request, res: Response) => {
+  const role = req.query.role === 'contributor' ? 'contributor' : 'main';
+  try {
+    const result = GitHubService.createAuthUrl(role);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/github/callback', async (req: Request, res: Response) => {
+  const { code, state, error, error_description } = req.query;
+  const frontendUrl = process.env.FRONTEND_DEV_URL || 'http://localhost:5173/developer/github-connect';
+
+  if (error) {
+    return res.redirect(`${frontendUrl}?status=error&message=${encodeURIComponent(String(error_description || error))}`);
+  }
+
+  if (!code || !state) {
+    return res.redirect(`${frontendUrl}?status=error&message=Missing+code+or+state+parameter`);
+  }
+
+  try {
+    const result = await GitHubService.handleCallback(String(code), String(state));
+    return res.redirect(result.redirect_url);
+  } catch (err: any) {
+    return res.redirect(`${frontendUrl}?status=error&message=${encodeURIComponent(err.message)}`);
+  }
+});
+
+app.post('/api/github/select-repo', (req: Request, res: Response) => {
+  const { role, repo_full_name } = req.body;
+  try {
+    const result = GitHubService.selectRepo(role === 'contributor' ? 'contributor' : 'main', repo_full_name);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/github/disconnect', (req: Request, res: Response) => {
+  const { role } = req.body;
+  res.json(GitHubService.disconnect(role === 'contributor' ? 'contributor' : 'main'));
+});
+
+app.get('/api/github/test-connection', async (req: Request, res: Response) => {
+  const role = req.query.role === 'contributor' ? 'contributor' : 'main';
+  const result = await GitHubService.testConnection(role);
+  res.json(result);
+});
+
 // Start Server if run directly
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {

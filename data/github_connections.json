@@ -1,0 +1,10 @@
+{
+  "main": {
+    "connected": false,
+    "role": "main"
+  },
+  "contributor": {
+    "connected": false,
+    "role": "contributor"
+  }
+}

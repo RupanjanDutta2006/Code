@@ -35,6 +35,13 @@ NVIDIA_MAX_TOKENS = int(os.getenv("NVIDIA_MAX_TOKENS", "16384"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
+# GitHub Official Authorization & App Connector (Server-Side ONLY)
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
+GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
+GITHUB_CALLBACK_URL = os.getenv("GITHUB_CALLBACK_URL", "http://localhost:8000/api/github/callback")
+GITHUB_APP_NAME = os.getenv("GITHUB_APP_NAME", "CodeVault-Pro-Dev-Connector")
+FRONTEND_DEV_URL = os.getenv("FRONTEND_DEV_URL", "http://localhost:5173/developer/github-connect")
+
 # CORS
 ALLOWED_ORIGINS = [
     "http://localhost:5173",

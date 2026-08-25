@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { OfflineProvider } from './context/OfflineContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -21,6 +21,7 @@ import { CreatorPage } from './pages/CreatorPage';
 import { ContactPage } from './pages/ContactPage';
 import { MyClassPage } from './pages/MyClassPage';
 import { InteractiveClassPage } from './pages/InteractiveClassPage';
+import { DeveloperGitHubConnectPage } from './pages/DeveloperGitHubConnectPage';
 
 export const App: React.FC = () => {
   return (
@@ -50,6 +51,7 @@ export const App: React.FC = () => {
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/creator" element={<CreatorPage />} />
                     <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/developer/github-connect" element={<DeveloperGitHubConnectPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
@@ -64,13 +66,13 @@ export const App: React.FC = () => {
                       <span className="font-bold text-slate-900 dark:text-white">CodeVault Pro</span> — Next-Gen AI Code Platform & Interactive Learning Studio.
                     </div>
                     <div className="flex items-center gap-4 text-slate-400 dark:text-dark-400">
-                      <a href="/about" className="hover:text-purple-400 transition-colors">Documentation</a>
+                      <Link to="/about" className="hover:text-purple-400 transition-colors">Documentation</Link>
                       <span>•</span>
-                      <a href="/creator" className="hover:text-purple-400 transition-colors font-medium">Creator</a>
+                      <Link to="/creator" className="hover:text-purple-400 transition-colors font-medium">Creator</Link>
                       <span>•</span>
-                      <a href="/contact" className="hover:text-cyan-400 transition-colors font-medium">Contact & Team</a>
+                      <Link to="/contact" className="hover:text-cyan-400 transition-colors font-medium">Contact & Team</Link>
                       <span>•</span>
-                      <span>11 Compilers</span>
+                      <Link to="/developer/github-connect" className="hover:text-emerald-400 transition-colors font-mono text-[11px] text-dark-500">GitHub Connect</Link>
                     </div>
                   </div>
                 </footer>
