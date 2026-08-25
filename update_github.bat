@@ -1,28 +1,21 @@
 @echo off
 setlocal
-echo ========================================
-echo   CodeVault Pro - Push to GitHub
-echo ========================================
-
-set GIT_EXE="C:\Program Files\Git\cmd\git.exe"
-
-set /p MSG="Enter commit message (or press Enter for default): "
-if "%MSG%"=="" set MSG="chore: update CodeVault Pro platform"
-
+echo ===================================================
+echo   CodeVault Pro -- Safe GitHub Push Workflow
+echo   Target: https://github.com/S0u1k/Code-Vault-Pro
+echo ===================================================
 echo.
-echo [1/3] Adding modified files...
-%GIT_EXE% add .
 
-echo.
-echo [2/3] Committing changes...
-%GIT_EXE% commit -m "%MSG%"
+powershell -ExecutionPolicy Bypass -File "%~dp0update_github.ps1"
 
+if %ERRORLEVEL% equ 0 (
+    echo.
+    echo ===================================================
+    echo  [SUCCESS] CodeVault Pro synchronized to GitHub!
+    echo ===================================================
+) else (
+    echo.
+    echo [ERROR] Update failed with error code %ERRORLEVEL%.
+)
 echo.
-echo [3/3] Pushing to https://github.com/RupanjanDutta2006/Code-Vault_Pro...
-%GIT_EXE% push -u origin main
-
-echo.
-echo ========================================
-echo   Done!
-echo ========================================
 pause

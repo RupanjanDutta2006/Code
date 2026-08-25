@@ -33,6 +33,7 @@ data/*.sqlite3
 .env.*.local
 *.key
 *.pem
+data/github_tokens.json
 
 # OS & IDE metadata
 .DS_Store
