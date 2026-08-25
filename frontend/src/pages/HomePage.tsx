@@ -346,177 +346,14 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-<<<<<<< HEAD
-      {/* Feature Section 1: Practice & Check (Judge Mode) */}
-      <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-2xl border border-dark-700 bg-gradient-to-br from-dark-900 via-dark-850 to-dark-900 p-8 shadow-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
-                <Trophy className="w-3.5 h-3.5" />
-                <span>New Feature</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                Practice & Check
-              </h2>
-              <p className="text-dark-300 text-sm leading-relaxed">
-                Attach sample inputs and expected answers to any program. Instantly see if your solution passes every test case — exactly like a mini contest judge.
-              </p>
-              <ul className="space-y-2 text-xs text-dark-300">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Real-time per-testcase pass/fail comparison</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Hidden test cases for teacher assignments & contests</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Reuses ultra-fast SHA-256 build cache</span>
-                </li>
-              </ul>
-              <div className="pt-2">
-                <Link
-                  to="/programs/1"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-800 hover:bg-dark-750 text-white font-medium text-xs border border-dark-700 transition-colors"
-                >
-                  <span>Try Practice Mode with Binary Search</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Visual Card */}
-            <div className="p-5 rounded-xl bg-dark-950 border border-dark-700 shadow-inner space-y-3 font-mono text-xs">
-              <div className="flex items-center justify-between pb-2 border-b border-dark-750">
-                <span className="text-dark-400">Binary Search — Practice Checks</span>
-                <span className="text-emerald-400 font-bold">3 / 3 Passed ✓</span>
-              </div>
-              <div className="space-y-2">
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-emerald-500/30 flex items-center justify-between">
-                  <span className="text-emerald-400">Check 1: Sample</span>
-                  <span className="text-emerald-400">Passed (24 ms) ✓</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-emerald-500/30 flex items-center justify-between">
-                  <span className="text-emerald-400">Check 2: Edge Case</span>
-                  <span className="text-emerald-400">Passed (18 ms) ✓</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-emerald-500/30 flex items-center justify-between">
-                  <span className="text-emerald-400">Check 3: Hidden Test</span>
-                  <span className="text-emerald-400">Passed (21 ms) ✓</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Section 2: Classrooms for Teachers & Students */}
-      <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-2xl border border-dark-700 bg-gradient-to-br from-dark-900 via-dark-850 to-dark-900 p-8 shadow-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            {/* Visual Leaderboard Mock */}
-            <div className="order-2 lg:order-1 p-5 rounded-xl bg-dark-950 border border-dark-700 shadow-inner space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-dark-750 text-xs">
-                <span className="font-semibold text-white">DSA Section A — Leaderboard</span>
-                <span className="px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 font-mono text-[11px]">
-                  Code: DSA-7F2K
-                </span>
-              </div>
-              <div className="space-y-2 text-xs">
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-dark-750 flex items-center justify-between">
-                  <span className="text-white font-medium">1. Asha R.</span>
-                  <span className="text-emerald-400 font-mono font-bold">3/3 Passed ✓</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-dark-750 flex items-center justify-between">
-                  <span className="text-white font-medium">2. Rohit K.</span>
-                  <span className="text-amber-400 font-mono font-bold">2/3 Passed</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-dark-900 border border-dark-750 flex items-center justify-between">
-                  <span className="text-dark-400">3. Meera S.</span>
-                  <span className="text-dark-500 font-mono">Not started</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="order-1 lg:order-2 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold">
-                <GraduationCap className="w-3.5 h-3.5" />
-                <span>Classroom Platform</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                Classrooms Without Spreadsheets
-              </h2>
-              <p className="text-dark-300 text-sm leading-relaxed">
-                Teachers can create classes with instant invite codes, assign coding problems with checks, and view student progress on a simple live leaderboard.
-              </p>
-              <div className="pt-2">
-                <Link
-                  to="/classrooms"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-xs shadow-md shadow-brand-500/20 transition-colors"
-                >
-                  <span>Explore Classrooms</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Section 3: Creator & Curated Resources Spotlight */}
-      <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-dark-900 via-purple-950/20 to-dark-900 p-8 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-              <img
-                src="/team/rupanjan.jpg"
-                alt="Coder Babuu"
-                className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-lg shadow-purple-500/20"
-              />
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-semibold">
-                  <Sparkles className="w-3 h-3 text-amber-400" />
-                  <span>Creator & Free Resources</span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white">
-                  Curated Codes, DSA Notes & Assignments by Coder Babuu
-                </h3>
-                <p className="text-xs sm:text-sm text-dark-300 max-w-xl">
-                  Access free Python, C, C++, and DSA code repositories, downloadable lecture notes, and assignments directly on CodeVault.
-                </p>
-              </div>
-            </div>
-
-            <Link
-              to="/creator"
-              className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2 flex-shrink-0 hover:scale-[1.02]"
-            >
-              <span>Explore All Resources</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Supported Languages Grid */}
-      <section className="max-w-6xl mx-auto px-4">
-        <div className="text-center space-y-2 mb-8">
-          <h2 className="text-2xl font-bold text-white">
-            11 Supported Languages & Sandboxes
-=======
       {/* Feature Cards Grid (SaaS Cards) */}
       <section className="max-w-6xl mx-auto px-4 space-y-6">
         <div className="text-center space-y-2">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-light-textStrong dark:text-white font-sans">
             Engineered for Students, Creators & Engineers
->>>>>>> origin/main
           </h2>
           <p className="text-xs sm:text-sm text-light-textSecondary dark:text-dark-400">
-            A comprehensive developer toolkit built with next-gen AI and zero dependencies.
+            A comprehensive developer toolkit built with next-gen AI, interactive visualizers, and real-time execution.
           </p>
         </div>
 
@@ -528,7 +365,7 @@ export const HomePage: React.FC = () => {
             </div>
             <h3 className="text-lg font-bold text-light-textStrong dark:text-white font-sans">CodeVault Hybrid AI</h3>
             <p className="text-xs text-light-textSecondary dark:text-dark-300 leading-relaxed">
-              Powered by cloud NVIDIA Nemotron for deep reasoning, with full browser-side on-device Qwen fallback when you lose internet connection.
+              Powered by cloud NVIDIA Nemotron for deep reasoning, with full browser-side on-device fallback when you lose internet connection.
             </p>
             <div className="pt-2">
               <button
@@ -554,7 +391,7 @@ export const HomePage: React.FC = () => {
                 to="/my-class"
                 className="text-xs text-amber-600 dark:text-amber-400 hover:underline font-bold inline-flex items-center gap-1.5"
               >
-                Explore 15 Lessons <ArrowRight className="w-3.5 h-3.5" />
+                Explore Lessons <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
@@ -576,6 +413,43 @@ export const HomePage: React.FC = () => {
                 Practice Coding <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Section: Creator & Curated Resources Spotlight */}
+      <section className="max-w-6xl mx-auto px-4">
+        <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-br from-white via-purple-50/50 to-white dark:from-dark-900 dark:via-purple-950/20 dark:to-dark-900 p-8 shadow-card-light dark:shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+              <img
+                src="/team/rupanjan.jpg"
+                alt="Coder Babuu"
+                className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-lg shadow-purple-500/20"
+              />
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-xs font-semibold">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <span>Creator & Free Resources</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-light-textStrong dark:text-white">
+                  Curated Codes, DSA Notes & Assignments by Coder Babuu
+                </h3>
+                <p className="text-xs sm:text-sm text-light-textSecondary dark:text-dark-300 max-w-xl">
+                  Access free Python, C, C++, and DSA code repositories, downloadable lecture notes, and assignments directly on CodeVault.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              to="/creator"
+              className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2 flex-shrink-0 hover:scale-[1.02]"
+            >
+              <span>Explore All Resources</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>

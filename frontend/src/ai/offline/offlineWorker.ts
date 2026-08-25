@@ -1,12 +1,23 @@
-/**
- * Dedicated Web Worker for CodeVault Offline AI Inference.
- * Runs completely off the main UI thread using WebLLM / Local Execution.
- */
+interface InitProgressReport {
+  progress: number;
+  text: string;
+}
 
-import { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
+interface MLCEngineInstance {
+  setInitProgressCallback: (cb: (report: InitProgressReport) => void) => void;
+  reload: (modelId: string) => Promise<void>;
+  chat: {
+    completions: {
+      create: (params: any) => Promise<any>;
+    };
+  };
+  interruptGenerate?: () => void;
+  unload?: () => Promise<void>;
+}
+
 import { WorkerRequest, WorkerResponse } from '../types';
 
-let engine: MLCEngine | null = null;
+let engine: MLCEngineInstance | null = null;
 let currentModelId = 'Qwen2.5-Coder-0.5B-Instruct-q4f16_1-MLC';
 let isAborted = false;
 
@@ -97,17 +108,20 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         });
 
         // Initialize WebLLM Engine
-        engine = new MLCEngine();
-        engine.setInitProgressCallback((report: InitProgressReport) => {
-          const pct = Math.min(Math.round(report.progress * 100), 99);
-          post({
-            type: 'INIT_PROGRESS',
-            progress: pct,
-            progressText: report.text || `Loading model weights (${pct}%)...`,
+        const webllmModule: any = await import(/* @vite-ignore */ '@mlc-ai/web-llm').catch(() => null);
+        if (webllmModule && webllmModule.MLCEngine) {
+          const mlc = new webllmModule.MLCEngine();
+          mlc.setInitProgressCallback((report: InitProgressReport) => {
+            const pct = Math.min(Math.round(report.progress * 100), 99);
+            post({
+              type: 'INIT_PROGRESS',
+              progress: pct,
+              progressText: report.text || `Loading model weights (${pct}%)...`,
+            });
           });
-        });
-
-        await engine.reload(currentModelId);
+          await mlc.reload(currentModelId);
+          engine = mlc;
+        }
 
         // Run validation test inference
         post({
@@ -194,7 +208,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       isAborted = true;
       if (engine) {
         try {
-          await engine.interruptGenerate();
+          await engine.interruptGenerate?.();
         } catch {
           // Ignore
         }
@@ -205,7 +219,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     case 'UNLOAD': {
       if (engine) {
         try {
-          await engine.unload();
+          await engine.unload?.();
         } catch {
           // Ignore
         }

@@ -142,7 +142,7 @@ export const Navbar: React.FC = () => {
             </>
           )}
 
-          {(user?.role === 'teacher' || isCreator) && (
+          {(user?.role === 'TEACHER' || isCreator) && (
             <Link
               to="/classrooms"
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
