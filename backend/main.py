@@ -1,6 +1,6 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from backend.config import ALLOWED_ORIGINS
 from backend.database.database import engine, Base, sync_schema_columns
@@ -42,24 +42,49 @@ app.add_middleware(
 
 @app.middleware("http")
 async def normalize_vercel_api_paths(request, call_next):
-    matched_path = request.headers.get("x-matched-path") or request.headers.get("x-forwarded-uri")
-    if matched_path:
-        clean_matched = matched_path.split("?")[0]
-        if clean_matched.startswith("/api"):
-            request.scope["path"] = clean_matched
+    # Check headers for original requested path
+    headers = request.headers
+    candidates = [
+        headers.get("x-matched-path"),
+        headers.get("x-vercel-matched-path"),
+        headers.get("x-forwarded-uri"),
+        headers.get("x-original-url"),
+        headers.get("x-rewrite-url"),
+    ]
+    
+    matched = next((c for c in candidates if c and c.startswith("/api")), None)
+    if matched:
+        clean_path = matched.split("?")[0]
+        request.scope["path"] = clean_path
     else:
-        raw_path = request.scope.get("path", "")
-        for prefix in ["/api/index.py", "/index.py", "/api/index"]:
-            if raw_path.startswith(prefix):
-                new_path = raw_path[len(prefix):]
-                if not new_path.startswith("/"):
-                    new_path = "/" + new_path
-                if not new_path.startswith("/api") and new_path != "/":
-                    new_path = "/api" + new_path
-                request.scope["path"] = new_path
-                break
+        # Check query string for :match param e.g. ?match=classrooms or ?0=classrooms
+        match_param = request.query_params.get("match") or request.query_params.get("0") or request.query_params.get("1")
+        if match_param:
+            clean_match = match_param.lstrip("/")
+            request.scope["path"] = f"/api/{clean_match}"
+        else:
+            raw_path = request.scope.get("path", "")
+            for prefix in ["/api/index.py", "/index.py", "/api/index"]:
+                if raw_path.startswith(prefix) and len(raw_path) > len(prefix):
+                    new_path = raw_path[len(prefix):]
+                    if not new_path.startswith("/"):
+                        new_path = "/" + new_path
+                    if not new_path.startswith("/api") and new_path != "/":
+                        new_path = "/api" + new_path
+                    request.scope["path"] = new_path
+                    break
             
     return await call_next(request)
+
+@app.api_route("/api/debug-diag", methods=["GET", "POST"])
+def debug_diag(request: Request):
+    return {
+        "scope_path": request.scope.get("path"),
+        "raw_path": request.scope.get("raw_path", b"").decode("utf-8", errors="ignore"),
+        "query_string": request.scope.get("query_string", b"").decode("utf-8", errors="ignore"),
+        "query_params": dict(request.query_params),
+        "headers": dict(request.headers),
+    }
 
 # Include REST Routers
 app.include_router(auth.router)
