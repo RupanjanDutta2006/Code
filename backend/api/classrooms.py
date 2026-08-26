@@ -75,6 +75,7 @@ def _build_classroom_response(c: Classroom, user: User) -> ClassroomResponse:
 # ---------------------------------------------------------
 
 @router.post("", response_model=ClassroomResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=ClassroomResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_classroom(
     req: ClassroomCreate,
     current_user: User = Depends(get_current_user),
@@ -108,6 +109,7 @@ def create_classroom(
     return _build_classroom_response(classroom, current_user)
 
 @router.get("", response_model=List[ClassroomResponse])
+@router.get("/", response_model=List[ClassroomResponse], include_in_schema=False)
 def list_classrooms(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)

@@ -42,22 +42,23 @@ app.add_middleware(
 
 @app.middleware("http")
 async def normalize_vercel_api_paths(request, call_next):
-    raw_path = request.scope.get("path", "")
-    # Strip /api/index.py or /index.py or /api/index prefix added by Vercel rewrites
-    for prefix in ["/api/index.py", "/index.py", "/api/index"]:
-        if raw_path.startswith(prefix):
-            new_path = raw_path[len(prefix):]
-            if not new_path.startswith("/"):
-                new_path = "/" + new_path
-            if not new_path.startswith("/api") and new_path != "/":
-                new_path = "/api" + new_path
-            request.scope["path"] = new_path
-            break
+    matched_path = request.headers.get("x-matched-path") or request.headers.get("x-forwarded-uri")
+    if matched_path:
+        clean_matched = matched_path.split("?")[0]
+        if clean_matched.startswith("/api"):
+            request.scope["path"] = clean_matched
+    else:
+        raw_path = request.scope.get("path", "")
+        for prefix in ["/api/index.py", "/index.py", "/api/index"]:
+            if raw_path.startswith(prefix):
+                new_path = raw_path[len(prefix):]
+                if not new_path.startswith("/"):
+                    new_path = "/" + new_path
+                if not new_path.startswith("/api") and new_path != "/":
+                    new_path = "/api" + new_path
+                request.scope["path"] = new_path
+                break
             
-    # Also handle requests where /api prefix was stripped by Vercel
-    if not request.scope["path"].startswith("/api") and request.scope["path"] != "/":
-        request.scope["path"] = "/api" + request.scope["path"]
-        
     return await call_next(request)
 
 # Include REST Routers
