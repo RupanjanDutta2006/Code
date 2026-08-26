@@ -1,4 +1,4 @@
-﻿rules_version = '2';
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -75,6 +75,12 @@ service cloud.firestore {
 
       // Resources & Notes subcollection: members read, owner manages
       match /resources/{resourceId} {
+        allow read: if isClassMember(classId);
+        allow write, delete: if isClassOwner(classId);
+      }
+
+      // Study Library subcollection: members read, owner manages
+      match /library/{resourceId} {
         allow read: if isClassMember(classId);
         allow write, delete: if isClassOwner(classId);
       }

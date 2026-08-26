@@ -30,7 +30,8 @@ import {
   Unlock,
   School,
   Key,
-  Upload
+  Upload,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -61,6 +62,13 @@ import {
   normalizeAccessKey
 } from '../services/classroomFirestore';
 import { ModalPortal } from '../components/ModalPortal';
+import { ClassroomStudyLibrary } from '../components/classroom/ClassroomStudyLibrary';
+import { 
+  ClassroomCustomLibraryItem, 
+  subscribeClassroomLibrary, 
+  getMergedClassroomStudyLibrary 
+} from '../services/studyLibraryFirestore';
+import { StudySubject } from '../services/studyLibraryRegistry';
 
 export const ClassroomDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -68,7 +76,8 @@ export const ClassroomDetailPage: React.FC = () => {
   const { user, firebaseUser, loading: authLoading } = useAuth();
 
   const [classroom, setClassroom] = useState<FirestoreClassroom | null>(null);
-  const [activeTab, setActiveTab] = useState<'announcements' | 'notes' | 'code' | 'assignments' | 'members'>('announcements');
+  const [activeTab, setActiveTab] = useState<'library' | 'announcements' | 'notes' | 'code' | 'assignments' | 'members'>('library');
+  const [customLibraryItems, setCustomLibraryItems] = useState<ClassroomCustomLibraryItem[]>([]);
   
   // Data states
   const [announcements, setAnnouncements] = useState<FirestoreClassAnnouncement[]>([]);
@@ -169,6 +178,20 @@ export const ClassroomDetailPage: React.FC = () => {
       fetchClassroomData();
     }
   }, [id, authLoading, uid]);
+
+  useEffect(() => {
+    if (!id) return;
+    const unsubLib = subscribeClassroomLibrary(id, (items) => {
+      setCustomLibraryItems(items);
+    });
+    return () => {
+      unsubLib();
+    };
+  }, [id]);
+
+  const mergedSubjects = React.useMemo(() => {
+    return getMergedClassroomStudyLibrary(customLibraryItems);
+  }, [customLibraryItems]);
 
   const handleDirectJoin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -728,6 +751,18 @@ export const ClassroomDetailPage: React.FC = () => {
         {/* TABS NAVIGATION */}
         <div className="flex items-center gap-2 border-t border-slate-200 dark:border-white/10 pt-4 overflow-x-auto">
           <button
+            onClick={() => setActiveTab('library')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'library'
+                ? 'bg-crimson-600 text-white shadow-glow-red-sm'
+                : 'bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Study Library</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('announcements')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'announcements'
@@ -788,6 +823,16 @@ export const ClassroomDetailPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* TAB CONTENT: STUDY LIBRARY */}
+      {activeTab === 'library' && (
+        <ClassroomStudyLibrary
+          classroomId={id || ''}
+          isOwner={isClassTeacher}
+          subjects={mergedSubjects}
+          customItems={customLibraryItems}
+        />
+      )}
 
       {/* TAB CONTENT: ANNOUNCEMENTS */}
       {activeTab === 'announcements' && (
