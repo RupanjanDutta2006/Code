@@ -13,13 +13,13 @@ import { getAnalytics, isSupported, Analytics } from 'firebase/analytics';
 
 // CodeVault Pro Firebase Configuration
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBmFlKN0p6EfkudHq67ZByI5CiQDFj4M60",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "codevault-pro-souvik.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "codevault-pro-souvik",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "codevault-pro-souvik.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "348997630288",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:348997630288:web:af927d918f0bf38f079455",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBhcYHq5fhSybujFasFlH3LDnHlhJpBQJE",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "mediscan-ai-8f696.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "mediscan-ai-8f696",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "mediscan-ai-8f696.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "312494844658",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:312494844658:web:18cb50f6e94ac946c3fe6b",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-TZP6SX2VDB"
 };
 
 // Safe configuration validation without exposing private values
@@ -105,7 +105,7 @@ export const mapAuthErrorToMessage = (error: any): string => {
     return 'Network connection problem. Please check your internet connection.';
   }
   if (code === 'auth/api-key-not-valid' || message.includes('api-key-not-valid') || message.includes('CONFIGURATION_NOT_FOUND')) {
-    return 'Authentication service is initializing. Please verify that Firebase Authentication is enabled in Firebase Console.';
+    return 'Authentication service is initializing. Please verify that Firebase Authentication is enabled.';
   }
   if (code === 'auth/unauthorized-domain') {
     return 'This domain is not yet authorized in Firebase Console > Authentication > Settings > Authorized domains.';
