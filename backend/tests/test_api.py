@@ -10,7 +10,7 @@ def setup_db():
     seed_database()
 
 def test_root_endpoint():
-    response = client.get("/")
+    response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json()["status"] == "online"
 

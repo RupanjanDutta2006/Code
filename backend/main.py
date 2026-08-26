@@ -104,11 +104,54 @@ app.include_router(activity.admin_router)
 app.include_router(execution_ws.router)
 app.include_router(playground_ws.router)
 
-@app.get("/")
-def root():
+from pathlib import Path
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+
+# Resolve frontend build output directory
+_BASE_DIR = Path(__file__).resolve().parent.parent
+_DIST_DIR = _BASE_DIR / "dist"
+if not _DIST_DIR.exists():
+    _DIST_DIR = _BASE_DIR / "frontend" / "dist"
+
+if _DIST_DIR.exists() and (_DIST_DIR / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=str(_DIST_DIR / "assets")), name="assets")
+
+@app.get("/api", tags=["System"])
+@app.get("/api/health", tags=["System"])
+@app.get("/api/status", tags=["System"])
+def api_health():
     return {
         "app": "CodeVault Pro API",
         "status": "online",
-        "version": "2.0.0",
-        "docs": "/docs"
+        "version": "2.0.0"
+    }
+
+@app.api_route("/{full_path:path}", methods=["GET", "HEAD"], include_in_schema=False)
+def catch_all_spa_fallback(request: Request, full_path: str):
+    """
+    Fallback handler for single-page application routing.
+    Serves static assets or index.html for all non-API paths.
+    """
+    accept = request.headers.get("accept", "")
+    if full_path in ("", "api", "api/") and "application/json" in accept and "text/html" not in accept:
+        return {
+            "app": "CodeVault Pro API",
+            "status": "online",
+            "version": "2.0.0"
+        }
+
+    if _DIST_DIR.exists():
+        target = _DIST_DIR / full_path
+        if full_path and target.is_file():
+            return FileResponse(str(target))
+        
+        index_file = _DIST_DIR / "index.html"
+        if index_file.is_file():
+            return FileResponse(str(index_file))
+
+    return {
+        "app": "CodeVault Pro API",
+        "status": "online",
+        "version": "2.0.0"
     }
