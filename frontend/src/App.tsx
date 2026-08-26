@@ -26,14 +26,16 @@ import { InteractiveClassPage } from './pages/InteractiveClassPage';
 import { DeveloperGitHubConnectPage } from './pages/DeveloperGitHubConnectPage';
 import { UserActivityPage } from './pages/UserActivityPage';
 import { AdminActivityDashboardPage } from './pages/AdminActivityDashboardPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 export const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <OfflineProvider>
-          <AIChatProvider>
-            <BrowserRouter>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <OfflineProvider>
+            <AIChatProvider>
+              <BrowserRouter>
               <div className="min-h-screen-dvh flex flex-col bg-light-bg dark:bg-[#060608] text-slate-800 dark:text-dark-200 selection:bg-crimson-500 selection:text-white transition-colors duration-200 relative pb-16 md:pb-0">
                 {/* Ambient Red-Black Background System */}
                 <AnimatedRedBlackBackground />
@@ -95,6 +97,7 @@ export const App: React.FC = () => {
         </OfflineProvider>
       </AuthProvider>
     </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 

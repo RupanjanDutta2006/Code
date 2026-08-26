@@ -46,14 +46,14 @@ def handle_execution(req: ExecuteRequest, db: Session) -> ExecuteResponse:
     )
 
 @router.post("/api/execute", response_model=ExecuteResponse)
-def execute_code_standard(
-    req: ExecuteRequest,
-    db: Session = Depends(get_db)
-):
-    return handle_execution(req, db)
-
+@router.post("/api/execute/", response_model=ExecuteResponse, include_in_schema=False)
+@router.post("/api/run", response_model=ExecuteResponse)
+@router.post("/api/run/", response_model=ExecuteResponse, include_in_schema=False)
+@router.post("/api/execution/run", response_model=ExecuteResponse)
+@router.post("/api/execution/run/", response_model=ExecuteResponse, include_in_schema=False)
 @router.post("/api/programs/execute", response_model=ExecuteResponse)
-def execute_code_legacy(
+@router.post("/api/programs/execute/", response_model=ExecuteResponse, include_in_schema=False)
+def execute_code_endpoint(
     req: ExecuteRequest,
     db: Session = Depends(get_db)
 ):
