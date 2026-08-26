@@ -14,6 +14,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { mapAuthErrorToMessage } from '../services/firebase';
 
 export const LoginPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -44,16 +45,7 @@ export const LoginPage: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   const mapFirebaseError = (err: any): string => {
-    const code = err?.code || '';
-    if (code === 'auth/popup-closed-by-user') return 'Google sign-in popup was closed before completion.';
-    if (code === 'auth/cancelled-popup-request') return 'Sign-in operation cancelled.';
-    if (code === 'auth/popup-blocked') return 'Sign-in popup was blocked by your browser. Please allow popups for this site.';
-    if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') return 'Invalid email or password.';
-    if (code === 'auth/email-already-in-use') return 'An account with this email already exists. Please sign in instead.';
-    if (code === 'auth/weak-password') return 'Password should be at least 6 characters.';
-    if (code === 'auth/invalid-email') return 'Please enter a valid email address.';
-    if (code === 'auth/too-many-requests') return 'Too many unsuccessful attempts. Please wait a few moments or reset your password.';
-    return err?.message || 'Authentication failed. Please try again.';
+    return mapAuthErrorToMessage(err);
   };
 
   // Handle Email / Password Form Submit
