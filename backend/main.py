@@ -7,7 +7,7 @@ from backend.database.database import engine, Base, sync_schema_columns
 from backend.database.seed import seed_database
 from backend.api import (
     auth, programs, import_folder, execution, versions, judge,
-    classrooms, analytics, playground, ai_assist, github_auth
+    classrooms, analytics, playground, ai_assist, github_auth, activity
 )
 from backend.websockets import execution_ws, playground_ws
 
@@ -98,6 +98,8 @@ app.include_router(analytics.router)
 app.include_router(playground.router)
 app.include_router(ai_assist.router)
 app.include_router(github_auth.router)
+app.include_router(activity.router)
+app.include_router(activity.admin_router)
 
 # Include WebSocket Routers
 app.include_router(execution_ws.router)

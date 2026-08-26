@@ -10,6 +10,7 @@ class UserRole(str, enum.Enum):
     USER = "USER"
     CREATOR = "CREATOR"
     TEACHER = "TEACHER"
+    ADMIN = "ADMIN"
 
 class User(Base):
     __tablename__ = "users"
@@ -240,3 +241,24 @@ class ExecutionCache(Base):
     output = Column(Text, default="")
     execution_time_ms = Column(Float, default=0.0)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(String(64), unique=True, index=True, nullable=False)
+    actor_uid = Column(String(128), index=True, nullable=False)
+    actor_email = Column(String(120), nullable=True)
+    actor_name = Column(String(120), nullable=True)
+    action = Column(String(64), index=True, nullable=False)
+    category = Column(String(32), index=True, nullable=False)
+    resource_type = Column(String(32), nullable=True)
+    resource_id = Column(String(64), nullable=True)
+    classroom_id = Column(String(64), nullable=True)
+    outcome = Column(String(16), default="success", nullable=False)  # success, failure, denied
+    source = Column(String(32), default="server", nullable=False)  # server, verified-client-event, system
+    trust_level = Column(String(32), default="server-verified", nullable=False)  # server-verified, client-reported
+    request_id = Column(String(64), nullable=True)
+    metadata_json = Column(Text, default="{}")
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+

@@ -20,6 +20,7 @@ from backend.schemas import (
 from backend.utils.security import (
     get_current_user, require_teacher, generate_secure_access_key, hash_access_key
 )
+from backend.services.audit_service import log_audit_event
 
 router = APIRouter(prefix="/api/classrooms", tags=["Classrooms"])
 
@@ -105,6 +106,22 @@ def create_classroom(
     db.add(classroom)
     db.commit()
     db.refresh(classroom)
+
+    log_audit_event(
+        actor_uid=current_user.email or f"user_{current_user.id}",
+        action="classroom.created",
+        actor_email=current_user.email,
+        actor_name=current_user.full_name or current_user.username,
+        category="classroom",
+        resource_type="classroom",
+        resource_id=str(classroom.id),
+        classroom_id=str(classroom.id),
+        outcome="success",
+        source="server",
+        trust_level="server-verified",
+        metadata={"name": classroom.name, "subject": classroom.subject},
+        db=db
+    )
 
     return _build_classroom_response(classroom, current_user)
 
@@ -243,6 +260,22 @@ def join_classroom(
         db.commit()
         db.refresh(c)
 
+        log_audit_event(
+            actor_uid=current_user.email or f"user_{current_user.id}",
+            action="classroom.joined",
+            actor_email=current_user.email,
+            actor_name=current_user.full_name or current_user.username,
+            category="classroom",
+            resource_type="classroom",
+            resource_id=str(c.id),
+            classroom_id=str(c.id),
+            outcome="success",
+            source="server",
+            trust_level="server-verified",
+            metadata={"classroom_name": c.name},
+            db=db
+        )
+
     return _build_classroom_response(c, current_user)
 
 @router.post("/{classroom_id}/key/regenerate", response_model=AccessKeyRegenerateResponse)
@@ -269,6 +302,22 @@ def regenerate_access_key(
     c.access_key_hash = new_hash
     c.updated_at = datetime.utcnow()
     db.commit()
+
+    log_audit_event(
+        actor_uid=current_user.email or f"user_{current_user.id}",
+        action="classroom.key_regenerated",
+        actor_email=current_user.email,
+        actor_name=current_user.full_name or current_user.username,
+        category="classroom",
+        resource_type="classroom",
+        resource_id=str(c.id),
+        classroom_id=str(c.id),
+        outcome="success",
+        source="server",
+        trust_level="server-verified",
+        metadata={"classroom_name": c.name},
+        db=db
+    )
 
     return AccessKeyRegenerateResponse(
         classroom_id=c.id,
@@ -299,6 +348,23 @@ def leave_classroom(
 
     db.delete(member)
     db.commit()
+
+    log_audit_event(
+        actor_uid=current_user.email or f"user_{current_user.id}",
+        action="classroom.left",
+        actor_email=current_user.email,
+        actor_name=current_user.full_name or current_user.username,
+        category="classroom",
+        resource_type="classroom",
+        resource_id=str(c.id),
+        classroom_id=str(c.id),
+        outcome="success",
+        source="server",
+        trust_level="server-verified",
+        metadata={"classroom_name": c.name},
+        db=db
+    )
+
     return {"status": "ok", "message": f"Successfully left '{c.name}'."}
 
 # ---------------------------------------------------------
@@ -357,6 +423,22 @@ def remove_student_member(
 
     db.delete(member)
     db.commit()
+
+    log_audit_event(
+        actor_uid=current_user.email or f"user_{current_user.id}",
+        action="classroom.member_removed",
+        actor_email=current_user.email,
+        actor_name=current_user.full_name or current_user.username,
+        category="classroom",
+        resource_type="member",
+        resource_id=str(student_id),
+        classroom_id=str(classroom_id),
+        outcome="success",
+        source="server",
+        trust_level="server-verified",
+        db=db
+    )
+
     return {"status": "ok", "message": "Student has been removed from the classroom."}
 
 # ---------------------------------------------------------
@@ -393,7 +475,7 @@ def create_resource(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Add a note or code resource to the classroom (teacher only)."""
+    """Publish teacher lecture notes, PDFs, or runnable code references."""
     c = db.query(Classroom).filter(Classroom.id == classroom_id).first()
     if not c or c.is_archived:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Classroom not found.")
@@ -416,6 +498,22 @@ def create_resource(
     db.add(res)
     db.commit()
     db.refresh(res)
+
+    log_audit_event(
+        actor_uid=current_user.email or f"user_{current_user.id}",
+        action="resource.upload_completed",
+        actor_email=current_user.email,
+        actor_name=current_user.full_name or current_user.username,
+        category="resource",
+        resource_type=res.resource_type,
+        resource_id=str(res.id),
+        classroom_id=str(classroom_id),
+        outcome="success",
+        source="server",
+        trust_level="server-verified",
+        metadata={"title": res.title, "resource_type": res.resource_type},
+        db=db
+    )
 
     out = ClassResourceResponse.model_validate(res)
     out.author_name = current_user.full_name or current_user.username
@@ -445,6 +543,22 @@ def delete_resource(
 
     db.delete(res)
     db.commit()
+
+    log_audit_event(
+        actor_uid=current_user.email or f"user_{current_user.id}",
+        action="resource.deleted",
+        actor_email=current_user.email,
+        actor_name=current_user.full_name or current_user.username,
+        category="resource",
+        resource_type="resource",
+        resource_id=str(resource_id),
+        classroom_id=str(classroom_id),
+        outcome="success",
+        source="server",
+        trust_level="server-verified",
+        db=db
+    )
+
     return {"status": "ok", "message": "Resource deleted successfully."}
 
 # ---------------------------------------------------------
@@ -579,6 +693,22 @@ def assign_problem(
     db.commit()
     db.refresh(assignment)
 
+    log_audit_event(
+        actor_uid=current_user.email or f"user_{current_user.id}",
+        action="assignment.created",
+        actor_email=current_user.email,
+        actor_name=current_user.full_name or current_user.username,
+        category="assignment",
+        resource_type="assignment",
+        resource_id=str(assignment.id),
+        classroom_id=str(classroom_id),
+        outcome="success",
+        source="server",
+        trust_level="server-verified",
+        metadata={"title": assignment.title},
+        db=db
+    )
+
     return AssignmentResponse(
         id=assignment.id,
         classroom_id=classroom_id,
@@ -701,6 +831,22 @@ def submit_assignment(
     db.add(sub)
     db.commit()
     db.refresh(sub)
+
+    log_audit_event(
+        actor_uid=current_user.email or f"user_{current_user.id}",
+        action="assignment.submission_created",
+        actor_email=current_user.email,
+        actor_name=current_user.full_name or current_user.username,
+        category="assignment",
+        resource_type="submission",
+        resource_id=str(sub.id),
+        classroom_id=str(classroom_id),
+        outcome="success",
+        source="server",
+        trust_level="server-verified",
+        metadata={"assignment_id": str(assignment_id), "language": req.language},
+        db=db
+    )
 
     return {"status": "ok", "submission_id": sub.id, "message": "Assignment solution submitted successfully."}
 

@@ -16,7 +16,9 @@ import {
   Sun,
   Moon,
   ExternalLink,
-  BookOpen
+  BookOpen,
+  Activity,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useOffline } from '../context/OfflineContext';
@@ -204,9 +206,26 @@ export const Navbar: React.FC = () => {
           {/* User Profile / Auth State */}
           {user ? (
             <div className="flex items-center gap-1.5">
-              <span className="hidden sm:block text-xs font-semibold text-light-textNormal dark:text-dark-200">
-                {user.username}
-              </span>
+              <Link
+                to="/my-activity"
+                className={`h-10 px-3 rounded-xl bg-light-secondary dark:bg-[#111116] hover:bg-slate-100 dark:hover:bg-dark-800 text-light-textNormal dark:text-dark-200 border border-light-border dark:border-white/10 flex items-center gap-1.5 transition-all shadow-xs ${
+                  isActive('/my-activity') ? 'border-crimson-500/50 text-crimson-600 dark:text-crimson-400' : ''
+                }`}
+                title="View Activity History"
+              >
+                <Activity className="w-4 h-4 text-crimson-500" />
+                <span className="hidden sm:inline text-xs font-bold">{user.username}</span>
+              </Link>
+              {user.role === 'ADMIN' && (
+                <Link
+                  to="/admin/activity"
+                  className="h-10 px-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 text-xs font-bold flex items-center gap-1 transition-all"
+                  title="Admin Audit Dashboard"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">Admin</span>
+                </Link>
+              )}
               <button
                 onClick={logout}
                 className="w-10 h-10 rounded-xl bg-light-secondary dark:bg-[#111116] hover:bg-rose-50 dark:hover:bg-rose-950/40 text-light-textMuted dark:text-dark-400 hover:text-crimson-500 dark:hover:text-crimson-400 border border-light-border dark:border-white/10 flex items-center justify-center transition-all shadow-xs"

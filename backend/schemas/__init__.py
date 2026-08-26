@@ -417,3 +417,48 @@ class ImportResult(BaseModel):
     folders_created: int
     skipped_count: int
     programs: List[ProgramListResponse]
+
+# Activity & Audit
+class AuditLogResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    event_id: str
+    actor_uid: str
+    actor_email: Optional[str] = None
+    actor_name: Optional[str] = None
+    action: str
+    category: str
+    resource_type: Optional[str] = None
+    resource_id: Optional[str] = None
+    classroom_id: Optional[str] = None
+    outcome: str
+    source: str
+    trust_level: str
+    request_id: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    created_at: datetime
+
+class ClientActivityLogRequest(BaseModel):
+    action: str
+    category: Optional[str] = None
+    resource_type: Optional[str] = None
+    resource_id: Optional[str] = None
+    classroom_id: Optional[str] = None
+    outcome: Optional[str] = "success"
+    metadata: Optional[Dict[str, Any]] = None
+
+class ActivityPaginationResponse(BaseModel):
+    total_count: int
+    page: int
+    page_size: int
+    total_pages: int
+    has_next: bool
+    events: List[AuditLogResponse]
+
+class AdminActivityStatsResponse(BaseModel):
+    total_events: int
+    events_today: int
+    total_users_active: int
+    success_rate_percent: float
+    category_counts: Dict[str, int]
+

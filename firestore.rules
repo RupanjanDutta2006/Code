@@ -65,5 +65,11 @@ service cloud.firestore {
         allow write, delete: if isClassOwner(classId);
       }
     }
+
+    // Secure Audit Logs: client cannot create, edit or delete audit logs directly
+    match /auditLogs/{logId} {
+      allow create, update, delete: if false;
+      allow read: if isSignedIn() && (request.auth.token.admin == true || resource.data.actorUid == request.auth.uid);
+    }
   }
 }

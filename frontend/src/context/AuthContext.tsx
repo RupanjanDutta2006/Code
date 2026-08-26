@@ -14,6 +14,7 @@ import {
   updateProfile 
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { logClientActivity } from '../services/activity';
 
 export interface UserProfile {
   id: number;
@@ -21,7 +22,7 @@ export interface UserProfile {
   username: string;
   email: string;
   full_name?: string;
-  role: 'USER' | 'CREATOR' | 'TEACHER';
+  role: 'USER' | 'CREATOR' | 'TEACHER' | 'ADMIN';
   photo_url?: string;
   created_at?: string;
   last_login_at?: string;
@@ -150,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(idToken);
       localStorage.setItem('codevault_token', idToken);
       await syncFirestoreProfile(cred.user);
+      logClientActivity({ action: 'auth.login_succeeded', category: 'auth' });
     } catch (err: any) {
       console.error('Email sign-in error:', err);
       throw err;
@@ -170,6 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(idToken);
       localStorage.setItem('codevault_token', idToken);
       await syncFirestoreProfile(cred.user, role, name.trim());
+      logClientActivity({ action: 'auth.signup_succeeded', category: 'auth' });
     } catch (err: any) {
       console.error('Email registration error:', err);
       throw err;
@@ -187,6 +190,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(idToken);
       localStorage.setItem('codevault_token', idToken);
       const appUser = await syncFirestoreProfile(fbUser, role);
+      logClientActivity({ action: 'auth.login_succeeded', category: 'auth' });
       return appUser;
     } catch (err: any) {
       console.error('Google sign-in error:', err);
@@ -202,10 +206,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Please provide a valid email address.');
     }
     await sendPasswordResetEmail(auth, email.trim());
+    logClientActivity({ action: 'auth.password_reset_requested', category: 'auth' });
   };
 
   // Sign Out
   const logout = async () => {
+    try {
+      await logClientActivity({ action: 'auth.logout_requested', category: 'auth' });
+    } catch {
+      // Non-blocking
+    }
     try {
       await signOut(auth);
       setToken(null);

@@ -108,6 +108,9 @@ def get_current_user_optional(
             db.rollback()
             user = db.query(User).filter((User.email == email) | (User.username == candidate_username)).first()
 
+    if user and (payload.get("admin") is True or payload.get("role") == "ADMIN"):
+        user.role = UserRole.ADMIN
+
     return user
 
 def get_current_user(
@@ -143,7 +146,7 @@ def generate_secure_access_key(prefix: Optional[str] = None) -> str:
 def require_creator_or_teacher(
     current_user: User = Depends(get_current_user)
 ) -> User:
-    if current_user.role not in [UserRole.CREATOR, UserRole.TEACHER]:
+    if current_user.role not in [UserRole.CREATOR, UserRole.TEACHER, UserRole.ADMIN]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Action requires Creator or Teacher permissions."
@@ -154,3 +157,14 @@ def require_teacher(
     current_user: User = Depends(get_current_user)
 ) -> User:
     return current_user
+
+def require_admin(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access Denied: Administrator privileges required."
+        )
+    return current_user
+

@@ -24,6 +24,8 @@ import { ContactPage } from './pages/ContactPage';
 import { MyClassPage } from './pages/MyClassPage';
 import { InteractiveClassPage } from './pages/InteractiveClassPage';
 import { DeveloperGitHubConnectPage } from './pages/DeveloperGitHubConnectPage';
+import { UserActivityPage } from './pages/UserActivityPage';
+import { AdminActivityDashboardPage } from './pages/AdminActivityDashboardPage';
 
 export const App: React.FC = () => {
   return (
@@ -52,6 +54,9 @@ export const App: React.FC = () => {
                     <Route path="/my-class/:slug" element={<InteractiveClassPage />} />
                     <Route path="/classrooms" element={<ClassroomListPage />} />
                     <Route path="/classrooms/:id" element={<ClassroomDetailPage />} />
+                    <Route path="/my-activity" element={<UserActivityPage />} />
+                    <Route path="/activity" element={<UserActivityPage />} />
+                    <Route path="/admin/activity" element={<AdminActivityDashboardPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/creator" element={<CreatorPage />} />
