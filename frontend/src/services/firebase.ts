@@ -11,18 +11,18 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, isSupported, Analytics } from 'firebase/analytics';
 
-// CodeVault Pro Firebase Configuration
+// CodeVault Pro Canonical Firebase Configuration
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBhcYHq5fhSybujFasFlH3LDnHlhJpBQJE",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "mediscan-ai-8f696.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "mediscan-ai-8f696",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "mediscan-ai-8f696.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "312494844658",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:312494844658:web:18cb50f6e94ac946c3fe6b",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-TZP6SX2VDB"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBmFlKN0p6EfkudHq67ZByI5CiQDFj4M60",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "codevault-pro-souvik.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "codevault-pro-souvik",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "codevault-pro-souvik.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "348997630288",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:348997630288:web:af927d918f0bf38f079455",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
 };
 
-// Safe configuration validation without exposing private values
+// Safe configuration validation
 export const validateFirebaseConfig = (): { valid: boolean; missing: string[] } => {
   const missing: string[] = [];
   if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('PLACEHOLDER')) {
@@ -35,14 +35,6 @@ export const validateFirebaseConfig = (): { valid: boolean; missing: string[] } 
   }
   return { valid: missing.length === 0, missing };
 };
-
-const configValidation = validateFirebaseConfig();
-if (!configValidation.valid) {
-  console.warn(
-    '[CodeVault Firebase] Incomplete configuration. Missing variables:',
-    configValidation.missing.join(', ')
-  );
-}
 
 // Initialize Firebase App singleton
 export const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -74,14 +66,15 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Friendly error message mapper
+// User-friendly error message mapper (keeps UI clean and developer console detailed)
 export const mapAuthErrorToMessage = (error: any): string => {
-  if (!error) return 'An unexpected error occurred. Please try again.';
+  if (!error) return '';
   const code = error.code || '';
   const message = error.message || '';
 
+  // Silent user actions - no scary banners
   if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-    return 'Sign-in popup was closed. Please try again when ready.';
+    return '';
   }
   if (code === 'auth/popup-blocked') {
     return 'Sign-in popup was blocked by your browser. Please allow popups for CodeVault.';
@@ -104,11 +97,11 @@ export const mapAuthErrorToMessage = (error: any): string => {
   if (code === 'auth/network-request-failed') {
     return 'Network connection problem. Please check your internet connection.';
   }
-  if (code === 'auth/api-key-not-valid' || message.includes('api-key-not-valid') || message.includes('CONFIGURATION_NOT_FOUND')) {
-    return 'Authentication service is initializing. Please verify that Firebase Authentication is enabled.';
-  }
   if (code === 'auth/unauthorized-domain') {
-    return 'This domain is not yet authorized in Firebase Console > Authentication > Settings > Authorized domains.';
+    return 'Authentication is temporarily unavailable for this domain. Please contact support.';
+  }
+  if (code === 'auth/api-key-not-valid' || message.includes('api-key-not-valid') || message.includes('CONFIGURATION_NOT_FOUND')) {
+    return 'Authentication service is initializing. Please try again in a moment.';
   }
 
   return 'Authentication failed. Please check your credentials and try again.';
