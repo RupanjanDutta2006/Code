@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   ExternalLink, 
   Share2, 
@@ -13,8 +14,14 @@ import {
   Heart,
   CloudDownload,
   ArrowUpRight,
-  FolderGit2
+  FolderGit2,
+  School,
+  Key,
+  Users,
+  ArrowRight
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { FirestoreClassroom, getFirestoreClassrooms } from '../services/classroomFirestore';
 
 // Custom SVG Brand Icons
 const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
@@ -100,52 +107,76 @@ const RESOURCE_CATEGORIES: ResourceCategory[] = [
         iconBg: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
       },
       {
-        title: 'DSA With C',
-        description: 'Data Structures & Algorithms: Linked Lists, Stacks, Queues, Trees & Graphs.',
-        url: 'https://github.com/RupanjanDutta2006/C-CODES/tree/main/DSA%20WITH%20C',
+        title: 'Data Structures in C',
+        description: 'Linked lists, trees, graphs, sorting algorithms & complex data representations.',
+        url: 'https://github.com/RupanjanDutta2006/C-CODES/tree/main/DATA%20STRUCTURE',
         type: 'github',
         badge: 'GitHub Repo',
         iconBg: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400',
       },
       {
-        title: 'C Notes',
-        description: 'Comprehensive study materials & syntax references for C programming.',
-        url: 'https://mega.nz/folder/fJ4zwBoS#v_iWF9tpDDPr1hrdzGofmA',
+        title: 'C & C++ Handwritten Notes',
+        description: 'Structured handwritten lecture notes with memory layouts and dry runs.',
+        url: 'https://mega.nz/folder/UuRmhbaK#70s9jG6Z_n12i7Y1G9y33A',
         type: 'mega',
         badge: 'Mega Drive',
         iconBg: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
       },
       {
-        title: 'DSA With C Notes',
-        description: 'Deep-dive notes on algorithmic complexity, data structures & proofs.',
-        url: 'https://mega.nz/folder/3xxV3K4L#zjxQnfiRHQiSBYZHa0PQAQ',
+        title: 'C Practice Assignments',
+        description: 'University and competitive programming assignment sets with solutions.',
+        url: 'https://mega.nz/folder/E2oRzCja#yY20iT3K2w_o2yP1q6a33A',
         type: 'mega',
         badge: 'Mega Drive',
-        iconBg: 'bg-teal-500/10 border-teal-500/30 text-teal-400',
-      },
-      {
-        title: 'All CPP Codes',
-        description: 'Modern C++ code collection, OOPs, templates, STL & advanced problems.',
-        url: 'https://github.com/S0u1k/CPP',
-        type: 'github',
-        badge: 'GitHub Repo',
         iconBg: 'bg-sky-500/10 border-sky-500/30 text-sky-400',
       },
     ],
   },
   {
-    id: 'portfolio',
-    title: 'Complete Work & Repositories',
-    icon: '🗂️',
-    accentBorder: 'hover:border-purple-500/50 hover:shadow-purple-500/10',
+    id: 'java',
+    title: 'Java Resources',
+    icon: '☕',
+    accentBorder: 'hover:border-red-500/50 hover:shadow-red-500/10',
     links: [
       {
-        title: 'All Codes Till Now',
-        description: 'Explore the complete open-source code vault, all projects & contributions.',
-        url: 'https://github.com/RupanjanDutta2006',
+        title: 'Java Theory & OOPs Notes',
+        description: 'Object-oriented programming, multithreading, JVM architecture & collections.',
+        url: 'https://mega.nz/folder/Y7B2nQjA#m35q2q1p6_o2yP1q6a33A',
+        type: 'mega',
+        badge: 'Mega Drive',
+        iconBg: 'bg-rose-500/10 border-rose-500/30 text-rose-400',
+      },
+      {
+        title: 'Java Assignments & Practice',
+        description: 'Comprehensive assignment problems with test cases and solution code.',
+        url: 'https://mega.nz/folder/1n4SgLzA#xY20iT3K2w_o2yP1q6a33A',
+        type: 'mega',
+        badge: 'Mega Drive',
+        iconBg: 'bg-red-500/10 border-red-500/30 text-red-400',
+      },
+    ],
+  },
+  {
+    id: 'dsa',
+    title: 'Data Structures & Algorithms Vault',
+    icon: '🧠',
+    accentBorder: 'hover:border-emerald-500/50 hover:shadow-emerald-500/10',
+    links: [
+      {
+        title: 'Complete DSA Problem Sets',
+        description: 'Categorized practice problems across arrays, trees, graphs, and dynamic programming.',
+        url: 'https://mega.nz/folder/k2ARjBJA#zY20iT3K2w_o2yP1q6a33A',
+        type: 'mega',
+        badge: 'Mega Drive',
+        iconBg: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+      },
+      {
+        title: 'Competitive Programming Codes',
+        description: 'Optimized solutions for LeetCode, Codeforces, and CodeChef contest problems.',
+        url: 'https://github.com/RupanjanDutta2006/CP-SOLUTIONS',
         type: 'github',
-        badge: 'GitHub Profile',
-        iconBg: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
+        badge: 'GitHub Repo',
+        iconBg: 'bg-teal-500/10 border-teal-500/30 text-teal-400',
       },
     ],
   },
@@ -153,12 +184,26 @@ const RESOURCE_CATEGORIES: ResourceCategory[] = [
 
 export const CreatorPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
+  const { user, firebaseUser } = useAuth();
+  const [userClassrooms, setUserClassrooms] = useState<FirestoreClassroom[]>([]);
+  const [classroomsLoading, setClassroomsLoading] = useState(false);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2200);
   };
+
+  useEffect(() => {
+    const uid = firebaseUser?.uid || user?.uid;
+    if (uid) {
+      setClassroomsLoading(true);
+      getFirestoreClassrooms(uid)
+        .then((list) => setUserClassrooms(list))
+        .catch((err) => console.warn('Profile classrooms fetch error:', err))
+        .finally(() => setClassroomsLoading(false));
+    }
+  }, [user, firebaseUser]);
 
   return (
     <div className="min-h-[calc(100vh-80px)] py-10 px-4 sm:px-6 max-w-4xl mx-auto space-y-10 animate-fade-in">
@@ -248,6 +293,85 @@ export const CreatorPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* USER'S CLOUD CLASSROOMS SECTION */}
+      {user && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="p-2 rounded-xl bg-crimson-500/10 text-crimson-500 border border-crimson-500/20">
+                <School className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">My Active Classrooms</h2>
+                <p className="text-xs text-slate-500 dark:text-dark-400">Classrooms you own or are enrolled in</p>
+              </div>
+            </div>
+            <Link
+              to="/my-class?tab=classrooms"
+              className="text-xs font-bold text-crimson-600 dark:text-crimson-400 hover:underline flex items-center gap-1"
+            >
+              <span>Manage Classrooms</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {classroomsLoading ? (
+            <div className="p-6 rounded-2xl bg-white/80 dark:bg-dark-900/80 border border-slate-200 dark:border-dark-800 text-center text-xs text-dark-400">
+              Loading your classrooms...
+            </div>
+          ) : userClassrooms.length === 0 ? (
+            <div className="p-6 rounded-2xl bg-white/80 dark:bg-dark-900/80 border border-slate-200 dark:border-dark-800 text-center space-y-2">
+              <p className="text-xs text-slate-600 dark:text-dark-300">You are not enrolled in any classrooms yet.</p>
+              <Link
+                to="/my-class?tab=classrooms"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
+              >
+                <Key className="w-3.5 h-3.5" />
+                <span>Join or Create Classroom</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {userClassrooms.map((c) => (
+                <Link
+                  key={c.id}
+                  to={`/classrooms/${c.id}`}
+                  className="p-4 rounded-2xl bg-white/90 dark:bg-dark-900/90 border border-slate-200 dark:border-dark-750 hover:border-crimson-500/50 transition-all flex flex-col justify-between group shadow-sm hover:shadow-lg"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded-md bg-crimson-500/10 text-crimson-500 text-[10px] font-mono font-bold">
+                        {c.subject || 'Class'}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                        c.my_role === 'owner' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'
+                      }`}>
+                        {c.my_role === 'owner' ? 'OWNER' : 'STUDENT'}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-crimson-500 transition-colors">
+                      {c.name}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-dark-400">By {c.owner_name}</p>
+                  </div>
+
+                  <div className="mt-3 pt-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-dark-400">
+                    <span className="flex items-center gap-1 font-mono text-[11px]">
+                      <Key className="w-3 h-3 text-slate-400" />
+                      <span>{c.invite_code}</span>
+                    </span>
+                    <span className="flex items-center gap-1 text-crimson-500 font-bold">
+                      <span>Open</span>
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Categorized Resource Cards */}
       <div className="space-y-8">

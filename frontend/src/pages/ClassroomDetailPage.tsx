@@ -32,34 +32,46 @@ import {
   Key,
   Upload
 } from 'lucide-react';
-import { 
-  api, 
-  Classroom, 
-  ClassResource, 
-  ClassAnnouncement, 
-  ClassroomMember, 
-  ClassroomAssignment, 
-  LeaderboardEntry, 
-  Program 
-} from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { storage } from '../services/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { 
+  FirestoreClassroom, 
+  FirestoreClassResource, 
+  FirestoreClassAnnouncement, 
+  FirestoreClassroomMember, 
+  FirestoreClassAssignment,
+  FirestoreAssignmentSubmission,
+  getFirestoreClassroom,
+  getFirestoreAnnouncements,
+  getFirestoreResources,
+  getFirestoreAssignments,
+  getFirestoreMembers,
+  getFirestoreSubmissions,
+  createFirestoreAnnouncement,
+  deleteFirestoreAnnouncement,
+  createFirestoreResource,
+  deleteFirestoreResource,
+  createFirestoreAssignment,
+  submitFirestoreAssignment,
+  regenerateFirestoreAccessKey,
+  toggleFirestoreJoining,
+  deleteFirestoreClassroom,
+  leaveFirestoreClassroom,
+  removeFirestoreMember
+} from '../services/classroomFirestore';
 
 export const ClassroomDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, firebaseUser } = useAuth();
 
-  const [classroom, setClassroom] = useState<Classroom | null>(null);
-  const [activeTab, setActiveTab] = useState<'announcements' | 'notes' | 'code' | 'assignments' | 'members' | 'leaderboard'>('announcements');
+  const [classroom, setClassroom] = useState<FirestoreClassroom | null>(null);
+  const [activeTab, setActiveTab] = useState<'announcements' | 'notes' | 'code' | 'assignments' | 'members'>('announcements');
   
   // Data states
-  const [announcements, setAnnouncements] = useState<ClassAnnouncement[]>([]);
-  const [resources, setResources] = useState<ClassResource[]>([]);
-  const [assignments, setAssignments] = useState<ClassroomAssignment[]>([]);
-  const [members, setMembers] = useState<ClassroomMember[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [announcements, setAnnouncements] = useState<FirestoreClassAnnouncement[]>([]);
+  const [resources, setResources] = useState<FirestoreClassResource[]>([]);
+  const [assignments, setAssignments] = useState<FirestoreClassAssignment[]>([]);
+  const [members, setMembers] = useState<FirestoreClassroomMember[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -67,7 +79,7 @@ export const ClassroomDetailPage: React.FC = () => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [showSubmitModal, setShowSubmitModal] = useState<ClassroomAssignment | null>(null);
+  const [showSubmitModal, setShowSubmitModal] = useState<FirestoreClassAssignment | null>(null);
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -90,46 +102,41 @@ export const ClassroomDetailPage: React.FC = () => {
   const [codeCategory, setCodeCategory] = useState('Sample Code');
   const [codeSource, setCodeSource] = useState('');
 
-  const [availablePrograms, setAvailablePrograms] = useState<Program[]>([]);
   const [assignTitle, setAssignTitle] = useState('');
   const [assignDesc, setAssignDesc] = useState('');
   const [assignInstructions, setAssignInstructions] = useState('');
   const [assignStarterCode, setAssignStarterCode] = useState('');
   const [assignStarterLang, setAssignStarterLang] = useState('cpp');
   const [assignDueDate, setAssignDueDate] = useState('');
-  const [assignProgramId, setAssignProgramId] = useState<number | ''>('');
 
   const [submitCode, setSubmitCode] = useState('');
   const [submitLang, setSubmitLang] = useState('cpp');
-  const [submitNotes, setSubmitNotes] = useState('');
 
   const [actionLoading, setActionLoading] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
+
+  const uid = firebaseUser?.uid || user?.uid || '';
+  const currentUserName = user?.full_name || firebaseUser?.displayName || user?.username || 'Member';
+  const currentUserEmail = user?.email || firebaseUser?.email || '';
 
   const fetchClassroomData = async () => {
     if (!id) return;
     setLoading(true);
     try {
-      const [classRes, annRes, resRes, assignRes, memRes] = await Promise.all([
-        api.get<Classroom>(`/api/classrooms/${id}`),
-        api.get<ClassAnnouncement[]>(`/api/classrooms/${id}/announcements`),
-        api.get<ClassResource[]>(`/api/classrooms/${id}/resources`),
-        api.get<ClassroomAssignment[]>(`/api/classrooms/${id}/assignments`),
-        api.get<ClassroomMember[]>(`/api/classrooms/${id}/members`),
+      const [classData, annData, resData, assignData, memData] = await Promise.all([
+        getFirestoreClassroom(id, uid),
+        getFirestoreAnnouncements(id),
+        getFirestoreResources(id),
+        getFirestoreAssignments(id, uid),
+        getFirestoreMembers(id),
       ]);
-      setClassroom(classRes.data);
-      setAnnouncements(annRes.data);
-      setResources(resRes.data);
-      setAssignments(assignRes.data);
-      setMembers(memRes.data);
-
-      if (classRes.data.teacher_id === user?.id) {
-        const lbRes = await api.get<LeaderboardEntry[]>(`/api/classrooms/${id}/leaderboard`);
-        setLeaderboard(lbRes.data);
-      }
+      setClassroom(classData);
+      setAnnouncements(annData);
+      setResources(resData);
+      setAssignments(assignData);
+      setMembers(memData);
     } catch (err) {
-      console.error('Failed to load classroom details:', err);
+      console.error('Failed to load classroom details from Firestore:', err);
     } finally {
       setLoading(false);
     }
@@ -137,9 +144,9 @@ export const ClassroomDetailPage: React.FC = () => {
 
   useEffect(() => {
     fetchClassroomData();
-  }, [id, user]);
+  }, [id, user, firebaseUser]);
 
-  const isClassTeacher = classroom?.teacher_id === user?.id;
+  const isClassTeacher = classroom?.my_role === 'owner' || classroom?.ownerUid === uid || classroom?.owner_id === uid;
 
   // -------------------------------------------------------------
   // KEY MANAGEMENT & CONTROLS
@@ -158,7 +165,7 @@ export const ClassroomDetailPage: React.FC = () => {
       navigator.share({
         title: classroom.name,
         text: shareText,
-        url: window.location.origin + `/my-class?tab=classrooms`,
+        url: window.location.origin + `/classrooms/${classroom.id}`,
       }).catch(() => {});
     } else {
       navigator.clipboard.writeText(shareText);
@@ -168,16 +175,16 @@ export const ClassroomDetailPage: React.FC = () => {
   };
 
   const handleRegenerateKey = async () => {
-    if (!id) return;
+    if (!id || !uid) return;
     setActionLoading(true);
     try {
-      const res = await api.post<{ invite_code: string }>(`/api/classrooms/${id}/key/regenerate`);
+      const newKey = await regenerateFirestoreAccessKey(id, uid, classroom?.subject);
       if (classroom) {
-        setClassroom({ ...classroom, invite_code: res.data.invite_code });
+        setClassroom({ ...classroom, invite_code: newKey, access_key: newKey });
       }
       setShowRegenerateConfirm(false);
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to regenerate key.');
+      alert(err.message || 'Failed to regenerate key.');
     } finally {
       setActionLoading(false);
     }
@@ -186,36 +193,35 @@ export const ClassroomDetailPage: React.FC = () => {
   const handleToggleJoining = async () => {
     if (!id || !classroom) return;
     try {
-      const res = await api.patch<Classroom>(`/api/classrooms/${id}`, {
-        joining_enabled: !classroom.joining_enabled,
-      });
-      setClassroom(res.data);
+      const nextState = !classroom.joining_enabled;
+      await toggleFirestoreJoining(id, nextState);
+      setClassroom({ ...classroom, joining_enabled: nextState });
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to update joining status.');
+      alert(err.message || 'Failed to update enrollment status.');
     }
   };
 
   const handleDeleteClassroom = async () => {
-    if (!id) return;
+    if (!id || !uid) return;
     setActionLoading(true);
     try {
-      await api.delete(`/api/classrooms/${id}`);
+      await deleteFirestoreClassroom(id, uid);
       navigate('/my-class?tab=classrooms');
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to delete classroom.');
+      alert(err.message || 'Failed to delete classroom.');
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleLeaveClassroom = async () => {
-    if (!id) return;
+    if (!id || !uid) return;
     setActionLoading(true);
     try {
-      await api.post(`/api/classrooms/${id}/leave`);
+      await leaveFirestoreClassroom(id, uid);
       navigate('/my-class?tab=classrooms');
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to leave classroom.');
+      alert(err.message || 'Failed to leave classroom.');
     } finally {
       setActionLoading(false);
     }
@@ -230,30 +236,33 @@ export const ClassroomDetailPage: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const res = await api.post<ClassAnnouncement>(`/api/classrooms/${id}/announcements`, {
-        title: annTitle.trim(),
-        content: annContent.trim(),
-        is_pinned: annPinned,
-      });
-      setAnnouncements((prev) => [res.data, ...prev]);
+      const created = await createFirestoreAnnouncement(
+        id, 
+        uid, 
+        currentUserName, 
+        annTitle, 
+        annContent, 
+        annPinned
+      );
+      setAnnouncements((prev) => [created, ...prev]);
       setShowAnnouncementModal(false);
       setAnnTitle('');
       setAnnContent('');
       setAnnPinned(false);
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to post announcement.');
+      alert(err.message || 'Failed to post announcement.');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleDeleteAnnouncement = async (annId: number) => {
+  const handleDeleteAnnouncement = async (annId: string) => {
     if (!id || !window.confirm('Delete this announcement?')) return;
     try {
-      await api.delete(`/api/classrooms/${id}/announcements/${annId}`);
+      await deleteFirestoreAnnouncement(id, annId);
       setAnnouncements((prev) => prev.filter((a) => a.id !== annId));
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to delete announcement.');
+      alert(err.message || 'Failed to delete announcement.');
     }
   };
 
@@ -263,43 +272,22 @@ export const ClassroomDetailPage: React.FC = () => {
 
     setActionLoading(true);
     setUploadProgress(null);
-    let finalFileUrl = noteUrl.trim();
-
     try {
-      if (noteFile) {
-        setUploadProgress(10);
-        const resourceId = `${Date.now()}_${noteFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const storagePath = `classrooms/${id}/notes/${resourceId}`;
-        const fileRef = ref(storage, storagePath);
-        const uploadTask = uploadBytesResumable(fileRef, noteFile);
-
-        await new Promise<void>((resolve, reject) => {
-          uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-              const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-              setUploadProgress(progress);
-            },
-            (error) => {
-              console.error('Storage upload failed:', error);
-              reject(error);
-            },
-            async () => {
-              finalFileUrl = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve();
-            }
-          );
-        });
-      }
-
-      const res = await api.post<ClassResource>(`/api/classrooms/${id}/resources`, {
-        resource_type: 'note',
-        title: noteTitle.trim(),
-        description: noteDesc.trim() || undefined,
-        category: noteCategory,
-        file_url: finalFileUrl || undefined,
-      });
-      setResources((prev) => [res.data, ...prev]);
+      const created = await createFirestoreResource(
+        id,
+        uid,
+        currentUserName,
+        {
+          resource_type: noteFile ? 'document' : (noteUrl ? 'link' : 'note'),
+          title: noteTitle,
+          description: noteDesc,
+          category: noteCategory,
+          file: noteFile,
+          file_url: noteUrl || undefined,
+        },
+        (progress) => setUploadProgress(progress)
+      );
+      setResources((prev) => [created, ...prev]);
       setShowNoteModal(false);
       setNoteTitle('');
       setNoteDesc('');
@@ -307,7 +295,7 @@ export const ClassroomDetailPage: React.FC = () => {
       setNoteFile(null);
       setUploadProgress(null);
     } catch (err: any) {
-      alert(err.response?.data?.detail || err.message || 'Failed to create note.');
+      alert(err.message || 'Failed to upload note/document.');
     } finally {
       setActionLoading(false);
       setUploadProgress(null);
@@ -320,33 +308,38 @@ export const ClassroomDetailPage: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const res = await api.post<ClassResource>(`/api/classrooms/${id}/resources`, {
-        resource_type: 'code',
-        title: codeTitle.trim(),
-        description: codeDesc.trim() || undefined,
-        category: codeCategory,
-        language: codeLang,
-        source_code: codeSource,
-      });
-      setResources((prev) => [res.data, ...prev]);
+      const created = await createFirestoreResource(
+        id,
+        uid,
+        currentUserName,
+        {
+          resource_type: 'code',
+          title: codeTitle,
+          description: codeDesc,
+          category: codeCategory,
+          language: codeLang,
+          source_code: codeSource,
+        }
+      );
+      setResources((prev) => [created, ...prev]);
       setShowCodeModal(false);
       setCodeTitle('');
       setCodeDesc('');
       setCodeSource('');
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to create code resource.');
+      alert(err.message || 'Failed to create code snippet.');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleDeleteResource = async (resId: number) => {
+  const handleDeleteResource = async (resId: string) => {
     if (!id || !window.confirm('Delete this resource?')) return;
     try {
-      await api.delete(`/api/classrooms/${id}/resources/${resId}`);
+      await deleteFirestoreResource(id, resId);
       setResources((prev) => prev.filter((r) => r.id !== resId));
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to delete resource.');
+      alert(err.message || 'Failed to delete resource.');
     }
   };
 
@@ -362,41 +355,34 @@ export const ClassroomDetailPage: React.FC = () => {
   // -------------------------------------------------------------
   // ASSIGNMENT ACTIONS
   // -------------------------------------------------------------
-  const handleOpenAssignModal = async () => {
-    setShowAssignModal(true);
-    try {
-      const res = await api.get<Program[]>('/api/programs');
-      setAvailablePrograms(res.data);
-    } catch (err) {
-      console.error('Failed to load programs for assignment:', err);
-    }
-  };
-
   const handleAssignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id || !assignTitle.trim()) return;
 
     setActionLoading(true);
     try {
-      const res = await api.post<ClassroomAssignment>(`/api/classrooms/${id}/assign`, {
-        title: assignTitle.trim(),
-        description: assignDesc.trim() || undefined,
-        instructions: assignInstructions.trim() || undefined,
-        starter_code: assignStarterCode || undefined,
-        starter_language: assignStarterLang,
-        program_id: assignProgramId ? Number(assignProgramId) : undefined,
-        due_date: assignDueDate ? new Date(assignDueDate).toISOString() : undefined,
-      });
-      setAssignments((prev) => [res.data, ...prev]);
+      const created = await createFirestoreAssignment(
+        id,
+        uid,
+        currentUserName,
+        {
+          title: assignTitle,
+          description: assignDesc,
+          instructions: assignInstructions,
+          starter_code: assignStarterCode,
+          starter_language: assignStarterLang,
+          due_date: assignDueDate || undefined,
+        }
+      );
+      setAssignments((prev) => [created, ...prev]);
       setShowAssignModal(false);
       setAssignTitle('');
       setAssignDesc('');
       setAssignInstructions('');
       setAssignStarterCode('');
       setAssignDueDate('');
-      setAssignProgramId('');
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to assign problem.');
+      alert(err.message || 'Failed to create assignment.');
     } finally {
       setActionLoading(false);
     }
@@ -408,32 +394,35 @@ export const ClassroomDetailPage: React.FC = () => {
 
     setActionLoading(true);
     try {
-      await api.post(`/api/classrooms/${id}/assignments/${showSubmitModal.id}/submit`, {
-        source_code: submitCode,
-        language: submitLang,
-        notes: submitNotes.trim() || undefined,
-      });
+      await submitFirestoreAssignment(
+        id,
+        showSubmitModal.id,
+        uid,
+        currentUserName,
+        currentUserEmail,
+        submitCode,
+        submitLang
+      );
+      setAssignments((prev) => prev.map((a) => a.id === showSubmitModal.id ? { ...a, my_submission_status: 'submitted' } : a));
       setShowSubmitModal(null);
       setSubmitCode('');
-      setSubmitNotes('');
-      fetchClassroomData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to submit solution.');
+      alert(err.message || 'Failed to submit solution.');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleRemoveMember = async (studentId: number) => {
-    if (!id || !window.confirm('Remove this student from the classroom?')) return;
+  const handleRemoveMember = async (studentUid: string) => {
+    if (!id || !window.confirm('Remove this member from the classroom?')) return;
     try {
-      await api.delete(`/api/classrooms/${id}/members/${studentId}`);
-      setMembers((prev) => prev.filter((m) => m.student_id !== studentId));
+      await removeFirestoreMember(id, studentUid);
+      setMembers((prev) => prev.filter((m) => m.user_id !== studentUid && m.id !== studentUid));
       if (classroom) {
-        setClassroom({ ...classroom, member_count: Math.max(0, classroom.member_count - 1) });
+        setClassroom({ ...classroom, member_count: Math.max(1, classroom.member_count - 1) });
       }
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to remove member.');
+      alert(err.message || 'Failed to remove member.');
     }
   };
 
@@ -441,7 +430,7 @@ export const ClassroomDetailPage: React.FC = () => {
     return (
       <div className="py-24 text-center text-dark-400 space-y-3">
         <div className="w-8 h-8 border-2 border-crimson-500 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-xs">Loading classroom workspace...</p>
+        <p className="text-xs">Loading classroom workspace from Firestore...</p>
       </div>
     );
   }
@@ -452,7 +441,7 @@ export const ClassroomDetailPage: React.FC = () => {
         <AlertCircle className="w-12 h-12 text-crimson-500 mx-auto" />
         <h2 className="text-lg font-bold text-white">Classroom not found or access denied.</h2>
         <p className="text-xs text-dark-400">
-          You might not have access to this classroom or the class was deleted.
+          You might not have enrolled in this classroom or the class was deleted.
         </p>
         <Link
           to="/my-class?tab=classrooms"
@@ -465,7 +454,7 @@ export const ClassroomDetailPage: React.FC = () => {
     );
   }
 
-  const noteResources = resources.filter((r) => r.resource_type === 'note' || r.resource_type === 'document');
+  const noteResources = resources.filter((r) => r.resource_type === 'note' || r.resource_type === 'document' || r.resource_type === 'link');
   const codeResources = resources.filter((r) => r.resource_type === 'code');
 
   return (
@@ -499,77 +488,72 @@ export const ClassroomDetailPage: React.FC = () => {
                     {classroom.academic_level}
                   </span>
                 )}
-              </div>
-            </div>
-
-            <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              {classroom.name}
-            </h1>
-
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-dark-300">
-              Instructor: <span className="font-bold text-slate-900 dark:text-white">{classroom.teacher_name}</span> • {classroom.member_count} Enrolled Student{classroom.member_count !== 1 ? 's' : ''}
-            </p>
-          </div>
-
-          {/* Access Key Display Box & Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div className="flex items-center justify-between gap-3 px-3.5 py-2 rounded-2xl bg-slate-50 dark:bg-dark-950 border border-crimson-500/30 shadow-inner">
-              <div className="flex items-center gap-2">
-                <Key className="w-4 h-4 text-crimson-500" />
-                <div className="text-left">
-                  <span className="text-[10px] text-slate-400 dark:text-dark-400 uppercase tracking-wider block font-bold">
-                    Access Key
+                {isClassTeacher ? (
+                  <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold">
+                    OWNER
                   </span>
-                  <span className="font-mono font-extrabold text-sm sm:text-base text-crimson-600 dark:text-crimson-400">
-                    {classroom.invite_code}
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold">
+                    STUDENT
                   </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={handleCopyCode}
-                  className="p-1.5 rounded-xl text-slate-500 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-dark-800 transition-colors"
-                  title="Copy Access Key"
-                >
-                  {copiedCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                </button>
-
-                <button
-                  onClick={handleShareKey}
-                  className="p-1.5 rounded-xl text-slate-500 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-dark-800 transition-colors"
-                  title="Share Key"
-                >
-                  <Share2 className="w-4 h-4" />
-                </button>
-
-                {isClassTeacher && (
-                  <button
-                    onClick={() => setShowRegenerateConfirm(true)}
-                    className="p-1.5 rounded-xl text-slate-500 dark:text-dark-300 hover:text-crimson-500 hover:bg-slate-200 dark:hover:bg-dark-800 transition-colors"
-                    title="Rotate / Regenerate Key"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </button>
                 )}
               </div>
             </div>
 
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {classroom.name}
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-dark-400">
+              Instructor: <span className="font-semibold text-slate-700 dark:text-dark-200">{classroom.owner_name}</span>
+              {classroom.description && ` • ${classroom.description}`}
+            </p>
+          </div>
+
+          {/* Access Key & Actions */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-dark-950 border border-slate-200 dark:border-white/10 flex items-center gap-2">
+              <div className="space-y-0.5">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-dark-500 block">Class Key</span>
+                <span className="text-xs sm:text-sm font-mono font-extrabold text-crimson-600 dark:text-crimson-400 tracking-wider">
+                  {classroom.invite_code}
+                </span>
+              </div>
+              <button
+                onClick={handleCopyCode}
+                className="p-1.5 rounded-xl bg-white dark:bg-dark-800 text-slate-700 dark:text-dark-300 hover:text-crimson-500 border border-slate-200 dark:border-white/10 transition-colors"
+                title="Copy Key"
+              >
+                {copiedCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={handleShareKey}
+                className="p-1.5 rounded-xl bg-crimson-600 text-white shadow-glow-red-sm transition-transform hover:scale-105"
+                title="Share Class Key"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+            </div>
+
             {isClassTeacher ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setShowRegenerateConfirm(true)}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-300 border border-slate-200 dark:border-white/10 transition-colors"
+                  title="Regenerate Key"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
                 <button
                   onClick={handleToggleJoining}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                  className={`p-2 rounded-xl border transition-colors ${
                     classroom.joining_enabled
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                      : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
                   }`}
-                  title={classroom.joining_enabled ? 'Joining is Enabled' : 'Joining is Disabled'}
+                  title={classroom.joining_enabled ? "Enrollment Active (Click to Lock)" : "Enrollment Locked (Click to Unlock)"}
                 >
-                  {classroom.joining_enabled ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                  <span>{classroom.joining_enabled ? 'Open' : 'Locked'}</span>
+                  {classroom.joining_enabled ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                 </button>
-
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 transition-colors"
@@ -581,7 +565,7 @@ export const ClassroomDetailPage: React.FC = () => {
             ) : (
               <button
                 onClick={() => setShowLeaveConfirm(true)}
-                className="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold transition-all flex items-center gap-1.5"
+                className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold flex items-center gap-1.5 transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Leave Class</span>
@@ -590,157 +574,131 @@ export const ClassroomDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {classroom.description && (
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-dark-300 border-t border-slate-200 dark:border-white/10 pt-3 leading-relaxed">
-            {classroom.description}
-          </p>
-        )}
-      </div>
-
-      {/* WORKSPACE NAVIGATION TABS */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 dark:border-white/10">
-        <button
-          onClick={() => setActiveTab('announcements')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-            activeTab === 'announcements'
-              ? 'bg-crimson-600 text-white shadow-glow-red-sm'
-              : 'bg-white dark:bg-dark-900 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-dark-300 hover:text-white'
-          }`}
-        >
-          <Pin className="w-3.5 h-3.5" />
-          <span>Announcements ({announcements.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('notes')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-            activeTab === 'notes'
-              ? 'bg-crimson-600 text-white shadow-glow-red-sm'
-              : 'bg-white dark:bg-dark-900 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-dark-300 hover:text-white'
-          }`}
-        >
-          <FileText className="w-3.5 h-3.5" />
-          <span>Notes & Docs ({noteResources.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('code')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-            activeTab === 'code'
-              ? 'bg-crimson-600 text-white shadow-glow-red-sm'
-              : 'bg-white dark:bg-dark-900 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-dark-300 hover:text-white'
-          }`}
-        >
-          <Code2 className="w-3.5 h-3.5" />
-          <span>Code Resources ({codeResources.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('assignments')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-            activeTab === 'assignments'
-              ? 'bg-crimson-600 text-white shadow-glow-red-sm'
-              : 'bg-white dark:bg-dark-900 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-dark-300 hover:text-white'
-          }`}
-        >
-          <BookOpen className="w-3.5 h-3.5" />
-          <span>Assignments ({assignments.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('members')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-            activeTab === 'members'
-              ? 'bg-crimson-600 text-white shadow-glow-red-sm'
-              : 'bg-white dark:bg-dark-900 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-dark-300 hover:text-white'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5" />
-          <span>Members ({members.length})</span>
-        </button>
-
-        {isClassTeacher && (
+        {/* TABS NAVIGATION */}
+        <div className="flex items-center gap-2 border-t border-slate-200 dark:border-white/10 pt-4 overflow-x-auto">
           <button
-            onClick={() => setActiveTab('leaderboard')}
-            className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-              activeTab === 'leaderboard'
+            onClick={() => setActiveTab('announcements')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'announcements'
                 ? 'bg-crimson-600 text-white shadow-glow-red-sm'
-                : 'bg-white dark:bg-dark-900 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-dark-300 hover:text-white'
+                : 'bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Trophy className="w-3.5 h-3.5 text-amber-400" />
-            <span>Leaderboard</span>
+            <Pin className="w-3.5 h-3.5" />
+            <span>Announcements ({announcements.length})</span>
           </button>
-        )}
+
+          <button
+            onClick={() => setActiveTab('notes')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'notes'
+                ? 'bg-crimson-600 text-white shadow-glow-red-sm'
+                : 'bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Lecture Notes ({noteResources.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('code')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'code'
+                ? 'bg-crimson-600 text-white shadow-glow-red-sm'
+                : 'bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Code2 className="w-3.5 h-3.5" />
+            <span>Code Vault ({codeResources.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('assignments')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'assignments'
+                ? 'bg-crimson-600 text-white shadow-glow-red-sm'
+                : 'bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Assignments ({assignments.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('members')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'members'
+                ? 'bg-crimson-600 text-white shadow-glow-red-sm'
+                : 'bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Members ({members.length})</span>
+          </button>
+        </div>
       </div>
 
-      {/* TAB: ANNOUNCEMENTS */}
+      {/* TAB CONTENT: ANNOUNCEMENTS */}
       {activeTab === 'announcements' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Pin className="w-4 h-4 text-crimson-500" />
-              <span>Classroom Announcements</span>
+              <span>Announcements & Updates</span>
             </h2>
-
             {isClassTeacher && (
               <button
                 onClick={() => setShowAnnouncementModal(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white font-bold text-xs shadow-glow-red-sm transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm flex items-center gap-1.5"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
-                <span>Post Notice</span>
+                <span>Post Announcement</span>
               </button>
             )}
           </div>
 
           {announcements.length === 0 ? (
-            <div className="p-8 text-center text-dark-400 bg-white/80 dark:bg-[#0e0e13]/80 rounded-2xl border border-slate-200 dark:border-white/10 space-y-2">
-              <Pin className="w-8 h-8 text-dark-500 mx-auto opacity-50" />
-              <p className="text-xs font-medium">No announcements posted yet.</p>
+            <div className="p-8 rounded-3xl bg-white/80 dark:bg-[#0e0e13]/80 border border-slate-200 dark:border-white/10 text-center text-dark-400 space-y-2">
+              <Pin className="w-8 h-8 text-slate-400 dark:text-dark-500 mx-auto" />
+              <p className="text-xs font-medium">No announcements posted in this classroom yet.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {announcements.map((ann) => (
+              {announcements.map((a) => (
                 <div
-                  key={ann.id}
+                  key={a.id}
                   className={`p-5 rounded-2xl border transition-all ${
-                    ann.is_pinned
-                      ? 'bg-crimson-950/20 border-crimson-500/40 shadow-glow-red-sm'
+                    a.is_pinned
+                      ? 'bg-crimson-500/5 dark:bg-crimson-500/10 border-crimson-500/30'
                       : 'bg-white/90 dark:bg-[#0e0e13]/90 border-slate-200 dark:border-white/10'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {ann.is_pinned && (
-                          <span className="px-2 py-0.5 rounded-md bg-crimson-600 text-white text-[10px] font-bold flex items-center gap-1">
-                            <Pin className="w-2.5 h-2.5" />
-                            Pinned
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        {a.is_pinned && (
+                          <span className="px-2 py-0.5 rounded-md bg-crimson-500/20 text-crimson-600 dark:text-crimson-400 text-[10px] font-bold">
+                            PINNED
                           </span>
                         )}
-                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                          {ann.title}
-                        </h3>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">{a.title}</h3>
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-dark-400 font-mono">
-                        Posted by {ann.author_name} • {new Date(ann.created_at).toLocaleDateString()}
+                      <p className="text-xs text-slate-500 dark:text-dark-400">
+                        Posted by {a.author_name} • {a.created_at}
                       </p>
                     </div>
-
                     {isClassTeacher && (
                       <button
-                        onClick={() => handleDeleteAnnouncement(ann.id)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
-                        title="Delete Notice"
+                        onClick={() => handleDeleteAnnouncement(a.id)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-rose-500 transition-colors"
+                        title="Delete Announcement"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
-
-                  <p className="text-xs sm:text-sm text-slate-700 dark:text-dark-200 mt-3 whitespace-pre-line leading-relaxed">
-                    {ann.content}
+                  <p className="text-xs text-slate-700 dark:text-dark-200 mt-2.5 whitespace-pre-wrap leading-relaxed">
+                    {a.content}
                   </p>
                 </div>
               ))}
@@ -749,83 +707,68 @@ export const ClassroomDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB: NOTES & DOCS */}
+      {/* TAB CONTENT: LECTURE NOTES */}
       {activeTab === 'notes' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <FileText className="w-4 h-4 text-crimson-500" />
-              <span>Study Notes & Handouts</span>
+              <span>Lecture Notes & Documents</span>
             </h2>
-
             {isClassTeacher && (
               <button
                 onClick={() => setShowNoteModal(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white font-bold text-xs shadow-glow-red-sm transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm flex items-center gap-1.5"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
-                <span>Add Note</span>
+                <span>Upload Note</span>
               </button>
             )}
           </div>
 
           {noteResources.length === 0 ? (
-            <div className="p-8 text-center text-dark-400 bg-white/80 dark:bg-[#0e0e13]/80 rounded-2xl border border-slate-200 dark:border-white/10 space-y-2">
-              <FileText className="w-8 h-8 text-dark-500 mx-auto opacity-50" />
-              <p className="text-xs font-medium">No study notes uploaded yet.</p>
+            <div className="p-8 rounded-3xl bg-white/80 dark:bg-[#0e0e13]/80 border border-slate-200 dark:border-white/10 text-center text-dark-400 space-y-2">
+              <FileText className="w-8 h-8 text-slate-400 dark:text-dark-500 mx-auto" />
+              <p className="text-xs font-medium">No notes uploaded yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {noteResources.map((nr) => (
+              {noteResources.map((r) => (
                 <div
-                  key={nr.id}
-                  className="p-4 rounded-2xl bg-white/90 dark:bg-[#0e0e13]/90 border border-slate-200 dark:border-white/10 hover:border-crimson-500/40 transition-all flex flex-col justify-between space-y-3"
+                  key={r.id}
+                  className="p-5 rounded-2xl bg-white/90 dark:bg-[#0e0e13]/90 border border-slate-200 dark:border-white/10 space-y-3 flex flex-col justify-between"
                 >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="px-2 py-0.5 rounded-lg bg-crimson-500/10 text-crimson-600 dark:text-crimson-400 text-[10px] font-bold">
-                        {nr.category}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/20 text-[10px] font-bold">
+                        {r.category}
                       </span>
                       {isClassTeacher && (
                         <button
-                          onClick={() => handleDeleteResource(nr.id)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
+                          onClick={() => handleDeleteResource(r.id)}
+                          className="text-slate-400 hover:text-rose-500 transition-colors"
+                          title="Delete Resource"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
-
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      {nr.title}
-                    </h3>
-
-                    {nr.description && (
-                      <p className="text-xs text-slate-600 dark:text-dark-300 leading-relaxed line-clamp-2">
-                        {nr.description}
-                      </p>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">{r.title}</h3>
+                    {r.description && (
+                      <p className="text-xs text-slate-600 dark:text-dark-300 line-clamp-2">{r.description}</p>
                     )}
                   </div>
-
-                  <div className="pt-2 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs">
-                    <span className="text-slate-400 dark:text-dark-400 text-[11px]">
-                      By {nr.author_name}
-                    </span>
-
-                    {nr.file_url ? (
-                      <a
-                        href={nr.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-crimson-600 dark:text-crimson-400 font-bold hover:underline"
-                      >
-                        <span>Open Document</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    ) : (
-                      <span className="text-slate-400 dark:text-dark-500 text-[11px]">Text Note</span>
-                    )}
-                  </div>
+                  {r.file_url && (
+                    <a
+                      href={r.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-700 text-xs font-bold text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5 text-crimson-500" />
+                      <span>Open Document</span>
+                    </a>
+                  )}
                 </div>
               ))}
             </div>
@@ -833,81 +776,63 @@ export const ClassroomDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB: CODE RESOURCES */}
+      {/* TAB CONTENT: CODE VAULT */}
       {activeTab === 'code' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Code2 className="w-4 h-4 text-crimson-500" />
-              <span>Verified Code Resources & Templates</span>
+              <span>Shared Code & Snippets</span>
             </h2>
-
             {isClassTeacher && (
               <button
                 onClick={() => setShowCodeModal(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white font-bold text-xs shadow-glow-red-sm transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm flex items-center gap-1.5"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
-                <span>Add Code Snippet</span>
+                <span>Share Code</span>
               </button>
             )}
           </div>
 
           {codeResources.length === 0 ? (
-            <div className="p-8 text-center text-dark-400 bg-white/80 dark:bg-[#0e0e13]/80 rounded-2xl border border-slate-200 dark:border-white/10 space-y-2">
-              <Code2 className="w-8 h-8 text-dark-500 mx-auto opacity-50" />
-              <p className="text-xs font-medium">No code resources added yet.</p>
+            <div className="p-8 rounded-3xl bg-white/80 dark:bg-[#0e0e13]/80 border border-slate-200 dark:border-white/10 text-center text-dark-400 space-y-2">
+              <Code2 className="w-8 h-8 text-slate-400 dark:text-dark-500 mx-auto" />
+              <p className="text-xs font-medium">No code snippets shared yet.</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {codeResources.map((cr) => (
+              {codeResources.map((r) => (
                 <div
-                  key={cr.id}
+                  key={r.id}
                   className="p-5 rounded-2xl bg-white/90 dark:bg-[#0e0e13]/90 border border-slate-200 dark:border-white/10 space-y-3"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded-md bg-crimson-500/10 text-crimson-600 dark:text-crimson-400 text-[10px] font-mono font-bold uppercase">
-                          {cr.language || 'Code'}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-[10px]">
-                          {cr.category}
-                        </span>
-                      </div>
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                        {cr.title}
-                      </h3>
-                      {cr.description && (
-                        <p className="text-xs text-slate-600 dark:text-dark-300">
-                          {cr.description}
-                        </p>
-                      )}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">{r.title}</h3>
+                      <span className="text-[10px] font-mono text-crimson-500 uppercase font-bold">{r.language || 'CPP'}</span>
                     </div>
-
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handlePracticeInCompiler(cr.source_code || '', cr.language || 'cpp')}
-                        className="px-3.5 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white font-bold text-xs shadow-glow-red-sm transition-all flex items-center gap-1.5 touch-target"
+                        onClick={() => handlePracticeInCompiler(r.source_code || '', r.language || 'cpp')}
+                        className="px-3 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm flex items-center gap-1"
                       >
                         <Play className="w-3.5 h-3.5" />
-                        <span>Practice in Compiler</span>
+                        <span>Run in Sandbox</span>
                       </button>
-
                       {isClassTeacher && (
                         <button
-                          onClick={() => handleDeleteResource(cr.id)}
-                          className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
+                          onClick={() => handleDeleteResource(r.id)}
+                          className="text-slate-400 hover:text-rose-500 p-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
                   </div>
-
-                  {cr.source_code && (
-                    <pre className="p-3.5 rounded-xl bg-slate-950 text-emerald-400 font-mono text-xs overflow-x-auto max-h-48 border border-white/5">
-                      <code>{cr.source_code}</code>
+                  {r.source_code && (
+                    <pre className="p-3 rounded-xl bg-slate-900 text-emerald-400 font-mono text-xs overflow-x-auto border border-white/5 max-h-56">
+                      {r.source_code}
                     </pre>
                   )}
                 </div>
@@ -917,97 +842,79 @@ export const ClassroomDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB: ASSIGNMENTS */}
+      {/* TAB CONTENT: ASSIGNMENTS */}
       {activeTab === 'assignments' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-crimson-500" />
-              <span>Class Assignments ({assignments.length})</span>
+              <CheckCircle2 className="w-4 h-4 text-crimson-500" />
+              <span>Classroom Assignments</span>
             </h2>
-
             {isClassTeacher && (
               <button
-                onClick={handleOpenAssignModal}
-                className="px-3.5 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white font-bold text-xs shadow-glow-red-sm transition-all flex items-center gap-1.5"
+                onClick={() => setShowAssignModal(true)}
+                className="px-3 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm flex items-center gap-1.5"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
-                <span>Assign Problem</span>
+                <span>Create Assignment</span>
               </button>
             )}
           </div>
 
           {assignments.length === 0 ? (
-            <div className="p-8 text-center text-dark-400 bg-white/80 dark:bg-[#0e0e13]/80 rounded-2xl border border-slate-200 dark:border-white/10 space-y-2">
-              <BookOpen className="w-8 h-8 text-dark-500 mx-auto opacity-50" />
-              <p className="text-xs font-medium">No problems assigned yet.</p>
+            <div className="p-8 rounded-3xl bg-white/80 dark:bg-[#0e0e13]/80 border border-slate-200 dark:border-white/10 text-center text-dark-400 space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-slate-400 dark:text-dark-500 mx-auto" />
+              <p className="text-xs font-medium">No assignments active right now.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {assignments.map((a) => (
                 <div
                   key={a.id}
-                  className="p-5 rounded-2xl bg-white/90 dark:bg-[#0e0e13]/90 border border-slate-200 dark:border-white/10 hover:border-crimson-500/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  className="p-5 rounded-2xl bg-white/90 dark:bg-[#0e0e13]/90 border border-slate-200 dark:border-white/10 space-y-3 flex flex-col justify-between"
                 >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
-                        {a.title}
-                      </h3>
-                      <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 font-mono text-[10px] uppercase">
-                        {a.starter_language || a.program_language || 'python'}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-500 text-[10px] font-bold">
+                        Max Score: {a.max_score}
                       </span>
-                    </div>
-
-                    {a.description && (
-                      <p className="text-xs text-slate-600 dark:text-dark-300">
-                        {a.description}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-dark-400 font-mono">
-                      {a.due_date && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-crimson-500" />
-                          Due: {new Date(a.due_date).toLocaleDateString()}
+                      {a.my_submission_status === 'submitted' && (
+                        <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">
+                          SUBMITTED
                         </span>
                       )}
-                      <span>Max Score: {a.max_score || 100}</span>
                     </div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">{a.title}</h3>
+                    {a.description && (
+                      <p className="text-xs text-slate-600 dark:text-dark-300">{a.description}</p>
+                    )}
+                    {a.due_date && (
+                      <p className="text-[11px] text-slate-500 dark:text-dark-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        <span>Due: {a.due_date}</span>
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${
-                      a.my_submission_status.includes('✓')
-                        ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
-                        : a.my_submission_status === 'Not started'
-                        ? 'bg-slate-100 dark:bg-dark-800 text-slate-500 dark:text-dark-400'
-                        : 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
-                    }`}>
-                      {a.my_submission_status}
-                    </span>
-
-                    <button
-                      onClick={() => handlePracticeInCompiler(a.starter_code || '', a.starter_language || 'cpp')}
-                      className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-800 dark:text-white font-bold text-xs border border-slate-200 dark:border-white/10 hover:border-crimson-500/40 flex items-center gap-1.5"
-                    >
-                      <Play className="w-3 h-3 text-crimson-500" />
-                      <span>Solve in Compiler</span>
-                    </button>
-
-                    {!isClassTeacher && (
+                  <div className="pt-2 flex items-center gap-2">
+                    {a.starter_code && (
                       <button
-                        onClick={() => {
-                          setShowSubmitModal(a);
-                          setSubmitCode(a.starter_code || '');
-                          setSubmitLang(a.starter_language || 'cpp');
-                        }}
-                        className="px-3.5 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white font-bold text-xs shadow-glow-red-sm transition-all flex items-center gap-1"
+                        onClick={() => handlePracticeInCompiler(a.starter_code || '', a.starter_language || 'cpp')}
+                        className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-xs font-bold text-slate-800 dark:text-white transition-colors"
                       >
-                        <Send className="w-3 h-3" />
-                        <span>Submit Work</span>
+                        Open Starter Code
                       </button>
                     )}
+                    <button
+                      onClick={() => {
+                        setShowSubmitModal(a);
+                        setSubmitCode(a.starter_code || '');
+                        setSubmitLang(a.starter_language || 'cpp');
+                      }}
+                      className="flex-1 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm transition-colors text-center"
+                    >
+                      {a.my_submission_status === 'submitted' ? 'Resubmit Solution' : 'Submit Solution'}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1016,681 +923,418 @@ export const ClassroomDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB: MEMBERS ROSTER */}
+      {/* TAB CONTENT: MEMBERS */}
       {activeTab === 'members' && (
-        <div className="space-y-4 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Users className="w-4 h-4 text-crimson-500" />
-              <span>Enrolled Students ({members.length})</span>
-            </h2>
-          </div>
+        <div className="space-y-4">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Users className="w-4 h-4 text-crimson-500" />
+            <span>Classroom Roster ({members.length})</span>
+          </h2>
 
-          {members.length === 0 ? (
-            <div className="p-8 text-center text-dark-400 bg-white/80 dark:bg-[#0e0e13]/80 rounded-2xl border border-slate-200 dark:border-white/10 space-y-2">
-              <Users className="w-8 h-8 text-dark-500 mx-auto opacity-50" />
-              <p className="text-xs font-medium">No students enrolled in this classroom yet.</p>
-              <p className="text-[11px] text-slate-500 dark:text-dark-500">
-                Share access key <span className="font-mono font-bold text-crimson-500">{classroom.invite_code}</span> with students.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-              {members.map((m) => (
-                <div
-                  key={m.id}
-                  className="p-4 rounded-2xl bg-white/90 dark:bg-[#0e0e13]/90 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-3"
-                >
-                  <div className="space-y-0.5">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                      {m.student_name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-dark-400 font-mono">
-                      @{m.student_username}
-                    </p>
-                    <p className="text-[10px] text-slate-400 dark:text-dark-500">
-                      Joined: {new Date(m.joined_at).toLocaleDateString()}
-                    </p>
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#0e0e13]/90 border border-slate-200 dark:border-white/10 divide-y divide-slate-100 dark:divide-white/5">
+            {members.map((m) => (
+              <div key={m.id} className="py-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-crimson-500/10 text-crimson-500 font-bold flex items-center justify-center text-xs">
+                    {m.student_name.slice(0, 1).toUpperCase()}
                   </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">{m.student_name}</h4>
+                    <p className="text-[10px] text-slate-500 dark:text-dark-400">{m.email || 'Classroom Member'}</p>
+                  </div>
+                </div>
 
-                  {isClassTeacher && (
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                    m.role === 'owner' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'
+                  }`}>
+                    {m.role === 'owner' ? 'OWNER' : 'STUDENT'}
+                  </span>
+                  {isClassTeacher && m.role !== 'owner' && (
                     <button
-                      onClick={() => handleRemoveMember(m.student_id)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
-                      title="Remove Student"
+                      onClick={() => handleRemoveMember(m.user_id || m.id)}
+                      className="p-1 text-slate-400 hover:text-rose-500"
+                      title="Remove Member"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB: LEADERBOARD */}
-      {activeTab === 'leaderboard' && isClassTeacher && (
-        <div className="space-y-4 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-400" />
-              <span>Student Performance Leaderboard</span>
-            </h2>
-          </div>
-
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#0e0e13]/90">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-100 dark:bg-dark-950 text-slate-500 dark:text-dark-400 border-b border-slate-200 dark:border-white/10">
-                <tr>
-                  <th className="p-3">Rank</th>
-                  <th className="p-3">Student</th>
-                  <th className="p-3">Passed Testcases</th>
-                  <th className="p-3">Attempts</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Last Submission</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-white/5">
-                {leaderboard.map((lb, idx) => (
-                  <tr key={lb.student_id} className="hover:bg-slate-50 dark:hover:bg-dark-800/40">
-                    <td className="p-3 font-mono font-bold text-amber-400">#{idx + 1}</td>
-                    <td className="p-3 font-semibold text-slate-900 dark:text-white">
-                      {lb.student_name} <span className="text-[10px] text-slate-400">(@{lb.student_username})</span>
-                    </td>
-                    <td className="p-3 font-mono">{lb.passed_count}/{lb.total_count}</td>
-                    <td className="p-3 font-mono">{lb.attempts}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        lb.verdict === 'Accepted'
-                          ? 'bg-emerald-500/15 text-emerald-400'
-                          : lb.verdict === 'Not started'
-                          ? 'bg-slate-100 dark:bg-dark-800 text-slate-400'
-                          : 'bg-amber-500/15 text-amber-400'
-                      }`}>
-                        {lb.verdict}
-                      </span>
-                    </td>
-                    <td className="p-3 text-[11px] text-slate-400">
-                      {lb.last_submitted ? new Date(lb.last_submitted).toLocaleString() : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* POST ANNOUNCEMENT MODAL */}
-      {showAnnouncementModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                Post Notice / Announcement
-              </h3>
-              <button onClick={() => setShowAnnouncementModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateAnnouncement} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Lab Quiz on Trees tomorrow"
-                  value={annTitle}
-                  onChange={(e) => setAnnTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Content *
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  placeholder="Write your announcement details..."
-                  value={annContent}
-                  onChange={(e) => setAnnContent(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="pinNotice"
-                  checked={annPinned}
-                  onChange={(e) => setAnnPinned(e.target.checked)}
-                  className="rounded text-crimson-600 focus:ring-crimson-500"
-                />
-                <label htmlFor="pinNotice" className="text-xs text-slate-700 dark:text-dark-300">
-                  Pin to top of classroom announcements
-                </label>
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAnnouncementModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
-                >
-                  {actionLoading ? 'Posting...' : 'Post Notice'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ADD NOTE MODAL */}
-      {showNoteModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                Add Study Note / Handout
-              </h3>
-              <button onClick={() => setShowNoteModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateNote} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Binary Search Trees & AVL Balances"
-                  value={noteTitle}
-                  onChange={(e) => setNoteTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Category
-                </label>
-                <select
-                  value={noteCategory}
-                  onChange={(e) => setNoteCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                >
-                  <option value="Lecture Notes">Lecture Notes</option>
-                  <option value="Cheatsheet">Cheatsheet</option>
-                  <option value="Reference">Reference Material</option>
-                  <option value="Practice Problems">Practice Problem Sheet</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Upload Document / File (PDF, Images, DOC, Markdown)
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md,.png,.jpg,.jpeg"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setNoteFile(e.target.files[0]);
-                      }
-                    }}
-                    className="w-full text-xs text-slate-500 dark:text-dark-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-crimson-500/10 file:text-crimson-600 dark:file:text-crimson-400 hover:file:bg-crimson-500/20"
-                  />
-                </div>
-                {uploadProgress !== null && (
-                  <div className="mt-2 space-y-1">
-                    <div className="flex justify-between text-[10px] font-mono text-crimson-500">
-                      <span>Uploading to Firebase Storage...</span>
-                      <span>{uploadProgress}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-slate-200 dark:bg-dark-800 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-crimson-500 transition-all duration-300"
-                        style={{ width: `${uploadProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  OR External Link / Drive / Mega URL (Optional)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://drive.google.com/... or https://..."
-                  value={noteUrl}
-                  onChange={(e) => setNoteUrl(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Description (Optional)
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="Summary of this material..."
-                  value={noteDesc}
-                  onChange={(e) => setNoteDesc(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowNoteModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
-                >
-                  {actionLoading ? 'Saving...' : 'Add Note'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ADD CODE RESOURCE MODAL */}
-      {showCodeModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                Add Code Snippet
-              </h3>
-              <button onClick={() => setShowCodeModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateCodeResource} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Dijkstra Shortest Path Algorithm"
-                  value={codeTitle}
-                  onChange={(e) => setCodeTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                    Language
-                  </label>
-                  <select
-                    value={codeLang}
-                    onChange={(e) => setCodeLang(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                  >
-                    <option value="cpp">C++</option>
-                    <option value="c">C</option>
-                    <option value="python">Python</option>
-                    <option value="java">Java</option>
-                    <option value="javascript">JavaScript</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                    Category
-                  </label>
-                  <select
-                    value={codeCategory}
-                    onChange={(e) => setCodeCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                  >
-                    <option value="Sample Code">Sample Code</option>
-                    <option value="Starter Template">Starter Template</option>
-                    <option value="Algorithm">Algorithm Reference</option>
-                    <option value="Solution">Solution Key</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Source Code *
-                </label>
-                <textarea
-                  rows={6}
-                  required
-                  placeholder="// Paste your code snippet here..."
-                  value={codeSource}
-                  onChange={(e) => setCodeSource(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 text-emerald-400 font-mono text-xs border border-slate-200 dark:border-white/10 rounded-xl outline-none focus:border-crimson-500 resize-none"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCodeModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
-                >
-                  {actionLoading ? 'Saving...' : 'Add Code'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ASSIGN PROBLEM MODAL */}
-      {showAssignModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                Assign Problem to Classroom
-              </h3>
-              <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleAssignSubmit} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Assignment Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Implement Breadth First Search"
-                  value={assignTitle}
-                  onChange={(e) => setAssignTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                    Language
-                  </label>
-                  <select
-                    value={assignStarterLang}
-                    onChange={(e) => setAssignStarterLang(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                  >
-                    <option value="cpp">C++</option>
-                    <option value="c">C</option>
-                    <option value="python">Python</option>
-                    <option value="java">Java</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                    Due Date (Optional)
-                  </label>
-                  <input
-                    type="date"
-                    value={assignDueDate}
-                    onChange={(e) => setAssignDueDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Instructions & Requirements
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="Specify problem constraints and expected output format..."
-                  value={assignInstructions}
-                  onChange={(e) => setAssignInstructions(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Starter Code (Optional)
-                </label>
-                <textarea
-                  rows={4}
-                  placeholder="// Starter template for students..."
-                  value={assignStarterCode}
-                  onChange={(e) => setAssignStarterCode(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 text-emerald-400 font-mono text-xs border border-slate-200 dark:border-white/10 rounded-xl outline-none focus:border-crimson-500 resize-none"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAssignModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
-                >
-                  {actionLoading ? 'Assigning...' : 'Assign Problem'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* SUBMIT ASSIGNMENT MODAL */}
-      {showSubmitModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
-              <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                  Submit Work: {showSubmitModal.title}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-dark-400">
-                  Paste your verified solution code for instructor review.
-                </p>
-              </div>
-              <button onClick={() => setShowSubmitModal(null)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitSolution} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Language
-                </label>
-                <select
-                  value={submitLang}
-                  onChange={(e) => setSubmitLang(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                >
-                  <option value="cpp">C++</option>
-                  <option value="c">C</option>
-                  <option value="python">Python</option>
-                  <option value="java">Java</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Solution Code *
-                </label>
-                <textarea
-                  rows={8}
-                  required
-                  placeholder="// Paste your solution code here..."
-                  value={submitCode}
-                  onChange={(e) => setSubmitCode(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 text-emerald-400 font-mono text-xs border border-slate-200 dark:border-white/10 rounded-xl outline-none focus:border-crimson-500 resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Notes / Explanation (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Time complexity O(V+E), space O(V)"
-                  value={submitNotes}
-                  onChange={(e) => setSubmitNotes(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSubmitModal(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
-                >
-                  {actionLoading ? 'Submitting...' : 'Submit Solution'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* REGENERATE KEY CONFIRMATION */}
+      {/* REGENERATE CONFIRM MODAL */}
       {showRegenerateConfirm && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-slate-900 dark:text-white text-base">
-              Rotate Access Key?
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-dark-300 leading-relaxed">
-              Generating a new key immediately revokes the old access key for new joiners. Existing students will remain enrolled.
+          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Regenerate Access Key?</h3>
+            <p className="text-xs text-slate-500 dark:text-dark-400 leading-relaxed">
+              The existing key will stop working for new joins. Existing enrolled members will retain full access.
             </p>
-            <div className="pt-2 flex justify-end gap-2">
+            <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowRegenerateConfirm(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold text-slate-700 dark:text-dark-300"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRegenerateKey}
                 disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm"
+                className="px-4 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
               >
-                {actionLoading ? 'Rotating...' : 'Yes, Rotate Key'}
+                {actionLoading ? 'Regenerating...' : 'Regenerate'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* DELETE CLASSROOM CONFIRMATION */}
+      {/* DELETE CONFIRM MODAL */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-rose-500/30 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-rose-500 text-base flex items-center gap-1.5">
-              <AlertCircle className="w-5 h-5" />
-              <span>Delete Classroom?</span>
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-dark-300 leading-relaxed">
-              This action is permanent and will delete all classroom assignments, announcements, and notes.
+          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Delete Classroom?</h3>
+            <p className="text-xs text-rose-500 dark:text-rose-400 leading-relaxed">
+              This action cannot be undone. All notes, announcements, and assignments will be permanently deleted.
             </p>
-            <div className="pt-2 flex justify-end gap-2">
+            <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold text-slate-700 dark:text-dark-300"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteClassroom}
                 disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-glow-red-sm"
               >
-                {actionLoading ? 'Deleting...' : 'Delete Forever'}
+                {actionLoading ? 'Deleting...' : 'Delete Permanently'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* LEAVE CLASSROOM CONFIRMATION */}
+      {/* LEAVE CONFIRM MODAL */}
       {showLeaveConfirm && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-slate-900 dark:text-white text-base">
-              Leave Classroom?
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-dark-300 leading-relaxed">
-              Are you sure you want to leave "{classroom.name}"? You will need an access key to join again.
+          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Leave Classroom?</h3>
+            <p className="text-xs text-slate-500 dark:text-dark-400 leading-relaxed">
+              You will lose access to classroom resources until you re-join with a valid access key.
             </p>
-            <div className="pt-2 flex justify-end gap-2">
+            <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowLeaveConfirm(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold text-slate-700 dark:text-dark-300"
               >
                 Cancel
               </button>
               <button
                 onClick={handleLeaveClassroom}
                 disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-glow-red-sm"
               >
                 {actionLoading ? 'Leaving...' : 'Leave Class'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ANNOUNCEMENT MODAL */}
+      {showAnnouncementModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Post Announcement</h3>
+              <button onClick={() => setShowAnnouncementModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateAnnouncement} className="space-y-3">
+              <input
+                type="text"
+                required
+                placeholder="Announcement Title"
+                value={annTitle}
+                onChange={(e) => setAnnTitle(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+              />
+              <textarea
+                required
+                rows={4}
+                placeholder="Write your announcement message..."
+                value={annContent}
+                onChange={(e) => setAnnContent(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
+              />
+              <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-dark-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={annPinned}
+                  onChange={(e) => setAnnPinned(e.target.checked)}
+                  className="rounded text-crimson-600 focus:ring-crimson-500"
+                />
+                <span>Pin announcement to the top</span>
+              </label>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAnnouncementModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
+                >
+                  {actionLoading ? 'Posting...' : 'Post'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* NOTE UPLOAD MODAL */}
+      {showNoteModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Upload Note / Document</h3>
+              <button onClick={() => setShowNoteModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateNote} className="space-y-3">
+              <input
+                type="text"
+                required
+                placeholder="Document Title"
+                value={noteTitle}
+                onChange={(e) => setNoteTitle(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+              />
+              <input
+                type="text"
+                placeholder="Category (e.g. Trees, Algorithms)"
+                value={noteCategory}
+                onChange={(e) => setNoteCategory(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+              />
+              <textarea
+                rows={2}
+                placeholder="Description"
+                value={noteDesc}
+                onChange={(e) => setNoteDesc(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
+              />
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block">Attach File</label>
+                <input
+                  type="file"
+                  onChange={(e) => setNoteFile(e.target.files ? e.target.files[0] : null)}
+                  className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-crimson-500/10 file:text-crimson-500 hover:file:bg-crimson-500/20"
+                />
+              </div>
+              <input
+                type="url"
+                placeholder="Or external URL (Drive, Mega, etc.)"
+                value={noteUrl}
+                onChange={(e) => setNoteUrl(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+              />
+              {uploadProgress !== null && (
+                <div className="w-full bg-slate-200 dark:bg-dark-800 rounded-full h-2">
+                  <div className="bg-crimson-500 h-2 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} />
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNoteModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
+                >
+                  {actionLoading ? 'Uploading...' : 'Save Resource'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CODE SHARE MODAL */}
+      {showCodeModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Share Code Snippet</h3>
+              <button onClick={() => setShowCodeModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateCodeResource} className="space-y-3">
+              <input
+                type="text"
+                required
+                placeholder="Snippet Title"
+                value={codeTitle}
+                onChange={(e) => setCodeTitle(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+              />
+              <select
+                value={codeLang}
+                onChange={(e) => setCodeLang(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+              >
+                <option value="cpp">C++</option>
+                <option value="c">C</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="javascript">JavaScript</option>
+              </select>
+              <textarea
+                required
+                rows={6}
+                placeholder="Paste code snippet here..."
+                value={codeSource}
+                onChange={(e) => setCodeSource(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 font-mono text-emerald-400 border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-crimson-500 resize-none"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCodeModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
+                >
+                  {actionLoading ? 'Saving...' : 'Share Code'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ASSIGNMENT CREATE MODAL */}
+      {showAssignModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Create Assignment</h3>
+              <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAssignSubmit} className="space-y-3">
+              <input
+                type="text"
+                required
+                placeholder="Problem Title"
+                value={assignTitle}
+                onChange={(e) => setAssignTitle(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+              />
+              <textarea
+                rows={2}
+                placeholder="Problem description and task"
+                value={assignDesc}
+                onChange={(e) => setAssignDesc(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
+              />
+              <textarea
+                rows={4}
+                placeholder="Starter code (optional)"
+                value={assignStarterCode}
+                onChange={(e) => setAssignStarterCode(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 font-mono text-emerald-400 border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-crimson-500 resize-none"
+              />
+              <input
+                type="date"
+                value={assignDueDate}
+                onChange={(e) => setAssignDueDate(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAssignModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
+                >
+                  {actionLoading ? 'Creating...' : 'Create Assignment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SUBMIT SOLUTION MODAL */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Submit Solution: {showSubmitModal.title}
+              </h3>
+              <button onClick={() => setShowSubmitModal(null)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSubmitSolution} className="space-y-3">
+              <textarea
+                required
+                rows={8}
+                placeholder="Paste your completed solution code here..."
+                value={submitCode}
+                onChange={(e) => setSubmitCode(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 font-mono text-emerald-400 border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-crimson-500 resize-none"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSubmitModal(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
+                >
+                  {actionLoading ? 'Submitting...' : 'Submit Solution'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

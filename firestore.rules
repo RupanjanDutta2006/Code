@@ -12,8 +12,10 @@ service cloud.firestore {
     }
 
     function isClassOwner(classId) {
-      return isSignedIn() && 
-        get(/databases/$(database)/documents/classrooms/$(classId)).data.owner_id == request.auth.uid;
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/classrooms/$(classId)).data.owner_id == request.auth.uid ||
+        get(/databases/$(database)/documents/classrooms/$(classId)).data.ownerUid == request.auth.uid
+      );
     }
 
     function isClassMember(classId) {
@@ -23,26 +25,43 @@ service cloud.firestore {
       );
     }
 
-    // User profiles: each user manages their own profile
+    // User profiles & bidirectional user classroom references
     match /users/{uid} {
       allow read: if isSignedIn();
       allow write: if isUser(uid);
+
+      match /classrooms/{classId} {
+        allow read, write: if isUser(uid);
+      }
+    }
+
+    // Fast O(1) Access key lookup registry
+    match /classAccessKeys/{key} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
 
     // Classrooms collection
     match /classrooms/{classId} {
-      // Allow reading classroom metadata for members or join queries
+      // Allow reading classroom metadata for authenticated users / join resolution
       allow read: if isSignedIn();
       
       // Only authenticated users can create classrooms as owner
-      allow create: if isSignedIn() && request.resource.data.owner_id == request.auth.uid;
+      allow create: if isSignedIn() && (
+        request.resource.data.owner_id == request.auth.uid ||
+        request.resource.data.ownerUid == request.auth.uid
+      );
       
-      // Only owner can edit settings or delete classroom
-      allow update, delete: if isClassOwner(classId);
+      // Owner can edit settings or delete classroom; members can increment member_count on join
+      allow update: if isSignedIn() && (
+        isClassOwner(classId) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member_count', 'updated_at'])
+      );
+      allow delete: if isClassOwner(classId);
 
       // Members subcollection
       match /members/{memberUid} {
-        allow read: if isClassMember(classId);
+        allow read: if isSignedIn();
         allow create: if isSignedIn() && (isClassOwner(classId) || request.auth.uid == memberUid);
         allow update, delete: if isClassOwner(classId) || (isSignedIn() && request.auth.uid == memberUid);
       }
@@ -63,6 +82,13 @@ service cloud.firestore {
       match /assignments/{assignmentId} {
         allow read: if isClassMember(classId);
         allow write, delete: if isClassOwner(classId);
+
+        // Submissions subcollection under assignments
+        match /submissions/{studentUid} {
+          allow read: if isClassOwner(classId) || isUser(studentUid);
+          allow create, update: if isUser(studentUid) || isClassOwner(classId);
+          allow delete: if isClassOwner(classId);
+        }
       }
     }
 
