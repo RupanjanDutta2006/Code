@@ -31,7 +31,11 @@
       "destination": "/api/index.py?match=:match*"
     },
     {
-      "source": "/(.*)",
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!assets/|favicon|icons|manifest|sw\\.js|team/).*)",
       "destination": "/index.html"
     }
   ]
