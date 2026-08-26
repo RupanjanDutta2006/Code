@@ -217,6 +217,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Non-blocking
     }
     try {
+      // Clear user-scoped offline study materials for privacy isolation
+      if (user?.uid) {
+        try {
+          const { clearUserMaterials } = await import('../services/studyMaterialsStorage');
+          await clearUserMaterials(user.uid);
+        } catch {
+          // Non-blocking — don't block logout if IndexedDB fails
+        }
+      }
       await signOut(auth);
       setToken(null);
       setUser(null);

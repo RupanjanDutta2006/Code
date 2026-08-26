@@ -1,5 +1,6 @@
-/**
- * CodeVault AI - Backend Nemotron Provider Service
+﻿/**
+ * CodeVault AI - Backend Provider Service
+ * Provider-neutral: backend calls upstream AI; frontend never sees provider name.
  */
 
 export interface ChatMessage {
@@ -28,14 +29,10 @@ export interface AIChatRequest {
   context?: string;
 }
 
-export const NVIDIA_CONFIG = {
+const AI_CONFIG = {
   apiKey: process.env.NVIDIA_API_KEY || '',
-  baseURL:
-    process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1',
-  model:
-    process.env.NVIDIA_MODEL || 'nvidia/llama-3.1-nemotron-70b-instruct',
-  reasoningBudget: Number(process.env.NVIDIA_REASONING_BUDGET || 16384),
-  enableThinking: process.env.NVIDIA_ENABLE_THINKING !== 'false',
+  baseURL: process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1',
+  model: process.env.NVIDIA_MODEL || 'nvidia/llama-3.1-nemotron-70b-instruct',
   temperature: Number(process.env.NVIDIA_TEMPERATURE || 0.7),
   topP: Number(process.env.NVIDIA_TOP_P || 0.95),
   maxTokens: Number(process.env.NVIDIA_MAX_TOKENS || 4096),
@@ -58,37 +55,24 @@ function buildMessagesPayload(req: AIChatRequest): ChatMessage[] {
   }
 
   if (req.context) {
-    messages.push({
-      role: 'system',
-      content: req.context,
-    });
+    messages.push({ role: 'system', content: req.context });
   }
 
   messages.push(...req.messages);
   return messages;
 }
 
-async function callNvidiaNim(messages: ChatMessage[], maxTokensOverride?: number): Promise<string> {
-  const apiKey = NVIDIA_CONFIG.apiKey;
-  const baseURL = NVIDIA_CONFIG.baseURL;
-  const model = NVIDIA_CONFIG.model;
+async function callAIProvider(messages: ChatMessage[], maxTokensOverride?: number): Promise<string> {
+  const { apiKey, baseURL, model, temperature, topP, maxTokens, timeoutMs } = AI_CONFIG;
 
   if (!apiKey) {
-    throw new Error('CONFIG_ERROR: NVIDIA_API_KEY is not configured on server.');
+    throw new Error('CONFIG_ERROR: AI provider API key is not configured on server.');
   }
 
-  console.log(`[CodeVault AI] Calling NVIDIA NIM API (model=${model}, messages=${messages.length})...`);
-
-  const payload = {
-    model,
-    messages,
-    temperature: NVIDIA_CONFIG.temperature,
-    top_p: NVIDIA_CONFIG.topP,
-    max_tokens: maxTokensOverride || NVIDIA_CONFIG.maxTokens,
-  };
+  console.log(`[CodeVault AI] Calling upstream API (messages=${messages.length})...`);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), NVIDIA_CONFIG.timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const res = await fetch(`${baseURL}/chat/completions`, {
@@ -97,7 +81,13 @@ async function callNvidiaNim(messages: ChatMessage[], maxTokensOverride?: number
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature,
+        top_p: topP,
+        max_tokens: maxTokensOverride || maxTokens,
+      }),
       signal: controller.signal,
     });
 
@@ -122,7 +112,6 @@ async function callNvidiaNim(messages: ChatMessage[], maxTokensOverride?: number
   } catch (err: any) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
-      console.error('[CodeVault AI] Upstream request timed out.');
       throw new Error('TIMEOUT: CodeVault AI took too long to respond. Please try again.');
     }
     throw err;
@@ -130,23 +119,21 @@ async function callNvidiaNim(messages: ChatMessage[], maxTokensOverride?: number
 }
 
 /**
- * 1. Interactive Chat with CodeVault AI (Standard Non-Streaming)
+ * 1. Interactive Chat with CodeVault AI
  */
-export async function chatWithNemotron(req: AIChatRequest): Promise<{
+export async function chatWithAI(req: AIChatRequest): Promise<{
   provider: string;
-  model: string;
   response: string;
   disclaimer: string;
 }> {
   const messages = buildMessagesPayload(req);
 
   try {
-    const content = await callNvidiaNim(messages);
+    const content = await callAIProvider(messages);
     return {
-      provider: 'CodeVault AI (NVIDIA Nemotron)',
-      model: NVIDIA_CONFIG.model,
+      provider: 'CodeVault AI',
       response: content,
-      disclaimer: 'AI-generated guidance. Powered by NVIDIA Nemotron.',
+      disclaimer: 'AI-generated guidance. Always verify critical code logic independently.',
     };
   } catch (err: any) {
     console.error('[CodeVault AI Chat Error]:', err.message);
@@ -157,49 +144,49 @@ export async function chatWithNemotron(req: AIChatRequest): Promise<{
       fallbackMsg = 'CodeVault AI took too long to respond. Please try again.';
     }
     return {
-      provider: 'CodeVault AI (Offline Fallback)',
-      model: 'local-fallback',
+      provider: 'CodeVault AI',
       response: fallbackMsg,
-      disclaimer: 'Advisory analysis only.',
+      disclaimer: 'AI temporarily unavailable.',
     };
   }
 }
 
+// Keep legacy export names for backwards compat with api/ route files
+export const chatWithNemotron = chatWithAI;
+
 /**
- * 1b. Real-Time Streaming Chat with CodeVault AI via Server-Sent Events (SSE)
+ * 1b. Streaming Chat
  */
-export async function streamChatWithNemotron(
+export async function streamChatWithAI(
   req: AIChatRequest,
   onToken: (token: string) => void,
   onDone: () => void,
   onError: (err: any) => void
 ): Promise<void> {
   const messages = buildMessagesPayload(req);
+  const { apiKey, baseURL, model, temperature, topP, maxTokens, timeoutMs } = AI_CONFIG;
 
-  const apiKey = NVIDIA_CONFIG.apiKey;
   if (!apiKey) {
-    onError(new Error('CONFIG_ERROR: NVIDIA_API_KEY is not configured on server.'));
+    onError(new Error('CONFIG_ERROR: AI provider API key is not configured on server.'));
     return;
   }
 
-  console.log(`[CodeVault AI] Streaming request started (model=${NVIDIA_CONFIG.model})...`);
-
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), NVIDIA_CONFIG.timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`${NVIDIA_CONFIG.baseURL}/chat/completions`, {
+    const res = await fetch(`${baseURL}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${NVIDIA_CONFIG.apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: NVIDIA_CONFIG.model,
+        model,
         messages,
-        temperature: NVIDIA_CONFIG.temperature,
-        top_p: NVIDIA_CONFIG.topP,
-        max_tokens: NVIDIA_CONFIG.maxTokens,
+        temperature,
+        top_p: topP,
+        max_tokens: maxTokens,
         stream: true,
       }),
       signal: controller.signal,
@@ -209,8 +196,7 @@ export async function streamChatWithNemotron(
 
     if (!res.ok || !res.body) {
       const errText = await res.text();
-      console.error(`[CodeVault AI] Streaming upstream error HTTP ${res.status}:`, errText);
-      throw new Error(`Upstream returned HTTP ${res.status}`);
+      throw new Error(`Upstream returned HTTP ${res.status}: ${errText}`);
     }
 
     const reader = res.body.getReader();
@@ -228,16 +214,13 @@ export async function streamChatWithNemotron(
             try {
               const json = JSON.parse(line.slice(6));
               const token = json.choices?.[0]?.delta?.content || '';
-              if (token) {
-                onToken(token);
-              }
+              if (token) onToken(token);
             } catch (e) {}
           }
         }
       }
     }
 
-    console.log('[CodeVault AI] Streaming completed successfully.');
     onDone();
   } catch (err: any) {
     clearTimeout(timeoutId);
@@ -246,12 +229,13 @@ export async function streamChatWithNemotron(
   }
 }
 
+export const streamChatWithNemotron = streamChatWithAI;
+
 /**
- * 2. Explain Code with CodeVault AI
+ * 2. Explain Code
  */
-export async function explainCodeWithNemotron(req: AIExplainRequest): Promise<{
+export async function explainCodeWithAI(req: AIExplainRequest): Promise<{
   provider: string;
-  model: string;
   explanation: string;
   disclaimer: string;
 }> {
@@ -274,31 +258,30 @@ ${req.source_code}
   ];
 
   try {
-    const content = await callNvidiaNim(messages);
+    const content = await callAIProvider(messages);
     return {
-      provider: 'CodeVault AI (NVIDIA Nemotron)',
-      model: NVIDIA_CONFIG.model,
+      provider: 'CodeVault AI',
       explanation: content,
-      disclaimer: 'AI-generated code explanation. Powered by NVIDIA Nemotron.',
+      disclaimer: 'AI-generated code explanation. Always verify logic independently.',
     };
   } catch (err: any) {
     console.error('[CodeVault AI Explain Error]:', err.message);
     const lines = req.source_code ? req.source_code.split('\n').length : 0;
     return {
-      provider: 'CodeVault AI (Built-in)',
-      model: 'local-fallback',
+      provider: 'CodeVault AI',
       explanation: `### 📘 Code Analysis for ${req.language.toUpperCase()}\n\n- **Length**: ${lines} lines.\n- **Language**: ${req.language}\n- **Ready**: Code is structured and ready for cloud sandbox execution.`,
       disclaimer: 'Advisory analysis only.',
     };
   }
 }
 
+export const explainCodeWithNemotron = explainCodeWithAI;
+
 /**
- * 3. Suggest Fix with CodeVault AI
+ * 3. Suggest Fix
  */
-export async function suggestFixWithNemotron(req: AISuggestFixRequest): Promise<{
+export async function suggestFixWithAI(req: AISuggestFixRequest): Promise<{
   provider: string;
-  model: string;
   explanation: string;
   suggested_code?: string;
   disclaimer: string;
@@ -324,29 +307,26 @@ ${req.source_code}
   ];
 
   try {
-    const content = await callNvidiaNim(messages);
-
+    const content = await callAIProvider(messages);
     let extractedCode = req.source_code;
     const match = content.match(/```(?:[a-zA-Z+]+)?\n([\s\S]*?)```/);
-    if (match && match[1]) {
-      extractedCode = match[1].trim();
-    }
+    if (match && match[1]) extractedCode = match[1].trim();
 
     return {
-      provider: 'CodeVault AI (NVIDIA Nemotron)',
-      model: NVIDIA_CONFIG.model,
+      provider: 'CodeVault AI',
       explanation: content,
       suggested_code: extractedCode,
-      disclaimer: 'AI-suggested fixes are advisory. Powered by NVIDIA Nemotron.',
+      disclaimer: 'AI-suggested fixes are advisory. Always test before submitting.',
     };
   } catch (err: any) {
     console.error('[CodeVault AI Fix Error]:', err.message);
     return {
-      provider: 'CodeVault AI (Built-in)',
-      model: 'local-fallback',
+      provider: 'CodeVault AI',
       explanation: `### Fix Suggestions\n\n${req.error_message ? `**Detected Issue**: \`${req.error_message}\`\n\n` : ''}- Check variable declarations and scope.\n- Verify syntax and matching braces.\n- Ensure required inputs (STDIN) are provided.`,
       suggested_code: req.source_code,
       disclaimer: 'Advisory analysis only.',
     };
   }
 }
+
+export const suggestFixWithNemotron = suggestFixWithAI;

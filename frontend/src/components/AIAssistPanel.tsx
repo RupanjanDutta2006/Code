@@ -58,7 +58,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       setResponse(res.data);
     } catch (err) {
       setResponse({
-        provider: 'CodeVault Assistant (Nemotron / Hybrid)',
+        provider: 'CodeVault AI',
         explanation: `### Code Analysis for ${language ? language.toUpperCase() : 'CODE'}\n\n1. **Structure**: Contains ${sourceCode.split('\n').length} lines of code.\n2. **Execution**: Validated with standard ${language} runtime.\n3. **Logic**: Clean control flow with direct I/O processing.\n4. **Optimization Tip**: Make sure input conditions are validated and array bounds are checked.`,
         disclaimer: 'AI-generated code analysis. Always verify the code logic independently.',
       });
@@ -79,7 +79,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       setResponse(res.data);
     } catch (err) {
       setResponse({
-        provider: 'CodeVault Assistant (Nemotron / Hybrid)',
+        provider: 'CodeVault AI',
         explanation: `### Fix Recommendation\n\n${lastError ? `**Detected Issue**: \`${lastError}\`\n\n` : ''}**Suggestions**:\n- Check that all variables and functions are declared before usage.\n- Ensure required inputs (STDIN) are provided.\n- Confirm matching parentheses, brackets, and semicolons if applicable.`,
         suggested_code: sourceCode,
         disclaimer: 'AI fix suggestion is advisory only. Ensure tests pass before submitting.',

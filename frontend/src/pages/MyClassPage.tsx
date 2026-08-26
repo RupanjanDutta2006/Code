@@ -19,7 +19,8 @@ import {
   Share2,
   Lock,
   Unlock,
-  AlertCircle
+  AlertCircle,
+  HardDriveDownload
 } from 'lucide-react';
 import {
   CATEGORY_LABELS,
@@ -35,14 +36,17 @@ import {
   joinFirestoreClassroom,
   normalizeAccessKey
 } from '../services/classroomFirestore';
+import { OfflineDownloadsTab } from '../components/OfflineDownloadsTab';
 
 export const MyClassPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'classrooms' ? 'classrooms' : 'learning';
-  const [activeTab, setActiveTab] = useState<'learning' | 'classrooms'>(initialTab);
+  const rawTab = searchParams.get('tab');
+  const initialTab: 'learning' | 'classrooms' | 'downloads' =
+    rawTab === 'classrooms' ? 'classrooms' : rawTab === 'downloads' ? 'downloads' : 'learning';
+  const [activeTab, setActiveTab] = useState<'learning' | 'classrooms' | 'downloads'>(initialTab);
 
   // Sync tab with URL search parameter
-  const handleTabChange = (tab: 'learning' | 'classrooms') => {
+  const handleTabChange = (tab: 'learning' | 'classrooms' | 'downloads') => {
     setActiveTab(tab);
     setSearchParams({ tab });
   };
@@ -234,22 +238,22 @@ export const MyClassPage: React.FC = () => {
       
       {/* Primary Top Tabbed Segmented Switcher */}
       <div className="flex justify-center">
-        <div className="inline-flex p-1.5 rounded-2xl bg-white/90 dark:bg-[#0c0c10]/90 border border-slate-200 dark:border-white/10 shadow-lg backdrop-blur-xl gap-1.5 w-full sm:w-auto max-w-md">
+        <div className="inline-flex p-1.5 rounded-2xl bg-white/90 dark:bg-[#0c0c10]/90 border border-slate-200 dark:border-white/10 shadow-lg backdrop-blur-xl gap-1.5 w-full sm:w-auto max-w-xl">
           <button
             onClick={() => handleTabChange('learning')}
-            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${
               activeTab === 'learning'
                 ? 'bg-crimson-600 text-white shadow-glow-red-sm scale-[1.02]'
                 : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800'
             }`}
           >
-            <GraduationCap className="w-4 h-4 text-white" />
+            <GraduationCap className="w-4 h-4" />
             <span>Interactive Learning</span>
           </button>
 
           <button
             onClick={() => handleTabChange('classrooms')}
-            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${
               activeTab === 'classrooms'
                 ? 'bg-crimson-600 text-white shadow-glow-red-sm scale-[1.02]'
                 : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800'
@@ -257,6 +261,18 @@ export const MyClassPage: React.FC = () => {
           >
             <BookOpen className="w-4 h-4" />
             <span>My Classrooms</span>
+          </button>
+
+          <button
+            onClick={() => handleTabChange('downloads')}
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${
+              activeTab === 'downloads'
+                ? 'bg-crimson-600 text-white shadow-glow-red-sm scale-[1.02]'
+                : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800'
+            }`}
+          >
+            <HardDriveDownload className="w-4 h-4" />
+            <span>Downloads</span>
           </button>
         </div>
       </div>
@@ -793,6 +809,17 @@ export const MyClassPage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* TAB 3: OFFLINE DOWNLOADS LIBRARY                               */}
+      {/* ============================================================== */}
+      {activeTab === 'downloads' && (
+        <div className="animate-fade-in">
+          <div className="p-6 rounded-3xl bg-white/80 dark:bg-[#0e0e13]/80 border border-slate-200 dark:border-white/10 shadow-xl backdrop-blur-xl">
+            <OfflineDownloadsTab />
           </div>
         </div>
       )}

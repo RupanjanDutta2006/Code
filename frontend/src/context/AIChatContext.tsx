@@ -1,14 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   ChatMessage,
-  AIProviderMode,
   AIHealthStatus,
-  OfflineModelState,
   CodeAttachment,
 } from '../ai/types';
 import { AIController } from '../ai/AIController';
 import { AIAvailabilityManager } from '../ai/network/AIAvailabilityManager';
-import { OfflineModelManager } from '../ai/offline/OfflineModelManager';
 
 const CHAT_STORAGE_KEY = 'codevault_ai_chat_history_v2';
 
@@ -30,10 +27,7 @@ interface AIChatContextType {
   closeChat: () => void;
   isGenerating: boolean;
   isStreaming: boolean;
-  providerMode: AIProviderMode;
-  setProviderMode: (mode: AIProviderMode) => void;
   healthStatus: AIHealthStatus;
-  offlineState: OfflineModelState;
   activeAttachment: CodeAttachment | null;
   setActiveAttachment: (attachment: CodeAttachment | null) => void;
   workspaceContext: WorkspaceContext;
@@ -45,9 +39,6 @@ interface AIChatContextType {
   clearHistory: () => void;
   clearChat: () => void;
   newChat: () => void;
-  downloadOfflineAI: () => Promise<void>;
-  removeOfflineAI: () => Promise<void>;
-  testOfflineAI: () => Promise<string>;
 }
 
 const AIChatContext = createContext<AIChatContextType | undefined>(undefined);
@@ -64,17 +55,12 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [providerMode, setProviderModeState] = useState<AIProviderMode>('auto');
   const [healthStatus, setHealthStatus] = useState<AIHealthStatus>('ONLINE_CHECKING');
-  const [offlineState, setOfflineState] = useState<OfflineModelState>(
-    OfflineModelManager.getInstance().getState()
-  );
   const [activeAttachment, setActiveAttachment] = useState<CodeAttachment | null>(null);
   const [workspaceContext, setWorkspaceContextState] = useState<WorkspaceContext>({});
 
   const controller = useRef(AIController.getInstance()).current;
   const availabilityManager = useRef(AIAvailabilityManager.getInstance()).current;
-  const offlineManager = useRef(OfflineModelManager.getInstance()).current;
 
   // Persist chat history
   useEffect(() => {
@@ -85,20 +71,11 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [messages]);
 
-  // Subscribe to health and offline state updates
+  // Subscribe to health updates
   useEffect(() => {
     const unsubHealth = availabilityManager.subscribe((st) => setHealthStatus(st));
-    const unsubOffline = offlineManager.subscribe((st) => setOfflineState(st));
-    return () => {
-      unsubHealth();
-      unsubOffline();
-    };
-  }, [availabilityManager, offlineManager]);
-
-  const setProviderMode = useCallback((mode: AIProviderMode) => {
-    setProviderModeState(mode);
-    controller.setMode(mode);
-  }, [controller]);
+    return () => { unsubHealth(); };
+  }, [availabilityManager]);
 
   const toggleChat = useCallback(() => setIsOpen((prev) => !prev), []);
   const closeChat = useCallback(() => setIsOpen(false), []);
@@ -166,12 +143,7 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantMsgId
-                ? {
-                    ...m,
-                    content: m.content + chunk.token,
-                    provider: chunk.provider,
-                    isStreaming: true,
-                  }
+                ? { ...m, content: m.content + chunk.token, provider: chunk.provider, isStreaming: true }
                 : m
             )
           );
@@ -189,7 +161,7 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   content:
                     m.content.trim().length > 0
                       ? m.content + `\n\n*(Error: ${err.message})*`
-                      : `Sorry, I encountered an error: ${err.message}. Please check your connection or switch AI provider modes in settings.`,
+                      : `CodeVault AI is temporarily unavailable: ${err.message}. Please check your internet connection and try again.`,
                   isStreaming: false,
                   isError: true,
                 }
@@ -261,18 +233,6 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     );
   }, [controller]);
 
-  const downloadOfflineAI = useCallback(async () => {
-    await offlineManager.downloadModel();
-  }, [offlineManager]);
-
-  const removeOfflineAI = useCallback(async () => {
-    await offlineManager.removeModel();
-  }, [offlineManager]);
-
-  const testOfflineAI = useCallback(async () => {
-    return await offlineManager.testOfflineAI();
-  }, [offlineManager]);
-
   return (
     <AIChatContext.Provider
       value={{
@@ -284,10 +244,7 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         closeChat,
         isGenerating,
         isStreaming: isGenerating,
-        providerMode,
-        setProviderMode,
         healthStatus,
-        offlineState,
         activeAttachment,
         setActiveAttachment,
         workspaceContext,
@@ -299,9 +256,6 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         clearHistory,
         clearChat: clearHistory,
         newChat: clearHistory,
-        downloadOfflineAI,
-        removeOfflineAI,
-        testOfflineAI,
       }}
     >
       {children}

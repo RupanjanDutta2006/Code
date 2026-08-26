@@ -32,7 +32,7 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const { toggleChat, healthStatus, offlineState } = useAIChat();
+  const { toggleChat, healthStatus } = useAIChat();
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -183,12 +183,12 @@ export const Navbar: React.FC = () => {
             <div className="relative">
               <Sparkles className="w-3.5 h-3.5 text-crimson-500 dark:text-crimson-400 group-hover:rotate-12 transition-transform" />
               <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
-                offlineState.status === 'ready' 
-                  ? 'bg-crimson-400' 
-                  : healthStatus === 'ONLINE_HEALTHY' 
-                  ? 'bg-emerald-500' 
-                  : 'bg-amber-500'
-              } animate-pulse`} />
+                healthStatus === 'ONLINE_HEALTHY'
+                  ? 'bg-emerald-500'
+                  : healthStatus === 'ONLINE_CHECKING'
+                  ? 'bg-amber-500 animate-pulse'
+                  : 'bg-red-500'
+              }`} />
             </div>
             <span>CodeVault AI</span>
           </button>

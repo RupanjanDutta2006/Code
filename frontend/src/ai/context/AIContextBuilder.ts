@@ -1,4 +1,4 @@
-import { AIRequest, AIProviderId, ChatMessage } from '../types';
+﻿import { AIRequest, AIProviderId, ChatMessage } from '../types';
 
 /**
  * Filter out sensitive content (API keys, .env secrets, private tokens)
@@ -13,34 +13,26 @@ export function sanitizeContextText(text: string): string {
 }
 
 export class AIContextBuilder {
-  public static readonly ONLINE_SYSTEM_PROMPT = 
+  public static readonly SYSTEM_PROMPT =
     `You are CodeVault AI, an expert computer science tutor and programming assistant. ` +
     `Help students write clean, readable, efficient code, understand data structures & algorithms (DSA), ` +
     `debug compiler/runtime errors, and master software development concepts. ` +
     `Provide well-commented code snippets with time and space complexity explanations where appropriate.`;
 
-  public static readonly OFFLINE_SYSTEM_PROMPT = 
-    `You are CodeVault Offline AI, a lightweight on-device coding tutor running completely locally without internet. ` +
-    `Help students understand programming concepts, loops, functions, arrays, DSA, and fix compiler errors. ` +
-    `Keep code explanations clear, concise, and pedagogical.`;
-
   /**
-   * Builds the formatted message array adapted to provider constraints.
+   * Builds the formatted message array for the online AI provider.
    */
   public static buildMessages(
     request: AIRequest,
-    provider: AIProviderId
+    _provider?: AIProviderId
   ): { role: string; content: string }[] {
-    const isOffline = provider === 'offline';
-    const systemPrompt = request.systemPrompt || (isOffline ? this.OFFLINE_SYSTEM_PROMPT : this.ONLINE_SYSTEM_PROMPT);
+    const systemPrompt = request.systemPrompt || this.SYSTEM_PROMPT;
 
     const formatted: { role: string; content: string }[] = [];
     formatted.push({ role: 'system', content: systemPrompt });
 
-    // History trimming strategy
     const rawHistory = request.messages || [];
-    const maxHistoryMessages = isOffline ? 4 : 12; // Offline trims to last 4 messages to preserve local context window
-    const recentHistory = rawHistory.slice(-maxHistoryMessages);
+    const recentHistory = rawHistory.slice(-12);
 
     for (let i = 0; i < recentHistory.length; i++) {
       const msg = recentHistory[i];
@@ -51,12 +43,10 @@ export class AIContextBuilder {
       if (isLast && msg.role === 'user') {
         let contextSuffix = '';
         if (request.language && request.activeCode) {
-          const codeSnippet = isOffline ? request.activeCode.slice(0, 1500) : request.activeCode;
-          contextSuffix += `\n\n[Active Code (${request.language.toUpperCase()})]:\n\`\`\`${request.language}\n${codeSnippet}\n\`\`\``;
+          contextSuffix += `\n\n[Active Code (${request.language.toUpperCase()})]:\n\`\`\`${request.language}\n${request.activeCode}\n\`\`\``;
         }
         if (request.lastError) {
-          const errSnippet = isOffline ? request.lastError.slice(0, 500) : request.lastError;
-          contextSuffix += `\n\n[Compiler Error]:\n\`\`\`\n${errSnippet}\n\`\`\``;
+          contextSuffix += `\n\n[Compiler Error]:\n\`\`\`\n${request.lastError}\n\`\`\``;
         }
         text += contextSuffix;
       }

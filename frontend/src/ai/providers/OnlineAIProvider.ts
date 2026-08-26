@@ -1,10 +1,10 @@
-import { CodeVaultAIProvider, AIRequest, GenerationOptions } from '../types';
+﻿import { CodeVaultAIProvider, AIRequest, GenerationOptions } from '../types';
 import { AIContextBuilder } from '../context/AIContextBuilder';
 import { AIAvailabilityManager } from '../network/AIAvailabilityManager';
 
-export class NemotronProvider implements CodeVaultAIProvider {
-  public readonly id = 'nemotron';
-  public readonly name = 'CodeVault AI (NVIDIA Nemotron)';
+export class OnlineAIProvider implements CodeVaultAIProvider {
+  public readonly id = 'online' as const;
+  public readonly name = 'CodeVault AI';
   private currentAbortController: AbortController | null = null;
 
   public async isAvailable(): Promise<boolean> {
@@ -18,7 +18,7 @@ export class NemotronProvider implements CodeVaultAIProvider {
     this.currentAbortController = new AbortController();
     const signal = options?.signal || this.currentAbortController.signal;
 
-    const messages = AIContextBuilder.buildMessages(request, 'nemotron');
+    const messages = AIContextBuilder.buildMessages(request, 'online');
 
     const payload = {
       messages,
@@ -30,16 +30,14 @@ export class NemotronProvider implements CodeVaultAIProvider {
 
     const resp = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       signal,
     });
 
     if (!resp.ok) {
       const errText = await resp.text().catch(() => 'Network error');
-      throw new Error(`Nemotron online API failed (${resp.status}): ${errText}`);
+      throw new Error(`CodeVault AI unavailable (${resp.status}): ${errText}`);
     }
 
     const data = await resp.json();
@@ -50,11 +48,8 @@ export class NemotronProvider implements CodeVaultAIProvider {
     for (let i = 0; i < words.length; i++) {
       if (signal.aborted) break;
       const chunk = words[i] + (i === words.length - 1 ? '' : ' ');
-      if (options?.onToken) {
-        options.onToken(chunk);
-      }
+      if (options?.onToken) options.onToken(chunk);
       yield chunk;
-      // Micro-delay for natural token streaming
       await new Promise((r) => setTimeout(r, 12));
     }
   }

@@ -200,7 +200,7 @@ export const HomePage: React.FC = () => {
             & AI Mentorship.
           </h1>
           <p className="text-xs sm:text-base text-light-textSecondary dark:text-dark-300 max-w-2xl mx-auto leading-relaxed font-normal">
-            Execute 11+ programming languages instantly in cloud sandboxes, visualize complex algorithms step-by-step, and collaborate with dual online & offline AI models.
+            Execute 11+ programming languages instantly in cloud sandboxes, visualize complex algorithms step-by-step, and get instant AI mentorship from CodeVault AI.
           </p>
         </div>
 
@@ -243,7 +243,7 @@ export const HomePage: React.FC = () => {
         <div className="mt-8 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 max-w-4xl mx-auto text-left">
           {[
             { label: 'Cloud Sandboxes', val: '11 Compilers', icon: Terminal, color: 'text-crimson-500 dark:text-crimson-400' },
-            { label: 'AI Intelligence', val: 'Nemotron + Offline', icon: Bot, color: 'text-crimson-500 dark:text-rose-400' },
+            { label: 'AI Intelligence', val: 'CodeVault AI', icon: Bot, color: 'text-crimson-500 dark:text-rose-400' },
             { label: 'DSA Traces', val: '15 Visualizers', icon: Layers, color: 'text-crimson-500 dark:text-crimson-400' },
             { label: 'Local Setup Needed', val: 'Zero Config', icon: Cpu, color: 'text-amber-500 dark:text-amber-400' },
           ].map((stat, i) => (
@@ -385,14 +385,13 @@ export const HomePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Card 1: Hybrid AI */}
           <div className="p-6 rounded-3xl bg-white dark:bg-[#0f0f13]/80 border border-light-border dark:border-white/10 shadow-card-light dark:shadow-md hover:border-crimson-500/40 transition-all space-y-4 hover:translate-y-[-2px]">
             <div className="w-12 h-12 rounded-2xl bg-crimson-500/10 dark:bg-gradient-to-tr dark:from-crimson-600 dark:to-rose-700 text-crimson-600 dark:text-white flex items-center justify-center shadow-glow-red-sm border border-crimson-500/30 dark:border-transparent">
               <Bot className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-light-textStrong dark:text-white font-sans">CodeVault Hybrid AI</h3>
+            <h3 className="text-lg font-bold text-light-textStrong dark:text-white font-sans">CodeVault AI</h3>
             <p className="text-xs text-light-textSecondary dark:text-dark-300 leading-relaxed">
-              Powered by cloud NVIDIA Nemotron for deep reasoning, with full browser-side on-device fallback when you lose internet connection.
+              Powered by cloud AI for deep reasoning — explain code line by line, diagnose compiler errors, analyze time/space complexity, and generate test cases.
             </p>
             <div className="pt-2">
               <button
