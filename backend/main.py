@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.config import ALLOWED_ORIGINS
-from backend.database.database import engine, Base
+from backend.database.database import engine, Base, sync_schema_columns
 from backend.database.seed import seed_database
 from backend.api import (
     auth, programs, import_folder, execution, versions, judge,
@@ -11,12 +11,14 @@ from backend.api import (
 )
 from backend.websockets import execution_ws, playground_ws
 
-# Initialize Tables
+# Initialize Tables & migrate columns
 Base.metadata.create_all(bind=engine)
+sync_schema_columns()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: seed database
+    sync_schema_columns()
     seed_database()
     yield
     # Shutdown logic if any

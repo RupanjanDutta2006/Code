@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Users, 
   Share2, 
@@ -8,9 +8,9 @@ import {
   Play, 
   Terminal, 
   Sparkles, 
-  Globe,
-  Radio,
-  Clock
+  Globe, 
+  Radio, 
+  Clock 
 } from 'lucide-react';
 import { CodeEditor } from '../components/CodeEditor';
 import { OutputTerminal } from '../components/OutputTerminal';
@@ -43,12 +43,15 @@ const PEER_COLORS = ['#38bdf8', '#818cf8', '#34d399', '#f472b6', '#fbbf24', '#a7
 export const PlaygroundPage: React.FC = () => {
   const { roomId } = useParams<{ roomId?: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
+  const stateData = (location.state as { code?: string; language?: string; input?: string }) || {};
+
   const [currentRoomId, setCurrentRoomId] = useState<string>(roomId || '');
-  const [code, setCode] = useState('# Collaborative Playground\nprint("Collaborating in real-time!")');
-  const [language, setLanguage] = useState('python');
-  const [customInput, setCustomInput] = useState('');
+  const [code, setCode] = useState(stateData.code || '# Collaborative Playground\nprint("Collaborating in real-time!")');
+  const [language, setLanguage] = useState(stateData.language || 'python');
+  const [customInput, setCustomInput] = useState(stateData.input || '');
   const [peers, setPeers] = useState<Peer[]>([]);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<ExecuteResult | null>(null);

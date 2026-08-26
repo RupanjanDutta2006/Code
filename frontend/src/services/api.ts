@@ -123,24 +123,79 @@ export interface JudgeSubmitResult {
 export interface Classroom {
   id: number;
   name: string;
+  subject?: string;
   description?: string;
+  section?: string;
+  academic_level?: string;
   teacher_id: number;
   teacher_name?: string;
   invite_code: string;
+  joining_enabled: boolean;
+  is_teacher?: boolean;
+  is_member?: boolean;
   created_at: string;
+  updated_at?: string;
   member_count: number;
+  resource_count?: number;
   assignment_count: number;
+  announcement_count?: number;
+}
+
+export interface ClassResource {
+  id: number;
+  classroom_id: number;
+  created_by: number;
+  author_name?: string;
+  resource_type: 'note' | 'code' | 'document' | 'link';
+  title: string;
+  description?: string;
+  category: string;
+  language?: string;
+  source_code?: string;
+  file_url?: string;
+  file_name?: string;
+  file_size_bytes?: number;
+  created_at: string;
+}
+
+export interface ClassAnnouncement {
+  id: number;
+  classroom_id: number;
+  teacher_id: number;
+  author_name?: string;
+  title: string;
+  content: string;
+  is_pinned: boolean;
+  created_at: string;
+}
+
+export interface ClassroomMember {
+  id: number;
+  classroom_id: number;
+  student_id: number;
+  student_name: string;
+  student_username: string;
+  student_email?: string;
+  role: string;
+  joined_at: string;
 }
 
 export interface ClassroomAssignment {
   id: number;
   classroom_id: number;
-  program_id: number;
-  program_title: string;
-  program_language: string;
+  program_id?: number;
+  title: string;
+  description?: string;
+  instructions?: string;
+  starter_code?: string;
+  starter_language?: string;
+  max_score?: number;
+  program_title?: string;
+  program_language?: string;
   due_date?: string;
   assigned_at: string;
   my_submission_status: string;
+  my_score?: number;
   passed_count: number;
   total_count: number;
 }
@@ -153,6 +208,7 @@ export interface LeaderboardEntry {
   total_count: number;
   attempts: number;
   verdict: string;
+  score?: number;
   last_submitted?: string;
 }
 

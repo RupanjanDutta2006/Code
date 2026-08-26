@@ -64,6 +64,31 @@ def get_current_user(
         )
     return current_user
 
+import hashlib
+import random
+import string
+
+def hash_access_key(key: str) -> str:
+    """Compute deterministic salted hash of classroom access key for safe storage and verification."""
+    normalized = key.strip().upper().replace(" ", "")
+    return hashlib.sha256(f"{SECRET_KEY}:{normalized}".encode("utf-8")).hexdigest()
+
+def generate_secure_access_key(prefix: Optional[str] = None) -> str:
+    """Generate a clean, unambiguous, non-sequential mobile-friendly access key e.g. DSA-7K4P."""
+    # Character set excluding easily confused characters: 0/O, 1/I/L
+    SAFE_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+    
+    if prefix:
+        clean_prefix = "".join([c for c in prefix.upper() if c.isalnum()])[:4]
+    else:
+        clean_prefix = "".join(random.choices("ABCDEFGHJKMNPQRSTUVWXYZ", k=3))
+    
+    if not clean_prefix or len(clean_prefix) < 2:
+        clean_prefix = "".join(random.choices("ABCDEFGHJKMNPQRSTUVWXYZ", k=3))
+        
+    part1 = "".join(random.choices(SAFE_CHARS, k=4))
+    return f"{clean_prefix}-{part1}"
+
 def require_creator_or_teacher(
     current_user: User = Depends(get_current_user)
 ) -> User:
@@ -77,9 +102,6 @@ def require_creator_or_teacher(
 def require_teacher(
     current_user: User = Depends(get_current_user)
 ) -> User:
-    if current_user.role != UserRole.TEACHER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Action requires Teacher permissions."
-        )
+    # Any authenticated user is eligible to act as classroom creator/teacher for classrooms they own
     return current_user
+

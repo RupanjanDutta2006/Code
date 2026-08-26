@@ -201,39 +201,137 @@ class JudgeSubmitResponse(BaseModel):
 
 # Classrooms
 class ClassroomCreate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=2, max_length=150)
+    subject: Optional[str] = Field(None, max_length=120)
     description: Optional[str] = None
+    section: Optional[str] = Field(None, max_length=64)
+    academic_level: Optional[str] = Field(None, max_length=64)
+
+class ClassroomUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=150)
+    subject: Optional[str] = Field(None, max_length=120)
+    description: Optional[str] = None
+    section: Optional[str] = Field(None, max_length=64)
+    academic_level: Optional[str] = Field(None, max_length=64)
+    joining_enabled: Optional[bool] = None
 
 class ClassroomResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
-    description: Optional[str]
+    subject: Optional[str] = None
+    description: Optional[str] = None
+    section: Optional[str] = None
+    academic_level: Optional[str] = None
     teacher_id: int
     teacher_name: Optional[str] = None
     invite_code: str
+    joining_enabled: bool = True
+    is_teacher: Optional[bool] = False
+    is_member: Optional[bool] = False
     created_at: datetime
+    updated_at: Optional[datetime] = None
     member_count: Optional[int] = 0
+    resource_count: Optional[int] = 0
     assignment_count: Optional[int] = 0
+    announcement_count: Optional[int] = 0
 
 class ClassroomJoin(BaseModel):
     invite_code: str
 
+class ClassResourceCreate(BaseModel):
+    resource_type: str = "note" # "note", "code", "document", "link"
+    title: str = Field(..., min_length=2, max_length=200)
+    description: Optional[str] = None
+    category: Optional[str] = "General"
+    language: Optional[str] = None # e.g. "c", "cpp", "python"
+    source_code: Optional[str] = None
+    file_url: Optional[str] = None
+    file_name: Optional[str] = None
+    file_size_bytes: Optional[int] = None
+
+class ClassResourceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    classroom_id: int
+    created_by: int
+    author_name: Optional[str] = None
+    resource_type: str
+    title: str
+    description: Optional[str]
+    category: str
+    language: Optional[str] = None
+    source_code: Optional[str] = None
+    file_url: Optional[str] = None
+    file_name: Optional[str] = None
+    file_size_bytes: Optional[int] = None
+    created_at: datetime
+
+class ClassAnnouncementCreate(BaseModel):
+    title: str = Field(..., min_length=2, max_length=200)
+    content: str = Field(..., min_length=1)
+    is_pinned: Optional[bool] = False
+
+class ClassAnnouncementResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    classroom_id: int
+    teacher_id: int
+    author_name: Optional[str] = None
+    title: str
+    content: str
+    is_pinned: bool = False
+    created_at: datetime
+
+class ClassroomMemberResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    classroom_id: int
+    student_id: int
+    student_name: str
+    student_username: str
+    student_email: Optional[str] = None
+    role: str = "student"
+    joined_at: datetime
+
 class ClassroomAssign(BaseModel):
-    program_id: int
+    program_id: Optional[int] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    instructions: Optional[str] = None
+    starter_code: Optional[str] = None
+    starter_language: Optional[str] = None
+    max_score: Optional[int] = 100
     due_date: Optional[datetime] = None
 
 class AssignmentResponse(BaseModel):
     id: int
     classroom_id: int
-    program_id: int
-    program_title: str
-    program_language: str
-    due_date: Optional[datetime]
+    program_id: Optional[int] = None
+    title: str
+    description: Optional[str] = None
+    instructions: Optional[str] = None
+    starter_code: Optional[str] = None
+    starter_language: Optional[str] = None
+    max_score: int = 100
+    program_title: Optional[str] = None
+    program_language: Optional[str] = None
+    due_date: Optional[datetime] = None
     assigned_at: datetime
     my_submission_status: Optional[str] = "Not started"
+    my_score: Optional[int] = 0
     passed_count: Optional[int] = 0
     total_count: Optional[int] = 0
+
+class AssignmentSubmitRequest(BaseModel):
+    source_code: str
+    language: str
+    notes: Optional[str] = None
+
+class AccessKeyRegenerateResponse(BaseModel):
+    classroom_id: int
+    invite_code: str
+    message: str = "Class access key regenerated successfully."
 
 class LeaderboardEntry(BaseModel):
     student_id: int
@@ -243,6 +341,7 @@ class LeaderboardEntry(BaseModel):
     total_count: int
     attempts: int
     verdict: str
+    score: Optional[int] = 0
     last_submitted: Optional[datetime]
 
 # Playground
