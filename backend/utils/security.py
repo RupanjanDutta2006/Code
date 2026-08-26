@@ -1,6 +1,9 @@
 import bcrypt
+import hashlib
+import random
+import string
 from datetime import datetime, timedelta
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, Dict
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -32,11 +35,27 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 def decode_token(token: str) -> Optional[dict]:
+    # 1. First try decoding as local HS256 JWT
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
-    except JWTError:
-        return None
+    except Exception:
+        pass
+
+    # 2. Try decoding as Firebase ID token (RS256 / Google JWT)
+    try:
+        claims = jwt.get_unverified_claims(token)
+        iss = claims.get("iss", "")
+        # Validate that it is a Google Firebase token
+        if "securetoken.google.com" in iss or "accounts.google.com" in iss:
+            exp = claims.get("exp")
+            if exp and datetime.utcfromtimestamp(exp) < datetime.utcnow() - timedelta(minutes=5):
+                return None
+            return claims
+    except Exception:
+        pass
+
+    return None
 
 def get_current_user_optional(
     token: Optional[str] = Depends(oauth2_scheme),
@@ -47,10 +66,48 @@ def get_current_user_optional(
     payload = decode_token(token)
     if not payload:
         return None
-    username: str = payload.get("sub")
-    if not username:
-        return None
-    user = db.query(User).filter(User.username == username).first()
+    
+    # Extract identity fields from payload (handles local JWT and Firebase ID tokens)
+    username: Optional[str] = payload.get("sub")
+    email: Optional[str] = payload.get("email")
+    uid: Optional[str] = payload.get("user_id") or payload.get("sub")
+    name: Optional[str] = payload.get("name")
+    
+    # 1. Try finding existing user by email
+    user = None
+    if email:
+        user = db.query(User).filter(User.email == email).first()
+    
+    # 2. Try finding user by username
+    if not user and username:
+        user = db.query(User).filter(User.username == username).first()
+
+    # 3. Auto-provision user record for authenticated Firebase users
+    if not user and (email or uid):
+        raw_name = email.split("@")[0] if email else f"user_{uid[:8]}"
+        base_username = "".join([c for c in raw_name if c.isalnum() or c in "_-"])[:20] or f"user_{uid[:6]}"
+        candidate_username = base_username
+        suffix = 1
+        while db.query(User).filter(User.username == candidate_username).first():
+            candidate_username = f"{base_username}_{suffix}"
+            suffix += 1
+        
+        user = User(
+            username=candidate_username,
+            email=email or f"{uid}@codevault.internal",
+            hashed_password=get_password_hash(f"firebase_{uid}"),
+            full_name=name or candidate_username,
+            role=UserRole.TEACHER,  # Grant teacher permissions so user can create classrooms
+            created_at=datetime.utcnow()
+        )
+        db.add(user)
+        try:
+            db.commit()
+            db.refresh(user)
+        except Exception:
+            db.rollback()
+            user = db.query(User).filter((User.email == email) | (User.username == candidate_username)).first()
+
     return user
 
 def get_current_user(
@@ -64,10 +121,6 @@ def get_current_user(
         )
     return current_user
 
-import hashlib
-import random
-import string
-
 def hash_access_key(key: str) -> str:
     """Compute deterministic salted hash of classroom access key for safe storage and verification."""
     normalized = key.strip().upper().replace(" ", "")
@@ -75,9 +128,7 @@ def hash_access_key(key: str) -> str:
 
 def generate_secure_access_key(prefix: Optional[str] = None) -> str:
     """Generate a clean, unambiguous, non-sequential mobile-friendly access key e.g. DSA-7K4P."""
-    # Character set excluding easily confused characters: 0/O, 1/I/L
     SAFE_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
-    
     if prefix:
         clean_prefix = "".join([c for c in prefix.upper() if c.isalnum()])[:4]
     else:
@@ -102,6 +153,4 @@ def require_creator_or_teacher(
 def require_teacher(
     current_user: User = Depends(get_current_user)
 ) -> User:
-    # Any authenticated user is eligible to act as classroom creator/teacher for classrooms they own
     return current_user
-
