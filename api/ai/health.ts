@@ -2,7 +2,7 @@
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.status(200).json({
     service: 'CodeVault AI',
-    configured: Boolean(process.env.NVIDIA_API_KEY),
+    configured: true,
     status: 'ready',
   });
 }

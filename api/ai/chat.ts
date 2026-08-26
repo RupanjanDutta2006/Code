@@ -70,7 +70,11 @@ export default async function handler(req: any, res: any) {
       language,
       context,
     });
-    res.status(200).json(result);
+    res.status(200).json({
+      ...result,
+      content: result.response,
+      message: result.response,
+    });
   } catch (err: any) {
     console.error('[API /api/ai/chat Error]:', err.message);
     res.status(500).json({

@@ -1,4 +1,4 @@
-﻿import { CodeVaultAIProvider, AIRequest, GenerationOptions } from '../types';
+import { CodeVaultAIProvider, AIRequest, GenerationOptions } from '../types';
 import { AIContextBuilder } from '../context/AIContextBuilder';
 import { AIAvailabilityManager } from '../network/AIAvailabilityManager';
 
@@ -41,7 +41,7 @@ export class OnlineAIProvider implements CodeVaultAIProvider {
     }
 
     const data = await resp.json();
-    const fullText = data.content || data.message || '';
+    const fullText = data.response || data.content || data.message || '';
 
     // Stream text in small chunks for smooth token UX
     const words = fullText.split(' ');
