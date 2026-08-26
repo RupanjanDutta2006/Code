@@ -1,28 +1,41 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, User } from '../services/api';
 import { 
   auth, 
+  db,
   signInWithGooglePopup, 
-  signInWithGithubPopup, 
-  initPhoneRecaptcha, 
-  sendPhoneOtpCode, 
-  logOutFromFirebase,
-  FirebaseUser,
-  ConfirmationResult
+  FirebaseUser 
 } from '../services/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  sendPasswordResetEmail,
+  updateProfile 
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+
+export interface UserProfile {
+  id: number;
+  uid: string;
+  username: string;
+  email: string;
+  full_name?: string;
+  role: 'USER' | 'CREATOR' | 'TEACHER';
+  photo_url?: string;
+  created_at?: string;
+  last_login_at?: string;
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: UserProfile | null;
   firebaseUser: FirebaseUser | null;
   token: string | null;
   loading: boolean;
-  login: (usernameOrEmail: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string, role: 'USER' | 'CREATOR' | 'TEACHER', fullName?: string) => Promise<void>;
-  loginWithGoogle: (role?: 'USER' | 'TEACHER') => Promise<User>;
-  loginWithGithub: (role?: 'USER' | 'TEACHER') => Promise<User>;
-  sendPhoneOtp: (phoneNumber: string, containerId?: string) => Promise<ConfirmationResult>;
-  verifyPhoneOtp: (confirmationResult: ConfirmationResult, code: string, role?: 'USER' | 'TEACHER') => Promise<User>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, role?: 'USER' | 'TEACHER') => Promise<void>;
+  loginWithGoogle: (role?: 'USER' | 'TEACHER') => Promise<UserProfile>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   isTeacher: boolean;
   isCreator: boolean;
@@ -42,7 +55,7 @@ const hashStringToInteger = (str: string): number => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem('codevault_user');
     return saved ? JSON.parse(saved) : null;
   });
@@ -50,269 +63,163 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(localStorage.getItem('codevault_token'));
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Sync user profile with Firestore users/{uid}
+  const syncFirestoreProfile = async (fbUser: FirebaseUser, overrideRole?: 'USER' | 'TEACHER', overrideName?: string): Promise<UserProfile> => {
+    const uid = fbUser.uid;
+    const email = fbUser.email || '';
+    const displayName = overrideName || fbUser.displayName || email.split('@')[0] || 'CodeVault User';
+    const photoURL = fbUser.photoURL || '';
+    const userDocRef = doc(db, 'users', uid);
+
+    let role: 'USER' | 'CREATOR' | 'TEACHER' = overrideRole || 'USER';
+
+    try {
+      const snap = await getDoc(userDocRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        role = data.role || role;
+        await setDoc(userDocRef, {
+          displayName,
+          email,
+          photoURL,
+          lastLoginAt: serverTimestamp(),
+        }, { merge: true });
+      } else {
+        await setDoc(userDocRef, {
+          uid,
+          displayName,
+          email,
+          photoURL,
+          role,
+          createdAt: serverTimestamp(),
+          lastLoginAt: serverTimestamp(),
+        });
+      }
+    } catch (err) {
+      console.warn('Firestore profile sync note (fallback to local user):', err);
+    }
+
+    const appUser: UserProfile = {
+      id: hashStringToInteger(uid),
+      uid,
+      username: email.split('@')[0] || uid.slice(0, 8),
+      email,
+      full_name: displayName,
+      role,
+      photo_url: photoURL,
+      created_at: new Date().toISOString(),
+      last_login_at: new Date().toISOString(),
+    };
+
+    setUser(appUser);
+    localStorage.setItem('codevault_user', JSON.stringify(appUser));
+    return appUser;
+  };
+
   // Sync Firebase auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
+      if (fbUser) {
+        try {
+          const idToken = await fbUser.getIdToken();
+          setToken(idToken);
+          localStorage.setItem('codevault_token', idToken);
+          await syncFirestoreProfile(fbUser);
+        } catch (err) {
+          console.error('Error getting user token / profile:', err);
+        }
+      } else {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem('codevault_token');
+        localStorage.removeItem('codevault_user');
+      }
+      setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
-  // Sync user profile on mount / token change
-  useEffect(() => {
-    const fetchMe = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const res = await api.get<User>('/api/auth/me');
-        setUser(res.data);
-        localStorage.setItem('codevault_user', JSON.stringify(res.data));
-      } catch (err) {
-        const saved = localStorage.getItem('codevault_user');
-        if (saved) {
-          try {
-            setUser(JSON.parse(saved));
-          } catch (e) {}
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMe();
-  }, [token]);
-
-  // Standard Username / Email Login
-  const login = async (usernameOrEmail: string, password: string) => {
+  // Standard Email / Password Sign In
+  const login = async (email: string, password: string) => {
+    setLoading(true);
     try {
-      const res = await api.post<{ access_token: string; user: User }>('/api/auth/login', {
-        username_or_email: usernameOrEmail,
-        password,
-      });
-      localStorage.setItem('codevault_token', res.data.access_token);
-      localStorage.setItem('codevault_user', JSON.stringify(res.data.user));
-      setToken(res.data.access_token);
-      setUser(res.data.user);
-    } catch (err) {
-      // Offline / Vercel demo user fallback
-      const isTeacher = usernameOrEmail.toLowerCase().includes('teacher') || usernameOrEmail.toLowerCase().includes('prof');
-      const fallbackUser: User = {
-        id: isTeacher ? 2 : 3,
-        username: usernameOrEmail || 'student',
-        email: `${usernameOrEmail || 'student'}@codevault.pro`,
-        role: isTeacher ? 'TEACHER' : 'USER',
-        full_name: isTeacher ? 'Prof. Rajesh Sharma' : (usernameOrEmail === 'asha_r' ? 'Asha R.' : 'Student User'),
-        provider: 'password',
-        created_at: new Date().toISOString(),
-      };
-      const demoToken = 'demo_token_' + Date.now();
-      localStorage.setItem('codevault_token', demoToken);
-      localStorage.setItem('codevault_user', JSON.stringify(fallbackUser));
-      setToken(demoToken);
-      setUser(fallbackUser);
+      const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const idToken = await cred.user.getIdToken();
+      setToken(idToken);
+      localStorage.setItem('codevault_token', idToken);
+      await syncFirestoreProfile(cred.user);
+    } catch (err: any) {
+      console.error('Email sign-in error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Standard Registration
-  const register = async (
-    username: string, 
-    email: string, 
-    password: string, 
-    role: 'USER' | 'CREATOR' | 'TEACHER', 
-    fullName?: string
-  ) => {
+  // Standard Email / Password Registration
+  const register = async (name: string, email: string, password: string, role: 'USER' | 'TEACHER' = 'USER') => {
+    setLoading(true);
     try {
-      const res = await api.post<{ access_token: string; user: User }>('/api/auth/register', {
-        username,
-        email,
-        password,
-        role,
-        full_name: fullName,
+      const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      await updateProfile(cred.user, {
+        displayName: name.trim(),
       });
-      localStorage.setItem('codevault_token', res.data.access_token);
-      localStorage.setItem('codevault_user', JSON.stringify(res.data.user));
-      setToken(res.data.access_token);
-      setUser(res.data.user);
-    } catch (err) {
-      const fallbackUser: User = {
-        id: Date.now(),
-        username,
-        email,
-        role,
-        full_name: fullName || username,
-        provider: 'password',
-        created_at: new Date().toISOString(),
-      };
-      const demoToken = 'demo_token_' + Date.now();
-      localStorage.setItem('codevault_token', demoToken);
-      localStorage.setItem('codevault_user', JSON.stringify(fallbackUser));
-      setToken(demoToken);
-      setUser(fallbackUser);
+      const idToken = await cred.user.getIdToken();
+      setToken(idToken);
+      localStorage.setItem('codevault_token', idToken);
+      await syncFirestoreProfile(cred.user, role, name.trim());
+    } catch (err: any) {
+      console.error('Email registration error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Google Login / Signup
-  const loginWithGoogle = async (role: 'USER' | 'TEACHER' = 'USER'): Promise<User> => {
-    const fbUser = await signInWithGooglePopup();
-    let loggedUser: User;
-    let jwtToken = 'fb_google_' + fbUser.uid;
-
+  // Google Sign In / Sign Up
+  const loginWithGoogle = async (role: 'USER' | 'TEACHER' = 'USER'): Promise<UserProfile> => {
+    setLoading(true);
     try {
-      const res = await api.post<{ access_token: string; user: User }>('/api/auth/firebase', {
-        uid: fbUser.uid,
-        email: fbUser.email,
-        full_name: fbUser.displayName,
-        photo_url: fbUser.photoURL,
-        provider: 'google',
-        role,
-      });
-      jwtToken = res.data.access_token;
-      loggedUser = {
-        ...res.data.user,
-        avatar_url: fbUser.photoURL || res.data.user.avatar_url,
-        provider: 'google',
-      };
-    } catch (err) {
-      // Offline fallback
-      const cleanUsername = (fbUser.displayName || fbUser.email?.split('@')[0] || `user_${fbUser.uid.slice(0, 6)}`)
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, '_');
-      
-      loggedUser = {
-        id: hashStringToInteger(fbUser.uid),
-        username: cleanUsername,
-        email: fbUser.email || `${cleanUsername}@gmail.com`,
-        role,
-        full_name: fbUser.displayName || 'Google User',
-        avatar_url: fbUser.photoURL || undefined,
-        provider: 'google',
-        created_at: new Date().toISOString(),
-      };
+      const fbUser = await signInWithGooglePopup();
+      const idToken = await fbUser.getIdToken();
+      setToken(idToken);
+      localStorage.setItem('codevault_token', idToken);
+      const appUser = await syncFirestoreProfile(fbUser, role);
+      return appUser;
+    } catch (err: any) {
+      console.error('Google sign-in error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-
-    localStorage.setItem('codevault_token', jwtToken);
-    localStorage.setItem('codevault_user', JSON.stringify(loggedUser));
-    setToken(jwtToken);
-    setUser(loggedUser);
-    return loggedUser;
   };
 
-  // GitHub Login / Signup
-  const loginWithGithub = async (role: 'USER' | 'TEACHER' = 'USER'): Promise<User> => {
-    const fbUser = await signInWithGithubPopup();
-    let loggedUser: User;
-    let jwtToken = 'fb_github_' + fbUser.uid;
-
-    try {
-      const res = await api.post<{ access_token: string; user: User }>('/api/auth/firebase', {
-        uid: fbUser.uid,
-        email: fbUser.email,
-        full_name: fbUser.displayName,
-        photo_url: fbUser.photoURL,
-        provider: 'github',
-        role,
-      });
-      jwtToken = res.data.access_token;
-      loggedUser = {
-        ...res.data.user,
-        avatar_url: fbUser.photoURL || res.data.user.avatar_url,
-        provider: 'github',
-      };
-    } catch (err) {
-      const cleanUsername = (fbUser.displayName || fbUser.email?.split('@')[0] || `gh_${fbUser.uid.slice(0, 6)}`)
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, '_');
-
-      loggedUser = {
-        id: hashStringToInteger(fbUser.uid),
-        username: cleanUsername,
-        email: fbUser.email || `${cleanUsername}@github.com`,
-        role,
-        full_name: fbUser.displayName || 'GitHub Developer',
-        avatar_url: fbUser.photoURL || undefined,
-        provider: 'github',
-        created_at: new Date().toISOString(),
-      };
+  // Password Reset Email
+  const resetPassword = async (email: string) => {
+    if (!email || !email.trim()) {
+      throw new Error('Please provide a valid email address.');
     }
-
-    localStorage.setItem('codevault_token', jwtToken);
-    localStorage.setItem('codevault_user', JSON.stringify(loggedUser));
-    setToken(jwtToken);
-    setUser(loggedUser);
-    return loggedUser;
+    await sendPasswordResetEmail(auth, email.trim());
   };
 
-  // Phone / SMS OTP Request
-  const sendPhoneOtp = async (phoneNumber: string, containerId: string = 'recaptcha-container'): Promise<ConfirmationResult> => {
-    const verifier = initPhoneRecaptcha(containerId);
-    return await sendPhoneOtpCode(phoneNumber, verifier);
-  };
-
-  // Phone / SMS OTP Verification
-  const verifyPhoneOtp = async (
-    confirmationResult: ConfirmationResult, 
-    code: string, 
-    role: 'USER' | 'TEACHER' = 'USER'
-  ): Promise<User> => {
-    const result = await confirmationResult.confirm(code);
-    const fbUser = result.user;
-    let loggedUser: User;
-    let jwtToken = 'fb_phone_' + fbUser.uid;
-
-    try {
-      const res = await api.post<{ access_token: string; user: User }>('/api/auth/firebase', {
-        uid: fbUser.uid,
-        phone_number: fbUser.phoneNumber,
-        provider: 'phone',
-        role,
-      });
-      jwtToken = res.data.access_token;
-      loggedUser = {
-        ...res.data.user,
-        phone_number: fbUser.phoneNumber || undefined,
-        provider: 'phone',
-      };
-    } catch (err) {
-      const phoneDigits = (fbUser.phoneNumber || '').replace(/[^0-9]/g, '');
-      const phoneSuffix = phoneDigits.slice(-6) || fbUser.uid.slice(0, 6);
-      const username = `mobile_${phoneSuffix}`;
-
-      loggedUser = {
-        id: hashStringToInteger(fbUser.uid),
-        username,
-        email: `${phoneDigits || fbUser.uid}@phone.codevault.pro`,
-        role,
-        full_name: fbUser.phoneNumber ? `User (${fbUser.phoneNumber})` : 'Mobile Verified User',
-        phone_number: fbUser.phoneNumber || undefined,
-        provider: 'phone',
-        created_at: new Date().toISOString(),
-      };
-    }
-
-    localStorage.setItem('codevault_token', jwtToken);
-    localStorage.setItem('codevault_user', JSON.stringify(loggedUser));
-    setToken(jwtToken);
-    setUser(loggedUser);
-    return loggedUser;
-  };
-
-  // Unified Logout
+  // Sign Out
   const logout = async () => {
     try {
-      await logOutFromFirebase();
-    } catch (e) {
-      console.warn('Firebase logout warning:', e);
+      await signOut(auth);
+      setToken(null);
+      setUser(null);
+      setFirebaseUser(null);
+      localStorage.removeItem('codevault_token');
+      localStorage.removeItem('codevault_user');
+    } catch (err) {
+      console.error('Sign-out error:', err);
     }
-    localStorage.removeItem('codevault_token');
-    localStorage.removeItem('codevault_user');
-    setToken(null);
-    setUser(null);
-    setFirebaseUser(null);
   };
 
   const isTeacher = user?.role === 'TEACHER';
-  const isCreator = user?.role === 'CREATOR';
+  const isCreator = user?.role === 'CREATOR' || isTeacher;
 
   return (
     <AuthContext.Provider
@@ -324,9 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         loginWithGoogle,
-        loginWithGithub,
-        sendPhoneOtp,
-        verifyPhoneOtp,
+        resetPassword,
         logout,
         isTeacher,
         isCreator,
@@ -337,7 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');

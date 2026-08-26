@@ -29,7 +29,8 @@ import {
   Lock,
   Unlock,
   School,
-  Key
+  Key,
+  Upload
 } from 'lucide-react';
 import { 
   api, 
@@ -42,6 +43,8 @@ import {
   Program 
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { storage } from '../services/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 export const ClassroomDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -78,6 +81,8 @@ export const ClassroomDetailPage: React.FC = () => {
   const [noteDesc, setNoteDesc] = useState('');
   const [noteCategory, setNoteCategory] = useState('Lecture Notes');
   const [noteUrl, setNoteUrl] = useState('');
+  const [noteFile, setNoteFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const [codeTitle, setCodeTitle] = useState('');
   const [codeDesc, setCodeDesc] = useState('');
@@ -257,23 +262,55 @@ export const ClassroomDetailPage: React.FC = () => {
     if (!id || !noteTitle.trim()) return;
 
     setActionLoading(true);
+    setUploadProgress(null);
+    let finalFileUrl = noteUrl.trim();
+
     try {
+      if (noteFile) {
+        setUploadProgress(10);
+        const resourceId = `${Date.now()}_${noteFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const storagePath = `classrooms/${id}/notes/${resourceId}`;
+        const fileRef = ref(storage, storagePath);
+        const uploadTask = uploadBytesResumable(fileRef, noteFile);
+
+        await new Promise<void>((resolve, reject) => {
+          uploadTask.on(
+            'state_changed',
+            (snapshot) => {
+              const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+              setUploadProgress(progress);
+            },
+            (error) => {
+              console.error('Storage upload failed:', error);
+              reject(error);
+            },
+            async () => {
+              finalFileUrl = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve();
+            }
+          );
+        });
+      }
+
       const res = await api.post<ClassResource>(`/api/classrooms/${id}/resources`, {
         resource_type: 'note',
         title: noteTitle.trim(),
         description: noteDesc.trim() || undefined,
         category: noteCategory,
-        file_url: noteUrl.trim() || undefined,
+        file_url: finalFileUrl || undefined,
       });
       setResources((prev) => [res.data, ...prev]);
       setShowNoteModal(false);
       setNoteTitle('');
       setNoteDesc('');
       setNoteUrl('');
+      setNoteFile(null);
+      setUploadProgress(null);
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to create note.');
+      alert(err.response?.data?.detail || err.message || 'Failed to create note.');
     } finally {
       setActionLoading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -1207,11 +1244,43 @@ export const ClassroomDetailPage: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                  Document URL / Mega Link / Drive Link
+                  Upload Document / File (PDF, Images, DOC, Markdown)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md,.png,.jpg,.jpeg"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setNoteFile(e.target.files[0]);
+                      }
+                    }}
+                    className="w-full text-xs text-slate-500 dark:text-dark-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-crimson-500/10 file:text-crimson-600 dark:file:text-crimson-400 hover:file:bg-crimson-500/20"
+                  />
+                </div>
+                {uploadProgress !== null && (
+                  <div className="mt-2 space-y-1">
+                    <div className="flex justify-between text-[10px] font-mono text-crimson-500">
+                      <span>Uploading to Firebase Storage...</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-200 dark:bg-dark-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-crimson-500 transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1">
+                  OR External Link / Drive / Mega URL (Optional)
                 </label>
                 <input
                   type="url"
-                  placeholder="https://..."
+                  placeholder="https://drive.google.com/... or https://..."
                   value={noteUrl}
                   onChange={(e) => setNoteUrl(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"

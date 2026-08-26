@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isClassOwner(classId) {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/classrooms/$(classId)).data.owner_id == request.auth.uid;
+    }
+
+    function isClassMember(classId) {
+      return isSignedIn() && (
+        isClassOwner(classId) ||
+        exists(/databases/$(database)/documents/classrooms/$(classId)/members/$(request.auth.uid))
+      );
+    }
+
+    // User profiles: each user manages their own profile
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isUser(uid);
+    }
+
+    // Classrooms collection
+    match /classrooms/{classId} {
+      // Allow reading classroom metadata for members or join queries
+      allow read: if isSignedIn();
+      
+      // Only authenticated users can create classrooms as owner
+      allow create: if isSignedIn() && request.resource.data.owner_id == request.auth.uid;
+      
+      // Only owner can edit settings or delete classroom
+      allow update, delete: if isClassOwner(classId);
+
+      // Members subcollection
+      match /members/{memberUid} {
+        allow read: if isClassMember(classId);
+        allow create: if isSignedIn() && (isClassOwner(classId) || request.auth.uid == memberUid);
+        allow update, delete: if isClassOwner(classId) || (isSignedIn() && request.auth.uid == memberUid);
+      }
+
+      // Announcements subcollection: members read, owner manages
+      match /announcements/{announcementId} {
+        allow read: if isClassMember(classId);
+        allow write, delete: if isClassOwner(classId);
+      }
+
+      // Resources & Notes subcollection: members read, owner manages
+      match /resources/{resourceId} {
+        allow read: if isClassMember(classId);
+        allow write, delete: if isClassOwner(classId);
+      }
+
+      // Assignments subcollection: members read, owner manages
+      match /assignments/{assignmentId} {
+        allow read: if isClassMember(classId);
+        allow write, delete: if isClassOwner(classId);
+      }
+    }
+  }
+}
