@@ -1,7 +1,36 @@
 {
+  "framework": "vite",
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
+    {
+      "source": "/api/execute",
+      "destination": "/api/execute"
+    },
+    {
+      "source": "/api/run",
+      "destination": "/api/run"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/health"
+    },
+    {
+      "source": "/api/playground",
+      "destination": "/api/playground"
+    },
+    {
+      "source": "/api/ai/:match*",
+      "destination": "/api/ai/:match*"
+    },
+    {
+      "source": "/api/programs/execute",
+      "destination": "/api/programs/execute"
+    },
+    {
+      "source": "/api/:match*",
+      "destination": "/api/index.py"
+    },
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
