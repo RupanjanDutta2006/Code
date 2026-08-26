@@ -208,58 +208,70 @@ export const PlaygroundPage: React.FC = () => {
     }
   };
 
+  const [activeTab, setActiveTab] = useState<'code' | 'stdin' | 'terminal'>('code');
+
   const handleShareLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const handleRunAndSwitch = async () => {
+    if (window.innerWidth < 1024) {
+      setActiveTab('terminal');
+    }
+    await handleSharedRun();
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Playground Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-dark-700/80">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-accent-violet flex items-center justify-center">
-              <Users className="w-5 h-5" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-light-border dark:border-dark-700/80">
+        <div className="space-y-0.5 sm:space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-500/20 text-accent-violet flex items-center justify-center shrink-0">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <h1 className="text-xl font-bold text-white tracking-tight">
-              Real-time Collaborative Playground
+            <h1 className="text-base sm:text-xl font-bold text-light-textStrong dark:text-white tracking-tight">
+              Real-time Playground
             </h1>
-            <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-medium">
-              <Radio className="w-3 h-3 animate-pulse" />
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] sm:text-xs font-mono font-medium">
+              <Radio className="w-2.5 h-2.5 animate-pulse" />
               Live Room
             </span>
           </div>
-          <p className="text-xs text-dark-300">
-            Anyone with the link can edit and run together in real-time. Sessions automatically expire after 2 hours.
+          <p className="text-[11px] sm:text-xs text-light-textSecondary dark:text-dark-300">
+            Collaborative multi-language sandbox. Edits sync instantly in real-time.
           </p>
         </div>
 
         {/* Toolbar & Active Peers */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Peers List */}
-          <div className="flex items-center gap-1.5 bg-dark-900 border border-dark-700 px-3 py-1.5 rounded-xl text-xs">
-            <span className="text-dark-400 font-medium">Active Peers:</span>
-            <div className="flex items-center -space-x-1.5 overflow-hidden">
-              {peers.map((peer, i) => (
-                <div
-                  key={i}
-                  style={{ backgroundColor: peer.color }}
-                  className="w-6 h-6 rounded-full text-dark-950 font-bold text-[10px] flex items-center justify-center border-2 border-dark-900"
-                  title={peer.name}
-                >
-                  {peer.name.substring(0, 1).toUpperCase()}
-                </div>
-              ))}
+          {peers.length > 0 && (
+            <div className="flex items-center gap-1.5 bg-light-secondary dark:bg-dark-900 border border-light-border dark:border-dark-700 px-2.5 py-1 rounded-xl text-xs">
+              <span className="text-light-textMuted dark:text-dark-400 font-medium text-[11px]">Peers:</span>
+              <div className="flex items-center -space-x-1 overflow-hidden">
+                {peers.map((peer, i) => (
+                  <div
+                    key={i}
+                    style={{ backgroundColor: peer.color }}
+                    className="w-5 h-5 rounded-full text-dark-950 font-bold text-[9px] flex items-center justify-center border border-white dark:border-dark-900"
+                    title={peer.name}
+                  >
+                    {peer.name.substring(0, 1).toUpperCase()}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Language Selector */}
           <select
             value={language}
             onChange={(e) => handleLanguageChange(e.target.value)}
-            className="bg-dark-850 border border-dark-700 text-dark-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-brand-500 font-mono"
+            className="bg-light-secondary dark:bg-dark-850 border border-light-borderStrong dark:border-dark-700 text-light-textStrong dark:text-dark-200 text-xs rounded-xl px-2.5 py-1.5 outline-none focus:border-brand-500 font-mono touch-target"
+            aria-label="Programming language"
           >
             {LANGUAGES.map((l) => (
               <option key={l.id} value={l.id}>
@@ -271,54 +283,140 @@ export const PlaygroundPage: React.FC = () => {
           {/* Share Button */}
           <button
             onClick={handleShareLink}
-            className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition-all flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 touch-target"
+            title="Copy room link"
           >
-            {copiedLink ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-            <span>{copiedLink ? 'Link Copied!' : 'Share Room'}</span>
+            {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+            <span>{copiedLink ? 'Copied!' : 'Share'}</span>
           </button>
         </div>
       </div>
 
-      {/* Editor & Output Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-4">
+      {/* Mobile Tab Control Bar (Only visible on small/medium screens) */}
+      <div className="lg:hidden flex items-center justify-between p-1 bg-light-secondary dark:bg-dark-900 rounded-2xl border border-light-border dark:border-dark-700">
+        <div className="grid grid-cols-3 gap-1 flex-1">
+          <button
+            onClick={() => setActiveTab('code')}
+            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'code'
+                ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                : 'text-light-textSecondary dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white'
+            }`}
+          >
+            1. Code
+          </button>
+          <button
+            onClick={() => setActiveTab('stdin')}
+            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all relative ${
+              activeTab === 'stdin'
+                ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                : 'text-light-textSecondary dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white'
+            }`}
+          >
+            2. Stdin
+            {customInput.trim() && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 absolute top-2 right-2" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('terminal')}
+            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all relative ${
+              activeTab === 'terminal'
+                ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                : 'text-light-textSecondary dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white'
+            }`}
+          >
+            3. Output
+            {result && (
+              <span className={`w-1.5 h-1.5 rounded-full absolute top-2 right-2 ${result.status === 'success' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+            )}
+          </button>
+        </div>
+
+        <button
+          onClick={handleRunAndSwitch}
+          disabled={running}
+          className="ml-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 disabled:opacity-50 touch-target"
+        >
+          <Play className="w-3.5 h-3.5 fill-white" />
+          <span>{running ? '...' : 'Run'}</span>
+        </button>
+      </div>
+
+      {/* Editor & Output Workspaces (Desktop Side-by-Side | Mobile Single Tab Active) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Code Editor Panel */}
+        <div className={`space-y-2.5 ${activeTab !== 'code' ? 'hidden lg:block' : ''}`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-dark-300 uppercase tracking-wider font-mono">
-              Shared Code Editor
+            <span className="text-xs font-semibold text-light-textSecondary dark:text-dark-300 uppercase tracking-wider font-mono">
+              Code Editor
             </span>
-            <span className="text-[11px] text-dark-400 font-mono">
-              Edits synchronize instantly across all participants
+            <span className="hidden sm:inline text-[11px] text-light-textMuted dark:text-dark-400 font-mono">
+              Synchronized Live
             </span>
           </div>
 
-          <div className="h-[530px]">
+          <div className="h-[420px] sm:h-[500px] rounded-2xl overflow-hidden border border-light-border dark:border-dark-700 shadow-xs">
             <CodeEditor
               code={code}
               language={language}
               onChange={handleCodeChange}
-              height="530px"
-              onRun={handleSharedRun}
+              height="100%"
+              onRun={handleRunAndSwitch}
             />
           </div>
         </div>
 
-        <div className="space-y-4">
+        {/* Mobile Custom Stdin Tab */}
+        <div className={`space-y-2.5 ${activeTab !== 'stdin' ? 'hidden' : 'block lg:hidden'}`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-dark-300 uppercase tracking-wider font-mono">
-              Shared Execution Terminal
+            <span className="text-xs font-semibold text-light-textSecondary dark:text-dark-300 uppercase tracking-wider font-mono">
+              Custom Program Stdin
+            </span>
+            <span className="text-[11px] text-light-textMuted dark:text-dark-400 font-mono">
+              Passed to program execution
+            </span>
+          </div>
+
+          <div className="h-[420px] rounded-2xl p-4 bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 flex flex-col space-y-3">
+            <label className="text-xs text-light-textSecondary dark:text-dark-300 font-medium">
+              Enter input lines below (e.g. test cases, numbers, strings):
+            </label>
+            <textarea
+              value={customInput}
+              onChange={(e) => setCustomInput(e.target.value)}
+              placeholder="Enter stdin input for your program here..."
+              className="flex-1 w-full p-3 rounded-xl bg-light-secondary dark:bg-dark-950 border border-light-borderStrong dark:border-dark-700 text-xs font-mono outline-none focus:border-brand-500 resize-none"
+            />
+            <button
+              onClick={handleRunAndSwitch}
+              disabled={running}
+              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm touch-target"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              <span>Run Code with This Stdin</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Output Terminal Panel */}
+        <div className={`space-y-2.5 ${activeTab !== 'terminal' ? 'hidden lg:block' : ''}`}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-light-textSecondary dark:text-dark-300 uppercase tracking-wider font-mono">
+              Execution Terminal
             </span>
 
             <button
-              onClick={handleSharedRun}
+              onClick={handleRunAndSwitch}
               disabled={running}
-              className="px-5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+              className="hidden lg:flex px-4 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-xs transition-all items-center gap-2 disabled:opacity-50"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
-              <span>{running ? 'Running for all...' : 'Run Shared Code'}</span>
+              <span>{running ? 'Running...' : 'Run Code'}</span>
             </button>
           </div>
 
-          <div className="h-[530px]">
+          <div className="h-[420px] sm:h-[500px] rounded-2xl overflow-hidden border border-light-border dark:border-dark-700 shadow-xs">
             <OutputTerminal
               result={result}
               isRunning={running}

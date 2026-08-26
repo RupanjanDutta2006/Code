@@ -155,6 +155,15 @@ export const HomePage: React.FC = () => {
     setRunning(false);
   };
 
+  const [demoActiveTab, setDemoActiveTab] = useState<'code' | 'terminal'>('code');
+
+  const handleMobileQuickRun = () => {
+    if (window.innerWidth < 1024) {
+      setDemoActiveTab('terminal');
+    }
+    handleQuickRun();
+  };
+
   // Keyboard shortcuts: Ctrl+Enter to Run, Ctrl+Shift+K to Stop
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -171,77 +180,67 @@ export const HomePage: React.FC = () => {
   }, [demoCode, selectedLang]);
 
   return (
-    <div className="space-y-20 pb-24 mesh-gradient-bg transition-colors duration-200">
+    <div className="space-y-12 sm:space-y-20 pb-12 sm:pb-16 mesh-gradient-bg transition-colors duration-200">
       {/* Hero Section */}
-      <section className="relative pt-16 pb-10 overflow-hidden text-center max-w-6xl mx-auto px-4">
-        {/* Glow ambient meshes */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[380px] bg-gradient-to-tr from-light-blue/10 via-purple-500/10 to-cyan-500/10 dark:from-neon-blue/20 dark:via-neon-purple/20 dark:to-cyan-500/10 rounded-full blur-3xl pointer-events-none -z-10 animate-glow-pulse" />
-
-        {/* Feature badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-light-blueSoft dark:bg-gradient-to-r dark:from-neon-blue/15 dark:to-neon-purple/15 border border-light-blueBorder/50 dark:border-purple-500/30 text-light-blue dark:text-purple-300 text-xs font-bold mb-8 shadow-sm">
+      <section className="relative pt-8 sm:pt-16 pb-6 px-4 max-w-6xl mx-auto text-center space-y-6 sm:space-y-8">
+        
+        {/* Floating Top Pill */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-light-blueSoft dark:bg-gradient-to-r dark:from-neon-blue/15 dark:to-neon-purple/15 border border-light-blueBorder/50 dark:border-purple-500/30 text-light-blue dark:text-purple-300 text-xs font-bold tracking-wide shadow-xs animate-fade-in">
           <Sparkles className="w-3.5 h-3.5 text-light-blue dark:text-neon-purple" />
-          <span>Next-Gen Online + Offline Hybrid AI Coding Environment</span>
+          <span>CodeVault Pro 2.0 • Real-Time AI & DSA Platform</span>
         </div>
 
         {/* Hero Title */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-light-textStrong dark:text-white tracking-tight leading-[1.1] font-sans">
-          Your Code. Saved Online.<br />
-          <span className="text-gradient-neon">
-            Run & Reason Anywhere.
-          </span>
-        </h1>
+        <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-light-textStrong dark:text-white tracking-tight font-sans leading-[1.15]">
+            Master Coding Faster with{' '}
+            <span className="text-gradient-neon">
+              Interactive Execution
+            </span>{' '}
+            & AI Mentorship.
+          </h1>
+          <p className="text-xs sm:text-base text-light-textSecondary dark:text-dark-300 max-w-2xl mx-auto leading-relaxed font-normal">
+            Execute 11+ programming languages instantly in cloud sandboxes, visualize complex algorithms step-by-step, and collaborate with dual online & offline AI models.
+          </p>
+        </div>
 
-        <p className="mt-6 text-base sm:text-xl text-light-textSecondary dark:text-dark-300 max-w-3xl mx-auto leading-relaxed font-normal">
-          High-performance code library with 11 cloud compilers, interactive DSA visualizations, contest practice judge, and hybrid online & offline AI assistance.
-        </p>
-
-        {/* Call to Actions */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+        {/* Hero Primary Actions (Full width on mobile, row on tablet/desktop) */}
+        <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 pt-2">
           <Link
             to="/programs"
-            className="px-7 py-3.5 rounded-2xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:hover:from-brand-600 dark:hover:to-purple-600 text-white font-bold text-sm shadow-md hover:shadow-lg dark:shadow-xl dark:shadow-brand-500/30 transition-all duration-200 flex items-center gap-2.5 hover:scale-105"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:hover:from-brand-600 dark:hover:to-purple-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 touch-target"
           >
             <FolderPlus className="w-4 h-4" />
-            Explore Programs
+            <span>Explore Programs</span>
           </Link>
 
           <Link
             to="/my-class"
-            className="px-7 py-3.5 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/80 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-sm border border-light-border dark:border-[#1b223c] shadow-card-light transition-all flex items-center gap-2.5 hover:scale-105"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/80 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-xs sm:text-sm border border-light-border dark:border-[#1b223c] shadow-xs transition-all flex items-center justify-center gap-2 touch-target"
           >
             <GraduationCap className="w-4 h-4 text-amber-500 dark:text-accent-amber" />
-            My Class (Interactive DSA)
+            <span>My Class (DSA Visualizer)</span>
           </Link>
 
           <Link
             to="/playground"
-            className="px-7 py-3.5 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/80 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-sm border border-light-border dark:border-[#1b223c] shadow-card-light transition-all flex items-center gap-2.5 hover:scale-105"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/80 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-xs sm:text-sm border border-light-border dark:border-[#1b223c] shadow-xs transition-all flex items-center justify-center gap-2 touch-target"
           >
             <Users className="w-4 h-4 text-purple-600 dark:text-accent-violet" />
-            Live Playground
+            <span>Live Playground</span>
           </Link>
 
           <button
             onClick={toggleChat}
-            className="px-7 py-3.5 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/90 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-sm border border-light-borderStrong dark:border-purple-500/30 shadow-card-light dark:shadow-lg dark:shadow-purple-500/10 hover:border-light-blueBorder dark:hover:shadow-neon-purple transition-all duration-200 flex items-center gap-2.5 hover:scale-105"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/90 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-xs sm:text-sm border border-light-borderStrong dark:border-purple-500/30 shadow-xs hover:border-light-blueBorder transition-all flex items-center justify-center gap-2 touch-target"
           >
             <Sparkles className="w-4 h-4 text-light-blue dark:text-neon-purple" />
-            Ask CodeVault AI
+            <span>Ask CodeVault AI</span>
           </button>
-
-          {!user && (
-            <Link
-              to="/login"
-              className="px-7 py-3.5 rounded-2xl bg-light-secondary dark:bg-dark-800 text-light-textStrong dark:text-white font-bold text-sm border border-light-border dark:border-dark-700 transition-all flex items-center gap-2 hover:scale-105"
-            >
-              Get Started
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          )}
         </div>
 
         {/* Quick Platform Metrics */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
+        <div className="mt-8 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 max-w-4xl mx-auto text-left">
           {[
             { label: 'Cloud Sandboxes', val: '11 Compilers', icon: Terminal, color: 'text-light-blue dark:text-cyan-400' },
             { label: 'AI Intelligence', val: 'Nemotron + Offline', icon: Bot, color: 'text-purple-600 dark:text-purple-400' },
@@ -250,38 +249,39 @@ export const HomePage: React.FC = () => {
           ].map((stat, i) => (
             <div
               key={i}
-              className="p-4 rounded-2xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#1b223c] shadow-card-light dark:shadow-md hover:border-light-blueBorder dark:hover:border-purple-500/30 transition-all"
+              className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#1b223c] shadow-xs"
             >
-              <stat.icon className={`w-5 h-5 ${stat.color} mb-2`} />
-              <div className="text-base sm:text-lg font-bold text-light-textStrong dark:text-white font-sans">{stat.val}</div>
-              <div className="text-[11px] text-light-textSecondary dark:text-dark-400 font-medium">{stat.label}</div>
+              <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color} mb-1.5`} />
+              <div className="text-sm sm:text-lg font-bold text-light-textStrong dark:text-white font-sans">{stat.val}</div>
+              <div className="text-[10px] sm:text-[11px] text-light-textSecondary dark:text-dark-400 font-medium">{stat.label}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* Interactive Quick Runner Demo */}
-      <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-3xl bg-white dark:bg-dark-900/80 p-6 sm:p-8 shadow-card-light dark:shadow-2xl space-y-5 transition-colors border border-light-border dark:border-[#232b4b]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section className="max-w-6xl mx-auto px-3 sm:px-4">
+        <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-dark-900/80 p-4 sm:p-8 shadow-xs sm:shadow-md space-y-4 sm:space-y-5 transition-colors border border-light-border dark:border-[#232b4b]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-extrabold text-light-textStrong dark:text-white flex items-center gap-2.5 font-sans">
-                <div className="w-7 h-7 rounded-xl bg-light-blueSoft text-light-blue dark:bg-neon-blue/20 dark:text-neon-blue flex items-center justify-center border border-light-blueBorder/50 dark:border-neon-blue/30">
-                  <Terminal className="w-4 h-4" />
+              <h2 className="text-base sm:text-lg font-extrabold text-light-textStrong dark:text-white flex items-center gap-2 font-sans">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-light-blueSoft text-light-blue dark:bg-neon-blue/20 dark:text-neon-blue flex items-center justify-center border border-light-blueBorder/50 dark:border-neon-blue/30 shrink-0">
+                  <Terminal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
                 Live Cloud Execution Engine
               </h2>
-              <p className="text-xs text-light-textSecondary dark:text-dark-400 mt-1">
+              <p className="text-[11px] sm:text-xs text-light-textSecondary dark:text-dark-400 mt-0.5">
                 Select a language, write code, and stream inputs directly to the interactive cloud sandbox.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               <select
                 value={selectedLang}
                 onChange={(e) => handleLangChange(e.target.value)}
-                className="bg-light-secondary dark:bg-dark-900 border border-light-borderStrong dark:border-[#232b4b] text-light-textStrong dark:text-white text-xs rounded-xl px-3.5 py-2 outline-none focus:border-light-blue dark:focus:border-purple-500 font-mono transition-colors shadow-inner"
+                className="bg-light-secondary dark:bg-dark-900 border border-light-borderStrong dark:border-[#232b4b] text-light-textStrong dark:text-white text-xs rounded-xl px-2.5 py-1.5 sm:px-3.5 sm:py-2 outline-none focus:border-light-blue dark:focus:border-purple-500 font-mono transition-colors touch-target"
                 title="Select language"
+                aria-label="Select language"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l.id} value={l.id}>
@@ -292,46 +292,73 @@ export const HomePage: React.FC = () => {
 
               <button
                 onClick={handleReset}
-                className="px-3.5 py-2 rounded-xl bg-light-secondary dark:bg-dark-900 hover:bg-white dark:hover:bg-dark-850 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white text-xs font-bold border border-light-border dark:border-[#1b223c] transition-all flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 sm:py-2 rounded-xl bg-light-secondary dark:bg-dark-900 hover:bg-white dark:hover:bg-dark-850 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white text-xs font-bold border border-light-border dark:border-[#1b223c] transition-all flex items-center gap-1 touch-target"
                 title="Reset editor template"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset</span>
+                <span className="hidden sm:inline">Reset</span>
               </button>
 
               {running ? (
                 <button
                   onClick={handleStop}
-                  className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md shadow-rose-500/25 transition-all flex items-center gap-2"
-                  title="Stop execution (Ctrl+Shift+K)"
+                  className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 touch-target"
+                  title="Stop execution"
                 >
                   <Square className="w-3.5 h-3.5 fill-white" />
                   <span>Stop</span>
                 </button>
               ) : (
                 <button
-                  onClick={handleQuickRun}
-                  className="px-6 py-2 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple text-white text-xs font-bold shadow-md dark:shadow-lg dark:shadow-brand-500/25 transition-all flex items-center gap-2 hover:scale-105"
-                  title="Run code (Ctrl+Enter)"
+                  onClick={handleMobileQuickRun}
+                  className="px-4 sm:px-6 py-1.5 sm:py-2 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 touch-target"
+                  title="Run code"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
-                  <span>Run Code</span>
+                  <span>Run</span>
                 </button>
               )}
             </div>
           </div>
 
+          {/* Mobile Tab Control (Visible on phone) */}
+          <div className="lg:hidden grid grid-cols-2 gap-1 p-1 bg-light-secondary dark:bg-dark-950 rounded-xl border border-light-border dark:border-dark-800">
+            <button
+              onClick={() => setDemoActiveTab('code')}
+              className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
+                demoActiveTab === 'code'
+                  ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                  : 'text-light-textSecondary dark:text-dark-400'
+              }`}
+            >
+              1. Code Editor
+            </button>
+            <button
+              onClick={() => setDemoActiveTab('terminal')}
+              className={`py-1.5 rounded-lg text-xs font-bold transition-all relative ${
+                demoActiveTab === 'terminal'
+                  ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                  : 'text-light-textSecondary dark:text-dark-400'
+              }`}
+            >
+              2. Terminal Output
+              {result && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 absolute top-1.5 right-2" />
+              )}
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-sm">
+            <div className={`h-[340px] sm:h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-xs ${demoActiveTab !== 'code' ? 'hidden lg:block' : ''}`}>
               <CodeEditor
                 code={demoCode}
                 language={selectedLang}
                 onChange={setDemoCode}
-                height="390px"
-                onRun={handleQuickRun}
+                height="100%"
+                onRun={handleMobileQuickRun}
               />
             </div>
-            <div className="h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-sm">
+            <div className={`h-[340px] sm:h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-xs ${demoActiveTab !== 'terminal' ? 'hidden lg:block' : ''}`}>
               <OutputTerminal
                 ref={terminalRef}
                 result={result}

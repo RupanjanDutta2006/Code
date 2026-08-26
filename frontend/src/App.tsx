@@ -5,6 +5,7 @@ import { OfflineProvider } from './context/OfflineContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AIChatProvider } from './context/AIChatContext';
 import { Navbar } from './components/Navbar';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { CodeVaultAIChat } from './components/CodeVaultAIChat';
 import { HomePage } from './pages/HomePage';
 import { ProgramsPage } from './pages/ProgramsPage';
@@ -30,10 +31,10 @@ export const App: React.FC = () => {
         <OfflineProvider>
           <AIChatProvider>
             <BrowserRouter>
-              <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-200 selection:bg-neon-purple selection:text-white transition-colors duration-200 relative">
+              <div className="min-h-screen-dvh flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-200 selection:bg-neon-purple selection:text-white transition-colors duration-200 relative pb-16 md:pb-0">
                 <Navbar />
                 
-                <main className="flex-1">
+                <main className="flex-1 overflow-x-hidden">
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/programs" element={<ProgramsPage />} />
@@ -56,11 +57,14 @@ export const App: React.FC = () => {
                   </Routes>
                 </main>
 
+                {/* Mobile Bottom Navigation Bar (Phone-first dedicated nav) */}
+                <MobileBottomNav />
+
                 {/* Global Unified CodeVault AI Chat Trigger & Drawer */}
                 <CodeVaultAIChat />
 
                 {/* Footer */}
-                <footer className="border-t border-slate-200/80 dark:border-[#1b223c] bg-white/70 dark:bg-dark-950/80 py-8 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-xl transition-colors duration-200">
+                <footer className="border-t border-slate-200/80 dark:border-[#1b223c] bg-white/70 dark:bg-dark-950/80 py-8 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-xl transition-colors duration-200 mb-14 md:mb-0">
                   <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
                       <span className="font-bold text-slate-900 dark:text-white">CodeVault Pro</span> — Next-Gen AI Code Platform & Interactive Learning Studio.

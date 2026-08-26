@@ -193,6 +193,8 @@ export const InteractiveClassPage: React.FC = () => {
     });
   };
 
+  const [portraitTab, setPortraitTab] = useState<'visualizer' | 'code' | 'explanation'>('visualizer');
+
   // Dedicated Mobile Landscape / Fullscreen Learning Mode
   if (isFullscreen || (layout.isMobile && layout.isLandscape)) {
     return (
@@ -234,8 +236,8 @@ export const InteractiveClassPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen py-6 px-3 sm:px-6 max-w-[1600px] mx-auto space-y-6 relative mesh-gradient-bg transition-colors duration-200">
-      {/* Mobile Landscape Onboarding / Rotation Guidance */}
+    <div className="min-h-screen py-4 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-4 sm:space-y-6 mesh-gradient-bg transition-colors duration-200">
+      {/* Landscape Fullscreen Onboarding Banner */}
       <MobileLandscapeOnboarding
         isMobile={layout.isMobile}
         isPortrait={layout.isPortrait}
@@ -244,12 +246,12 @@ export const InteractiveClassPage: React.FC = () => {
       />
 
       {/* Top Breadcrumb & Actions Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-light-border dark:border-dark-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-light-border dark:border-dark-800">
         {/* Left Title & Meta */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <Link
             to="/my-class"
-            className="p-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-200 transition-colors shadow-card-light"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-200 flex items-center justify-center transition-colors shadow-xs touch-target"
             title="Back to My Class Catalog"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -257,49 +259,43 @@ export const InteractiveClassPage: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-light-textStrong dark:text-white font-sans">
+              <h1 className="text-lg sm:text-2xl font-black text-light-textStrong dark:text-white font-sans truncate max-w-[200px] sm:max-w-none">
                 {program.title}
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full bg-light-blueSoft border border-light-blueBorder/40 text-light-blue dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 text-xs font-mono font-bold uppercase">
+              <span className="px-2 py-0.5 rounded-full bg-light-blueSoft border border-light-blueBorder/40 text-light-blue dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 text-[10px] sm:text-xs font-mono font-bold uppercase">
                 {program.difficulty}
               </span>
             </div>
-            <p className="text-xs text-light-textSecondary dark:text-dark-400 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-light-textSecondary dark:text-dark-400 mt-0.5 truncate max-w-[260px] sm:max-w-none">
               {program.conceptSummary}
             </p>
           </div>
         </div>
 
         {/* Right Complexity, Fullscreen & Practice Button */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white dark:bg-dark-800/80 border border-light-border dark:border-dark-700 text-xs font-mono text-light-textSecondary dark:text-dark-300 shadow-card-light">
-            <span>Time: <b>{program.timeComplexity.average}</b></span>
-            <span>•</span>
-            <span>Space: <b>{program.spaceComplexity}</b></span>
-          </div>
-
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
           <button
             onClick={() => enterFullscreen()}
-            className="p-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-card-light"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-xs touch-target"
             title="Open Fullscreen Landscape Mode"
           >
             <Maximize2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Fullscreen</span>
+            <span>Landscape Fullscreen</span>
           </button>
 
           <button
             onClick={() => setShowAboutModal(!showAboutModal)}
-            className="p-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-card-light"
+            className="p-1.5 sm:p-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-300 text-xs font-medium flex items-center gap-1 transition-colors shadow-xs touch-target"
+            title="About Lesson"
           >
             <Info className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">About</span>
           </button>
 
           <button
             onClick={handlePracticeInCompiler}
-            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-transform active:scale-95"
+            className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-transform active:scale-95 touch-target"
           >
-            <span>Practice in Code</span>
+            <span>Practice</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -307,7 +303,7 @@ export const InteractiveClassPage: React.FC = () => {
 
       {/* About Collapsible Details */}
       {showAboutModal && (
-        <div className="rounded-2xl bg-white dark:bg-dark-900 p-4 text-xs sm:text-sm text-light-textStrong dark:text-dark-200 space-y-2 border border-light-border dark:border-dark-700 shadow-card-light dark:shadow-xl animate-in fade-in duration-150">
+        <div className="rounded-2xl bg-white dark:bg-dark-900 p-4 text-xs sm:text-sm text-light-textStrong dark:text-dark-200 space-y-2 border border-light-border dark:border-dark-700 shadow-xs animate-in fade-in duration-150">
           <h3 className="font-bold text-light-textStrong dark:text-white flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-light-blue dark:text-brand-500" />
             About {program.title}
@@ -323,7 +319,7 @@ export const InteractiveClassPage: React.FC = () => {
       )}
 
       {/* Presets & Input Selector Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 shadow-card-light">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 shadow-xs">
         <PresetSelector
           presets={program.presets}
           selectedPresetLabel={selectedPresetLabel}
@@ -331,17 +327,51 @@ export const InteractiveClassPage: React.FC = () => {
           onCustomInput={program.simulationType === 'array' ? handleCustomInput : undefined}
           simulationType={program.simulationType}
         />
-        <div className="text-xs font-mono text-light-textMuted dark:text-dark-400">
-          {steps.length} total simulation steps
+        <div className="text-[11px] sm:text-xs font-mono text-light-textMuted dark:text-dark-400">
+          Step <b>{currentStepIndex + 1}</b> of {steps.length}
         </div>
       </div>
 
+      {/* Mobile Portrait Viewport Tab Switcher (Visible on small screens) */}
+      <div className="lg:hidden grid grid-cols-3 gap-1 p-1 bg-light-secondary dark:bg-dark-900 rounded-2xl border border-light-border dark:border-dark-700">
+        <button
+          onClick={() => setPortraitTab('visualizer')}
+          className={`py-2 rounded-xl text-xs font-bold transition-all ${
+            portraitTab === 'visualizer'
+              ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+              : 'text-light-textSecondary dark:text-dark-400'
+          }`}
+        >
+          1. Simulation
+        </button>
+        <button
+          onClick={() => setPortraitTab('code')}
+          className={`py-2 rounded-xl text-xs font-bold transition-all ${
+            portraitTab === 'code'
+              ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+              : 'text-light-textSecondary dark:text-dark-400'
+          }`}
+        >
+          2. Code & Output
+        </button>
+        <button
+          onClick={() => setPortraitTab('explanation')}
+          className={`py-2 rounded-xl text-xs font-bold transition-all ${
+            portraitTab === 'explanation'
+              ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+              : 'text-light-textSecondary dark:text-dark-400'
+          }`}
+        >
+          3. Details & Vars
+        </button>
+      </div>
+
       {/* MAIN WORKSPACE: Left (Code + Output) | Right (Simulation + Variables + Explanation) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN: 5 Columns on Desktop */}
-        <div className="lg:col-span-5 flex flex-col space-y-5">
-          {/* Source Code Viewer (Height: 380px) */}
-          <div className="h-[380px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+        {/* LEFT COLUMN: 5 Columns on Desktop (Visible on mobile if 'code' tab selected) */}
+        <div className={`lg:col-span-5 flex-col space-y-4 sm:space-y-5 ${portraitTab === 'code' ? 'flex' : 'hidden lg:flex'}`}>
+          {/* Source Code Viewer */}
+          <div className="h-[340px] sm:h-[380px]">
             {currentImplementation && (
               <CodeViewerPanel
                 implementation={currentImplementation}
@@ -353,8 +383,8 @@ export const InteractiveClassPage: React.FC = () => {
             )}
           </div>
 
-          {/* Progressive Output Panel (Height: 160px) */}
-          <div className="h-[160px]">
+          {/* Progressive Output Panel */}
+          <div className="h-[140px] sm:h-[160px]">
             <OutputViewerPanel
               output={currentStep.output}
               stepNumber={currentStepIndex + 1}
@@ -363,22 +393,28 @@ export const InteractiveClassPage: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: 7 Columns on Desktop */}
-        <div className="lg:col-span-7 flex flex-col space-y-5">
-          {/* Visual Simulation Canvas */}
-          <div className="rounded-3xl bg-white dark:bg-dark-900/90 border border-light-border dark:border-dark-700/80 p-4 sm:p-6 shadow-card-light dark:shadow-2xl min-h-[380px] flex items-center justify-center relative overflow-hidden">
+        {/* RIGHT COLUMN: 7 Columns on Desktop (Simulation canvas + Explanation) */}
+        <div className="lg:col-span-7 flex flex-col space-y-4 sm:space-y-5">
+          {/* Visual Simulation Canvas (Always on desktop, on mobile visible when 'visualizer' tab selected) */}
+          <div className={`rounded-3xl bg-white dark:bg-dark-900/90 border border-light-border dark:border-dark-700/80 p-3 sm:p-6 shadow-xs sm:shadow-md min-h-[300px] sm:min-h-[380px] flex items-center justify-center relative overflow-hidden ${
+            portraitTab === 'visualizer' ? 'block' : 'hidden lg:block'
+          }`}>
             {renderVisualizer()}
           </div>
 
           {/* Teacher Step Explanation */}
-          <StepExplanationPanel
-            step={currentStep}
-            stepIndex={currentStepIndex}
-            totalSteps={steps.length}
-          />
+          <div className={portraitTab === 'explanation' || portraitTab === 'visualizer' ? 'block' : 'hidden lg:block'}>
+            <StepExplanationPanel
+              step={currentStep}
+              stepIndex={currentStepIndex}
+              totalSteps={steps.length}
+            />
+          </div>
 
           {/* Variable Watch Grid */}
-          <VariableWatchPanel variables={currentStep.variables} />
+          <div className={portraitTab === 'explanation' || portraitTab === 'visualizer' ? 'block' : 'hidden lg:block'}>
+            <VariableWatchPanel variables={currentStep.variables} />
+          </div>
         </div>
       </div>
 

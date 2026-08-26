@@ -71,30 +71,30 @@ export const ProgramsPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8 mesh-gradient-bg min-h-screen transition-colors duration-200">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8 mesh-gradient-bg min-h-screen transition-colors duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 pb-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-1 sm:pb-2">
         <div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-light-textStrong dark:text-white flex items-center gap-3 font-sans">
-            <div className="w-10 h-10 rounded-2xl bg-light-blue dark:bg-gradient-to-tr dark:from-neon-blue dark:to-neon-purple text-white flex items-center justify-center shadow-md dark:shadow-brand-500/25">
-              <Layers className="w-5 h-5" />
+          <h1 className="text-xl sm:text-4xl font-extrabold text-light-textStrong dark:text-white flex items-center gap-2.5 sm:gap-3 font-sans">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-light-blue dark:bg-gradient-to-tr dark:from-neon-blue dark:to-neon-purple text-white flex items-center justify-center shadow-md dark:shadow-brand-500/25 shrink-0">
+              <Layers className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            Public Programs Library
+            Programs Library
           </h1>
-          <p className="text-xs sm:text-sm text-light-textSecondary dark:text-dark-300 mt-2">
+          <p className="text-xs sm:text-sm text-light-textSecondary dark:text-dark-300 mt-1 sm:mt-2">
             Explore, practice, and run verified student programs, algorithms, data structures, and examples.
           </p>
         </div>
 
         {/* Search Bar */}
         <form onSubmit={handleSearchSubmit} className="relative w-full md:w-88">
-          <Search className="w-4 h-4 text-light-textMuted dark:text-dark-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-light-textMuted dark:text-dark-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search programs by title or keyword..."
+            placeholder="Search programs by title..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-[#0e1222]/90 border border-light-borderStrong dark:border-[#232b4b] rounded-2xl text-xs text-light-textStrong dark:text-white placeholder-light-textMuted dark:placeholder-dark-400 focus:border-light-blue dark:focus:border-purple-500 outline-none transition-colors shadow-card-light dark:shadow-inner"
+            className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white dark:bg-[#0e1222]/90 border border-light-borderStrong dark:border-[#232b4b] rounded-2xl text-sm sm:text-xs text-light-textStrong dark:text-white placeholder-light-textMuted dark:placeholder-dark-400 focus:border-light-blue dark:focus:border-purple-500 outline-none transition-colors shadow-xs touch-target"
           />
         </form>
       </div>

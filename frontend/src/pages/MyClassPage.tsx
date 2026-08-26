@@ -27,35 +27,35 @@ export const MyClassPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10 mesh-gradient-bg transition-colors duration-200">
+    <div className="min-h-screen py-6 sm:py-12 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 sm:space-y-10 mesh-gradient-bg transition-colors duration-200">
       {/* Hero Header */}
-      <div className="text-center space-y-5 max-w-3xl mx-auto pt-4">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-light-blueSoft dark:bg-gradient-to-r dark:from-neon-blue/15 dark:to-neon-purple/15 border border-light-blueBorder/50 dark:border-purple-500/30 text-light-blue dark:text-purple-300 text-xs font-bold tracking-wide shadow-sm">
+      <div className="text-center space-y-3 sm:space-y-5 max-w-3xl mx-auto pt-2 sm:pt-4">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-light-blueSoft dark:bg-gradient-to-r dark:from-neon-blue/15 dark:to-neon-purple/15 border border-light-blueBorder/50 dark:border-purple-500/30 text-light-blue dark:text-purple-300 text-xs font-bold tracking-wide shadow-xs">
           <GraduationCap className="w-4 h-4 text-light-blue dark:text-neon-purple" />
           <span>Interactive DSA Studio & Execution Traces</span>
         </div>
 
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-light-textStrong dark:text-white tracking-tight font-sans">
+        <h1 className="text-2xl sm:text-5xl lg:text-6xl font-extrabold text-light-textStrong dark:text-white tracking-tight font-sans">
           Understand Code Visually,{' '}
           <span className="text-gradient-neon">
             One Step at a Time.
           </span>
         </h1>
 
-        <p className="text-sm sm:text-base text-light-textSecondary dark:text-dark-300 leading-relaxed max-w-2xl mx-auto font-normal">
+        <p className="text-xs sm:text-base text-light-textSecondary dark:text-dark-300 leading-relaxed max-w-2xl mx-auto font-normal">
           Watch algorithm execution synchronized with animated data structures, step-by-step state inspection, and line-by-line code tracing.
         </p>
 
         {/* Search Bar */}
-        <div className="relative max-w-2xl mx-auto pt-4">
+        <div className="relative max-w-2xl mx-auto pt-2 sm:pt-4">
           <div className="relative flex items-center">
-            <Search className="w-5 h-5 absolute left-4 text-light-textMuted dark:text-dark-400" />
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 absolute left-3.5 text-light-textMuted dark:text-dark-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search algorithms, data structures, concepts (e.g. bubble sort, binary search, tree)..."
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white dark:bg-[#0e1222]/90 border border-light-borderStrong dark:border-[#232b4b] text-light-textStrong dark:text-white text-sm outline-none focus:border-light-blue dark:focus:border-purple-500 shadow-card-light dark:shadow-xl transition-all"
+              placeholder="Search algorithms, data structures (e.g. bubble sort, binary search, tree)..."
+              className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3.5 rounded-2xl bg-white dark:bg-[#0e1222]/90 border border-light-borderStrong dark:border-[#232b4b] text-light-textStrong dark:text-white text-sm sm:text-sm outline-none focus:border-light-blue dark:focus:border-purple-500 shadow-xs sm:shadow-md transition-all touch-target"
             />
           </div>
         </div>
