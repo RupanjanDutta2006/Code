@@ -246,12 +246,12 @@ export const InteractiveClassPage: React.FC = () => {
       />
 
       {/* Top Breadcrumb & Actions Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-light-border dark:border-dark-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-light-border dark:border-white/10">
         {/* Left Title & Meta */}
         <div className="flex items-center gap-2.5 sm:gap-3">
           <Link
             to="/my-class"
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-200 flex items-center justify-center transition-colors shadow-xs touch-target"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-[#121217] dark:hover:bg-[#191920] dark:text-dark-200 flex items-center justify-center transition-colors shadow-xs touch-target hover:border-crimson-500/40"
             title="Back to My Class Catalog"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -262,7 +262,7 @@ export const InteractiveClassPage: React.FC = () => {
               <h1 className="text-lg sm:text-2xl font-black text-light-textStrong dark:text-white font-sans truncate max-w-[200px] sm:max-w-none">
                 {program.title}
               </h1>
-              <span className="px-2 py-0.5 rounded-full bg-light-blueSoft border border-light-blueBorder/40 text-light-blue dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 text-[10px] sm:text-xs font-mono font-bold uppercase">
+              <span className="px-2 py-0.5 rounded-full bg-crimson-500/10 border border-crimson-500/30 text-crimson-600 dark:text-crimson-400 text-[10px] sm:text-xs font-mono font-bold uppercase">
                 {program.difficulty}
               </span>
             </div>
@@ -276,7 +276,7 @@ export const InteractiveClassPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
           <button
             onClick={() => enterFullscreen()}
-            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-xs touch-target"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-[#121217] dark:hover:bg-[#191920] dark:text-dark-300 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-xs touch-target hover:border-crimson-500/40"
             title="Open Fullscreen Landscape Mode"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -285,7 +285,7 @@ export const InteractiveClassPage: React.FC = () => {
 
           <button
             onClick={() => setShowAboutModal(!showAboutModal)}
-            className="p-1.5 sm:p-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-300 text-xs font-medium flex items-center gap-1 transition-colors shadow-xs touch-target"
+            className="p-1.5 sm:p-2 rounded-xl bg-white hover:bg-light-secondary text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-[#121217] dark:hover:bg-[#191920] dark:text-dark-300 text-xs font-medium flex items-center gap-1 transition-colors shadow-xs touch-target hover:border-crimson-500/40"
             title="About Lesson"
           >
             <Info className="w-3.5 h-3.5" />
@@ -293,7 +293,7 @@ export const InteractiveClassPage: React.FC = () => {
 
           <button
             onClick={handlePracticeInCompiler}
-            className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-transform active:scale-95 touch-target"
+            className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-crimson-600 hover:bg-crimson-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-glow-red-sm transition-transform active:scale-95 touch-target hover:scale-105"
           >
             <span>Practice</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -303,23 +303,23 @@ export const InteractiveClassPage: React.FC = () => {
 
       {/* About Collapsible Details */}
       {showAboutModal && (
-        <div className="rounded-2xl bg-white dark:bg-dark-900 p-4 text-xs sm:text-sm text-light-textStrong dark:text-dark-200 space-y-2 border border-light-border dark:border-dark-700 shadow-xs animate-in fade-in duration-150">
+        <div className="rounded-2xl bg-white dark:bg-[#0f0f13]/95 p-4 text-xs sm:text-sm text-light-textStrong dark:text-dark-200 space-y-2 border border-light-border dark:border-white/10 shadow-xs animate-in fade-in duration-150 backdrop-blur-xl">
           <h3 className="font-bold text-light-textStrong dark:text-white flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-light-blue dark:text-brand-500" />
+            <Sparkles className="w-4 h-4 text-crimson-500 dark:text-crimson-400" />
             About {program.title}
           </h3>
           <p className="leading-relaxed text-light-textSecondary dark:text-dark-300">{program.description}</p>
           <div className="flex flex-wrap gap-2 pt-1 font-mono text-[11px]">
-            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-dark-800 dark:border-transparent">Best: {program.timeComplexity.best || 'O(1)'}</span>
-            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-dark-800 dark:border-transparent">Average: {program.timeComplexity.average}</span>
-            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-dark-800 dark:border-transparent">Worst: {program.timeComplexity.worst}</span>
-            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-dark-800 dark:border-transparent">Space: {program.spaceComplexity}</span>
+            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-[#141419] dark:border-white/10">Best: {program.timeComplexity.best || 'O(1)'}</span>
+            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-[#141419] dark:border-white/10">Average: {program.timeComplexity.average}</span>
+            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-[#141419] dark:border-white/10">Worst: {program.timeComplexity.worst}</span>
+            <span className="px-2 py-0.5 rounded bg-light-secondary border border-light-border dark:bg-[#141419] dark:border-white/10">Space: {program.spaceComplexity}</span>
           </div>
         </div>
       )}
 
       {/* Presets & Input Selector Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#0f0f13]/90 border border-light-border dark:border-white/10 shadow-xs backdrop-blur-xl">
         <PresetSelector
           presets={program.presets}
           selectedPresetLabel={selectedPresetLabel}
@@ -333,12 +333,12 @@ export const InteractiveClassPage: React.FC = () => {
       </div>
 
       {/* Mobile Portrait Viewport Tab Switcher (Visible on small screens) */}
-      <div className="lg:hidden grid grid-cols-3 gap-1 p-1 bg-light-secondary dark:bg-dark-900 rounded-2xl border border-light-border dark:border-dark-700">
+      <div className="lg:hidden grid grid-cols-3 gap-1 p-1 bg-light-secondary dark:bg-[#0e0e13] rounded-2xl border border-light-border dark:border-white/10">
         <button
           onClick={() => setPortraitTab('visualizer')}
           className={`py-2 rounded-xl text-xs font-bold transition-all ${
             portraitTab === 'visualizer'
-              ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+              ? 'bg-crimson-600 text-white shadow-glow-red-sm'
               : 'text-light-textSecondary dark:text-dark-400'
           }`}
         >
@@ -348,7 +348,7 @@ export const InteractiveClassPage: React.FC = () => {
           onClick={() => setPortraitTab('code')}
           className={`py-2 rounded-xl text-xs font-bold transition-all ${
             portraitTab === 'code'
-              ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+              ? 'bg-crimson-600 text-white shadow-glow-red-sm'
               : 'text-light-textSecondary dark:text-dark-400'
           }`}
         >
@@ -358,7 +358,7 @@ export const InteractiveClassPage: React.FC = () => {
           onClick={() => setPortraitTab('explanation')}
           className={`py-2 rounded-xl text-xs font-bold transition-all ${
             portraitTab === 'explanation'
-              ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+              ? 'bg-crimson-600 text-white shadow-glow-red-sm'
               : 'text-light-textSecondary dark:text-dark-400'
           }`}
         >

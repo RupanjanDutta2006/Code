@@ -15,11 +15,11 @@ export const ProgramCard: React.FC<ProgramCardProps> = ({ program }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-[#0e1222]/80 rounded-3xl p-6 flex flex-col justify-between space-y-5 border border-light-border dark:border-[#232b4b] group hover:border-light-blueBorder dark:hover:border-purple-500/40 shadow-card-light hover:shadow-card-hover-light transition-all duration-200">
+    <div className="bg-white dark:bg-[#0f0f13]/85 rounded-3xl p-6 flex flex-col justify-between space-y-5 border border-light-border dark:border-white/10 group hover:border-crimson-500/40 dark:hover:border-crimson-500/40 shadow-card-light dark:shadow-md hover:shadow-glow-red-sm transition-all duration-200 backdrop-blur-xl hover:translate-y-[-2px]">
       <div className="space-y-3.5">
         {/* Category & Difficulty Badges */}
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-light-blue dark:text-purple-400 px-2.5 py-0.5 rounded-full bg-light-blueSoft dark:bg-purple-500/10 border border-light-blueBorder/40 dark:border-purple-500/20">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-crimson-600 dark:text-crimson-400 px-2.5 py-0.5 rounded-full bg-crimson-500/10 dark:bg-crimson-500/10 border border-crimson-500/30 dark:border-crimson-500/30">
             {program.category}
           </span>
           <span
@@ -32,7 +32,7 @@ export const ProgramCard: React.FC<ProgramCardProps> = ({ program }) => {
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-extrabold text-light-textStrong dark:text-white group-hover:text-light-blue dark:group-hover:text-purple-400 transition-colors font-sans tracking-tight">
+        <h3 className="text-xl font-extrabold text-light-textStrong dark:text-white group-hover:text-crimson-600 dark:group-hover:text-crimson-400 transition-colors font-sans tracking-tight">
           {program.title}
         </h3>
 
@@ -44,12 +44,12 @@ export const ProgramCard: React.FC<ProgramCardProps> = ({ program }) => {
         {/* Complexity Metadata */}
         <div className="flex items-center gap-3 pt-1 font-mono text-[11px] text-light-textMuted dark:text-dark-400">
           <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-light-blue dark:text-purple-400" />
+            <Clock className="w-3.5 h-3.5 text-crimson-500 dark:text-crimson-400" />
             <span>Time: {program.timeComplexity.average}</span>
           </div>
           <span>•</span>
           <div className="flex items-center gap-1.5">
-            <Box className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+            <Box className="w-3.5 h-3.5 text-crimson-500 dark:text-crimson-400" />
             <span>Space: {program.spaceComplexity}</span>
           </div>
         </div>
@@ -59,7 +59,7 @@ export const ProgramCard: React.FC<ProgramCardProps> = ({ program }) => {
           {program.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="px-2.5 py-0.5 rounded-lg bg-light-secondary dark:bg-dark-900 text-light-textSecondary dark:text-dark-300 text-[10px] font-medium border border-light-border dark:border-[#1b223c]"
+              className="px-2.5 py-0.5 rounded-lg bg-light-secondary dark:bg-[#141419] text-light-textSecondary dark:text-dark-300 text-[10px] font-medium border border-light-border dark:border-white/10"
             >
               #{tag}
             </span>
@@ -68,10 +68,10 @@ export const ProgramCard: React.FC<ProgramCardProps> = ({ program }) => {
       </div>
 
       {/* Action Link Button */}
-      <div className="pt-3 border-t border-light-border dark:border-[#1b223c]">
+      <div className="pt-3 border-t border-light-border dark:border-white/10">
         <Link
           to={`/my-class/${program.slug}`}
-          className="w-full py-3 px-4 rounded-2xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:hover:from-brand-600 dark:hover:to-purple-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md dark:shadow-brand-500/20"
+          className="w-full py-3 px-4 rounded-2xl bg-crimson-600 hover:bg-crimson-700 dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 dark:hover:from-crimson-500 dark:hover:to-rose-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-glow-red-sm hover:scale-[1.02]"
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-300" />
           <span>Launch Interactive Studio</span>

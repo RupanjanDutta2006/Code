@@ -185,8 +185,8 @@ export const HomePage: React.FC = () => {
       <section className="relative pt-8 sm:pt-16 pb-6 px-4 max-w-6xl mx-auto text-center space-y-6 sm:space-y-8">
         
         {/* Floating Top Pill */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-light-blueSoft dark:bg-gradient-to-r dark:from-neon-blue/15 dark:to-neon-purple/15 border border-light-blueBorder/50 dark:border-purple-500/30 text-light-blue dark:text-purple-300 text-xs font-bold tracking-wide shadow-xs animate-fade-in">
-          <Sparkles className="w-3.5 h-3.5 text-light-blue dark:text-neon-purple" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-crimson-500/10 dark:bg-[#141418] border border-crimson-500/30 text-crimson-600 dark:text-crimson-400 text-xs font-bold tracking-wide shadow-xs animate-fade-in">
+          <Sparkles className="w-3.5 h-3.5 text-crimson-500 dark:text-crimson-400" />
           <span>CodeVault Pro 2.0 • Real-Time AI & DSA Platform</span>
         </div>
 
@@ -194,7 +194,7 @@ export const HomePage: React.FC = () => {
         <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-light-textStrong dark:text-white tracking-tight font-sans leading-[1.15]">
             Master Coding Faster with{' '}
-            <span className="text-gradient-neon">
+            <span className="text-gradient-red">
               Interactive Execution
             </span>{' '}
             & AI Mentorship.
@@ -208,7 +208,7 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 pt-2">
           <Link
             to="/programs"
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:hover:from-brand-600 dark:hover:to-purple-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 touch-target"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-crimson-600 hover:bg-crimson-700 dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 dark:hover:from-crimson-500 dark:hover:to-rose-500 text-white font-bold text-xs sm:text-sm shadow-glow-red-sm hover:shadow-glow-red transition-all flex items-center justify-center gap-2 touch-target hover:scale-[1.02]"
           >
             <FolderPlus className="w-4 h-4" />
             <span>Explore Programs</span>
@@ -216,25 +216,25 @@ export const HomePage: React.FC = () => {
 
           <Link
             to="/my-class"
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/80 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-xs sm:text-sm border border-light-border dark:border-[#1b223c] shadow-xs transition-all flex items-center justify-center gap-2 touch-target"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-light-secondary dark:bg-[#111116]/80 dark:hover:bg-[#191920] text-light-textStrong dark:text-white font-bold text-xs sm:text-sm border border-light-border dark:border-white/10 hover:dark:border-crimson-500/40 shadow-xs transition-all flex items-center justify-center gap-2 touch-target"
           >
-            <GraduationCap className="w-4 h-4 text-amber-500 dark:text-accent-amber" />
+            <GraduationCap className="w-4 h-4 text-crimson-500 dark:text-crimson-400" />
             <span>My Class (DSA Visualizer)</span>
           </Link>
 
           <Link
             to="/playground"
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/80 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-xs sm:text-sm border border-light-border dark:border-[#1b223c] shadow-xs transition-all flex items-center justify-center gap-2 touch-target"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-light-secondary dark:bg-[#111116]/80 dark:hover:bg-[#191920] text-light-textStrong dark:text-white font-bold text-xs sm:text-sm border border-light-border dark:border-white/10 hover:dark:border-crimson-500/40 shadow-xs transition-all flex items-center justify-center gap-2 touch-target"
           >
-            <Users className="w-4 h-4 text-purple-600 dark:text-accent-violet" />
+            <Users className="w-4 h-4 text-crimson-500 dark:text-crimson-400" />
             <span>Live Playground</span>
           </Link>
 
           <button
             onClick={toggleChat}
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-light-secondary dark:bg-dark-900/90 dark:hover:bg-dark-850 text-light-textStrong dark:text-white font-bold text-xs sm:text-sm border border-light-borderStrong dark:border-purple-500/30 shadow-xs hover:border-light-blueBorder transition-all flex items-center justify-center gap-2 touch-target"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-light-secondary dark:bg-[#111116]/90 dark:hover:bg-[#191920] text-light-textStrong dark:text-white font-bold text-xs sm:text-sm border border-light-borderStrong dark:border-crimson-500/30 shadow-xs hover:border-crimson-500/60 transition-all flex items-center justify-center gap-2 touch-target"
           >
-            <Sparkles className="w-4 h-4 text-light-blue dark:text-neon-purple" />
+            <Sparkles className="w-4 h-4 text-crimson-500 dark:text-crimson-400" />
             <span>Ask CodeVault AI</span>
           </button>
         </div>
@@ -242,14 +242,14 @@ export const HomePage: React.FC = () => {
         {/* Quick Platform Metrics */}
         <div className="mt-8 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 max-w-4xl mx-auto text-left">
           {[
-            { label: 'Cloud Sandboxes', val: '11 Compilers', icon: Terminal, color: 'text-light-blue dark:text-cyan-400' },
-            { label: 'AI Intelligence', val: 'Nemotron + Offline', icon: Bot, color: 'text-purple-600 dark:text-purple-400' },
-            { label: 'DSA Traces', val: '15 Visualizers', icon: Layers, color: 'text-emerald-600 dark:text-emerald-400' },
-            { label: 'Local Setup Needed', val: 'Zero Config', icon: Cpu, color: 'text-amber-600 dark:text-amber-400' },
+            { label: 'Cloud Sandboxes', val: '11 Compilers', icon: Terminal, color: 'text-crimson-500 dark:text-crimson-400' },
+            { label: 'AI Intelligence', val: 'Nemotron + Offline', icon: Bot, color: 'text-crimson-500 dark:text-rose-400' },
+            { label: 'DSA Traces', val: '15 Visualizers', icon: Layers, color: 'text-crimson-500 dark:text-crimson-400' },
+            { label: 'Local Setup Needed', val: 'Zero Config', icon: Cpu, color: 'text-amber-500 dark:text-amber-400' },
           ].map((stat, i) => (
             <div
               key={i}
-              className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#1b223c] shadow-xs"
+              className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-[#0f0f13]/80 border border-light-border dark:border-white/10 shadow-xs hover:dark:border-crimson-500/30 transition-colors"
             >
               <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color} mb-1.5`} />
               <div className="text-sm sm:text-lg font-bold text-light-textStrong dark:text-white font-sans">{stat.val}</div>
@@ -261,11 +261,11 @@ export const HomePage: React.FC = () => {
 
       {/* Interactive Quick Runner Demo */}
       <section className="max-w-6xl mx-auto px-3 sm:px-4">
-        <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-dark-900/80 p-4 sm:p-8 shadow-xs sm:shadow-md space-y-4 sm:space-y-5 transition-colors border border-light-border dark:border-[#232b4b]">
+        <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-[#0f0f13]/85 p-4 sm:p-8 shadow-xs sm:shadow-md space-y-4 sm:space-y-5 transition-colors border border-light-border dark:border-white/10 backdrop-blur-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-base sm:text-lg font-extrabold text-light-textStrong dark:text-white flex items-center gap-2 font-sans">
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-light-blueSoft text-light-blue dark:bg-neon-blue/20 dark:text-neon-blue flex items-center justify-center border border-light-blueBorder/50 dark:border-neon-blue/30 shrink-0">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-crimson-500/10 text-crimson-600 dark:bg-crimson-500/20 dark:text-crimson-400 flex items-center justify-center border border-crimson-500/30 shrink-0">
                   <Terminal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
                 Live Cloud Execution Engine
@@ -279,7 +279,7 @@ export const HomePage: React.FC = () => {
               <select
                 value={selectedLang}
                 onChange={(e) => handleLangChange(e.target.value)}
-                className="bg-light-secondary dark:bg-dark-900 border border-light-borderStrong dark:border-[#232b4b] text-light-textStrong dark:text-white text-xs rounded-xl px-2.5 py-1.5 sm:px-3.5 sm:py-2 outline-none focus:border-light-blue dark:focus:border-purple-500 font-mono transition-colors touch-target"
+                className="bg-light-secondary dark:bg-[#141419] border border-light-borderStrong dark:border-white/10 text-light-textStrong dark:text-white text-xs rounded-xl px-2.5 py-1.5 sm:px-3.5 sm:py-2 outline-none focus:border-crimson-500 font-mono transition-colors touch-target"
                 title="Select language"
                 aria-label="Select language"
               >
@@ -292,7 +292,7 @@ export const HomePage: React.FC = () => {
 
               <button
                 onClick={handleReset}
-                className="px-3 py-1.5 sm:py-2 rounded-xl bg-light-secondary dark:bg-dark-900 hover:bg-white dark:hover:bg-dark-850 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white text-xs font-bold border border-light-border dark:border-[#1b223c] transition-all flex items-center gap-1 touch-target"
+                className="px-3 py-1.5 sm:py-2 rounded-xl bg-light-secondary dark:bg-[#141419] hover:bg-white dark:hover:bg-[#1c1c24] text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white text-xs font-bold border border-light-border dark:border-white/10 transition-all flex items-center gap-1 touch-target"
                 title="Reset editor template"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -311,7 +311,7 @@ export const HomePage: React.FC = () => {
               ) : (
                 <button
                   onClick={handleMobileQuickRun}
-                  className="px-4 sm:px-6 py-1.5 sm:py-2 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 touch-target"
+                  className="px-4 sm:px-6 py-1.5 sm:py-2 rounded-xl bg-crimson-600 hover:bg-crimson-700 dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 text-white text-xs font-bold shadow-glow-red-sm transition-all flex items-center gap-1.5 touch-target hover:scale-105"
                   title="Run code"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
@@ -322,12 +322,12 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Mobile Tab Control (Visible on phone) */}
-          <div className="lg:hidden grid grid-cols-2 gap-1 p-1 bg-light-secondary dark:bg-dark-950 rounded-xl border border-light-border dark:border-dark-800">
+          <div className="lg:hidden grid grid-cols-2 gap-1 p-1 bg-light-secondary dark:bg-[#09090d] rounded-xl border border-light-border dark:border-white/10">
             <button
               onClick={() => setDemoActiveTab('code')}
               className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
                 demoActiveTab === 'code'
-                  ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                  ? 'bg-crimson-600 text-white shadow-glow-red-sm'
                   : 'text-light-textSecondary dark:text-dark-400'
               }`}
             >
@@ -337,7 +337,7 @@ export const HomePage: React.FC = () => {
               onClick={() => setDemoActiveTab('terminal')}
               className={`py-1.5 rounded-lg text-xs font-bold transition-all relative ${
                 demoActiveTab === 'terminal'
-                  ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                  ? 'bg-crimson-600 text-white shadow-glow-red-sm'
                   : 'text-light-textSecondary dark:text-dark-400'
               }`}
             >
@@ -349,7 +349,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className={`h-[340px] sm:h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-xs ${demoActiveTab !== 'code' ? 'hidden lg:block' : ''}`}>
+            <div className={`h-[340px] sm:h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-white/10 shadow-xs ${demoActiveTab !== 'code' ? 'hidden lg:block' : ''}`}>
               <CodeEditor
                 code={demoCode}
                 language={selectedLang}
@@ -358,7 +358,7 @@ export const HomePage: React.FC = () => {
                 onRun={handleMobileQuickRun}
               />
             </div>
-            <div className={`h-[340px] sm:h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-[#232b4b] shadow-xs ${demoActiveTab !== 'terminal' ? 'hidden lg:block' : ''}`}>
+            <div className={`h-[340px] sm:h-[390px] rounded-2xl overflow-hidden border border-light-border dark:border-white/10 shadow-xs ${demoActiveTab !== 'terminal' ? 'hidden lg:block' : ''}`}>
               <OutputTerminal
                 ref={terminalRef}
                 result={result}
@@ -386,8 +386,8 @@ export const HomePage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Card 1: Hybrid AI */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#232b4b] shadow-card-light dark:shadow-md hover:border-light-blueBorder dark:hover:border-purple-500/40 transition-all space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-light-blueSoft dark:bg-gradient-to-tr dark:from-neon-blue dark:to-neon-purple text-light-blue dark:text-white flex items-center justify-center shadow-sm dark:shadow-brand-500/20 border border-light-blueBorder/40 dark:border-transparent">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0f0f13]/80 border border-light-border dark:border-white/10 shadow-card-light dark:shadow-md hover:border-crimson-500/40 transition-all space-y-4 hover:translate-y-[-2px]">
+            <div className="w-12 h-12 rounded-2xl bg-crimson-500/10 dark:bg-gradient-to-tr dark:from-crimson-600 dark:to-rose-700 text-crimson-600 dark:text-white flex items-center justify-center shadow-glow-red-sm border border-crimson-500/30 dark:border-transparent">
               <Bot className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold text-light-textStrong dark:text-white font-sans">CodeVault Hybrid AI</h3>
@@ -397,7 +397,7 @@ export const HomePage: React.FC = () => {
             <div className="pt-2">
               <button
                 onClick={toggleChat}
-                className="text-xs text-light-blue dark:text-purple-400 hover:underline font-bold inline-flex items-center gap-1.5"
+                className="text-xs text-crimson-600 dark:text-crimson-400 hover:underline font-bold inline-flex items-center gap-1.5"
               >
                 Open Assistant <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -405,8 +405,8 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Card 2: Interactive DSA */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#232b4b] shadow-card-light dark:shadow-md hover:border-amber-300 dark:hover:border-amber-500/40 transition-all space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-gradient-to-tr dark:from-amber-500 dark:to-orange-500 text-amber-600 dark:text-white flex items-center justify-center shadow-sm dark:shadow-amber-500/20 border border-amber-200 dark:border-transparent">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0f0f13]/80 border border-light-border dark:border-white/10 shadow-card-light dark:shadow-md hover:border-crimson-500/40 transition-all space-y-4 hover:translate-y-[-2px]">
+            <div className="w-12 h-12 rounded-2xl bg-crimson-500/10 dark:bg-gradient-to-tr dark:from-crimson-600 dark:to-rose-700 text-crimson-600 dark:text-white flex items-center justify-center shadow-glow-red-sm border border-crimson-500/30 dark:border-transparent">
               <GraduationCap className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold text-light-textStrong dark:text-white font-sans">My Class (Interactive DSA)</h3>
@@ -416,7 +416,7 @@ export const HomePage: React.FC = () => {
             <div className="pt-2">
               <Link
                 to="/my-class"
-                className="text-xs text-amber-600 dark:text-amber-400 hover:underline font-bold inline-flex items-center gap-1.5"
+                className="text-xs text-crimson-600 dark:text-crimson-400 hover:underline font-bold inline-flex items-center gap-1.5"
               >
                 Explore Lessons <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -424,8 +424,8 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Card 3: Practice & Check Judge */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#232b4b] shadow-card-light dark:shadow-md hover:border-emerald-300 dark:hover:border-emerald-500/40 transition-all space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-gradient-to-tr dark:from-emerald-500 dark:to-teal-500 text-emerald-600 dark:text-white flex items-center justify-center shadow-sm dark:shadow-emerald-500/20 border border-emerald-200 dark:border-transparent">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0f0f13]/80 border border-light-border dark:border-white/10 shadow-card-light dark:shadow-md hover:border-crimson-500/40 transition-all space-y-4 hover:translate-y-[-2px]">
+            <div className="w-12 h-12 rounded-2xl bg-crimson-500/10 dark:bg-gradient-to-tr dark:from-crimson-600 dark:to-rose-700 text-crimson-600 dark:text-white flex items-center justify-center shadow-glow-red-sm border border-crimson-500/30 dark:border-transparent">
               <Trophy className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold text-light-textStrong dark:text-white font-sans">Practice & Check Judge</h3>
@@ -435,7 +435,7 @@ export const HomePage: React.FC = () => {
             <div className="pt-2">
               <Link
                 to="/programs"
-                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-bold inline-flex items-center gap-1.5"
+                className="text-xs text-crimson-600 dark:text-crimson-400 hover:underline font-bold inline-flex items-center gap-1.5"
               >
                 Practice Coding <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -446,19 +446,19 @@ export const HomePage: React.FC = () => {
 
       {/* Feature Section: Creator & Curated Resources Spotlight */}
       <section className="max-w-6xl mx-auto px-4">
-        <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-br from-white via-purple-50/50 to-white dark:from-dark-900 dark:via-purple-950/20 dark:to-dark-900 p-8 shadow-card-light dark:shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="rounded-3xl border border-crimson-500/30 bg-gradient-to-br from-white via-rose-50/30 to-white dark:from-[#0f0f13] dark:via-crimson-950/20 dark:to-[#0f0f13] p-6 sm:p-8 shadow-card-light dark:shadow-xl relative overflow-hidden backdrop-blur-xl">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-crimson-500/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
               <img
                 src="/team/rupanjan.jpg"
                 alt="Coder Babuu"
-                className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-lg shadow-purple-500/20"
+                className="w-20 h-20 rounded-2xl object-cover border-2 border-crimson-500/40 shadow-glow-red-sm"
               />
               <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-xs font-semibold">
-                  <Sparkles className="w-3 h-3 text-amber-500" />
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-crimson-500/15 text-crimson-700 dark:text-crimson-300 border border-crimson-500/30 text-xs font-semibold">
+                  <Sparkles className="w-3 h-3 text-crimson-500 dark:text-crimson-400" />
                   <span>Creator & Free Resources</span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-light-textStrong dark:text-white">
@@ -472,7 +472,7 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/creator"
-              className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2 flex-shrink-0 hover:scale-[1.02]"
+              className="px-5 py-3 rounded-xl bg-crimson-600 hover:bg-crimson-700 dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 dark:hover:from-crimson-500 dark:hover:to-rose-500 text-white font-semibold text-sm shadow-glow-red-sm hover:shadow-glow-red transition-all flex items-center gap-2 flex-shrink-0 hover:scale-[1.02]"
             >
               <span>Explore All Resources</span>
               <ArrowRight className="w-4 h-4" />
@@ -499,8 +499,8 @@ export const HomePage: React.FC = () => {
               onClick={() => handleLangChange(lang.id)}
               className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between group shadow-card-light ${
                 selectedLang === lang.id
-                  ? 'bg-light-blueSoft border-light-blueBorder dark:bg-purple-950/40 dark:border-purple-500/60 shadow-sm'
-                  : 'bg-white dark:bg-dark-900/60 border-light-border dark:border-[#1b223c] hover:border-light-blueBorder dark:hover:border-[#232b4b] hover:bg-light-secondary dark:hover:bg-dark-850'
+                  ? 'bg-crimson-500/10 border-crimson-500/50 dark:bg-crimson-950/30 dark:border-crimson-500/50 shadow-glow-red-sm'
+                  : 'bg-white dark:bg-[#0f0f13]/80 border-light-border dark:border-white/10 hover:border-crimson-500/40 dark:hover:border-crimson-500/40 hover:bg-light-secondary dark:hover:bg-[#16161d]'
               }`}
             >
               <div className="flex items-center justify-between">

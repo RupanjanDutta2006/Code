@@ -7,6 +7,7 @@ import { AIChatProvider } from './context/AIChatContext';
 import { Navbar } from './components/Navbar';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { CodeVaultAIChat } from './components/CodeVaultAIChat';
+import { AnimatedRedBlackBackground } from './components/AnimatedRedBlackBackground';
 import { HomePage } from './pages/HomePage';
 import { ProgramsPage } from './pages/ProgramsPage';
 import { ProgramDetailPage } from './pages/ProgramDetailPage';
@@ -31,10 +32,13 @@ export const App: React.FC = () => {
         <OfflineProvider>
           <AIChatProvider>
             <BrowserRouter>
-              <div className="min-h-screen-dvh flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-200 selection:bg-neon-purple selection:text-white transition-colors duration-200 relative pb-16 md:pb-0">
+              <div className="min-h-screen-dvh flex flex-col bg-light-bg dark:bg-[#060608] text-slate-800 dark:text-dark-200 selection:bg-crimson-500 selection:text-white transition-colors duration-200 relative pb-16 md:pb-0">
+                {/* Ambient Red-Black Background System */}
+                <AnimatedRedBlackBackground />
+
                 <Navbar />
                 
-                <main className="flex-1 overflow-x-hidden">
+                <main className="flex-1 overflow-x-hidden relative z-10">
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/programs" element={<ProgramsPage />} />
@@ -64,19 +68,19 @@ export const App: React.FC = () => {
                 <CodeVaultAIChat />
 
                 {/* Footer */}
-                <footer className="border-t border-slate-200/80 dark:border-[#1b223c] bg-white/70 dark:bg-dark-950/80 py-8 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-xl transition-colors duration-200 mb-14 md:mb-0">
+                <footer className="border-t border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-[#08080c]/80 py-8 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-xl transition-colors duration-200 mb-14 md:mb-0 relative z-10">
                   <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
                       <span className="font-bold text-slate-900 dark:text-white">CodeVault Pro</span> — Next-Gen AI Code Platform & Interactive Learning Studio.
                     </div>
                     <div className="flex items-center gap-4 text-slate-400 dark:text-dark-400">
-                      <Link to="/about" className="hover:text-purple-400 transition-colors">Documentation</Link>
+                      <Link to="/about" className="hover:text-crimson-400 transition-colors">Documentation</Link>
                       <span>•</span>
-                      <Link to="/creator" className="hover:text-purple-400 transition-colors font-medium">Creator</Link>
+                      <Link to="/creator" className="hover:text-crimson-400 transition-colors font-medium">Creator</Link>
                       <span>•</span>
-                      <Link to="/contact" className="hover:text-cyan-400 transition-colors font-medium">Contact & Team</Link>
+                      <Link to="/contact" className="hover:text-crimson-400 transition-colors font-medium">Contact & Team</Link>
                       <span>•</span>
-                      <Link to="/developer/github-connect" className="hover:text-emerald-400 transition-colors font-mono text-[11px] text-dark-500">GitHub Connect</Link>
+                      <Link to="/developer/github-connect" className="hover:text-crimson-400 transition-colors font-mono text-[11px] text-dark-500">GitHub Connect</Link>
                     </div>
                   </div>
                 </footer>

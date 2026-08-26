@@ -226,10 +226,10 @@ export const PlaygroundPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Playground Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-light-border dark:border-dark-700/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-light-border dark:border-white/10">
         <div className="space-y-0.5 sm:space-y-1">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-500/20 text-accent-violet flex items-center justify-center shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-crimson-500/15 text-crimson-500 dark:text-crimson-400 flex items-center justify-center shrink-0 border border-crimson-500/30">
               <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <h1 className="text-base sm:text-xl font-bold text-light-textStrong dark:text-white tracking-tight">
@@ -249,14 +249,14 @@ export const PlaygroundPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Peers List */}
           {peers.length > 0 && (
-            <div className="flex items-center gap-1.5 bg-light-secondary dark:bg-dark-900 border border-light-border dark:border-dark-700 px-2.5 py-1 rounded-xl text-xs">
+            <div className="flex items-center gap-1.5 bg-light-secondary dark:bg-[#121217] border border-light-border dark:border-white/10 px-2.5 py-1 rounded-xl text-xs">
               <span className="text-light-textMuted dark:text-dark-400 font-medium text-[11px]">Peers:</span>
               <div className="flex items-center -space-x-1 overflow-hidden">
                 {peers.map((peer, i) => (
                   <div
                     key={i}
                     style={{ backgroundColor: peer.color }}
-                    className="w-5 h-5 rounded-full text-dark-950 font-bold text-[9px] flex items-center justify-center border border-white dark:border-dark-900"
+                    className="w-5 h-5 rounded-full text-dark-950 font-bold text-[9px] flex items-center justify-center border border-white dark:border-[#121217]"
                     title={peer.name}
                   >
                     {peer.name.substring(0, 1).toUpperCase()}
@@ -270,7 +270,7 @@ export const PlaygroundPage: React.FC = () => {
           <select
             value={language}
             onChange={(e) => handleLanguageChange(e.target.value)}
-            className="bg-light-secondary dark:bg-dark-850 border border-light-borderStrong dark:border-dark-700 text-light-textStrong dark:text-dark-200 text-xs rounded-xl px-2.5 py-1.5 outline-none focus:border-brand-500 font-mono touch-target"
+            className="bg-light-secondary dark:bg-[#121217] border border-light-borderStrong dark:border-white/10 text-light-textStrong dark:text-dark-200 text-xs rounded-xl px-2.5 py-1.5 outline-none focus:border-crimson-500 font-mono touch-target"
             aria-label="Programming language"
           >
             {LANGUAGES.map((l) => (
@@ -283,7 +283,7 @@ export const PlaygroundPage: React.FC = () => {
           {/* Share Button */}
           <button
             onClick={handleShareLink}
-            className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 touch-target"
+            className="px-3 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-700 text-white text-xs font-semibold shadow-glow-red-sm transition-all flex items-center gap-1.5 touch-target hover:scale-105"
             title="Copy room link"
           >
             {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
@@ -293,13 +293,13 @@ export const PlaygroundPage: React.FC = () => {
       </div>
 
       {/* Mobile Tab Control Bar (Only visible on small/medium screens) */}
-      <div className="lg:hidden flex items-center justify-between p-1 bg-light-secondary dark:bg-dark-900 rounded-2xl border border-light-border dark:border-dark-700">
+      <div className="lg:hidden flex items-center justify-between p-1 bg-light-secondary dark:bg-[#0e0e13] rounded-2xl border border-light-border dark:border-white/10">
         <div className="grid grid-cols-3 gap-1 flex-1">
           <button
             onClick={() => setActiveTab('code')}
             className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'code'
-                ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                ? 'bg-crimson-600 text-white shadow-glow-red-sm'
                 : 'text-light-textSecondary dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white'
             }`}
           >
@@ -309,7 +309,7 @@ export const PlaygroundPage: React.FC = () => {
             onClick={() => setActiveTab('stdin')}
             className={`py-2 px-3 rounded-xl text-xs font-bold transition-all relative ${
               activeTab === 'stdin'
-                ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                ? 'bg-crimson-600 text-white shadow-glow-red-sm'
                 : 'text-light-textSecondary dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white'
             }`}
           >
@@ -322,7 +322,7 @@ export const PlaygroundPage: React.FC = () => {
             onClick={() => setActiveTab('terminal')}
             className={`py-2 px-3 rounded-xl text-xs font-bold transition-all relative ${
               activeTab === 'terminal'
-                ? 'bg-light-blue text-white shadow-xs dark:bg-brand-600'
+                ? 'bg-crimson-600 text-white shadow-glow-red-sm'
                 : 'text-light-textSecondary dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white'
             }`}
           >
@@ -336,7 +336,7 @@ export const PlaygroundPage: React.FC = () => {
         <button
           onClick={handleRunAndSwitch}
           disabled={running}
-          className="ml-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 disabled:opacity-50 touch-target"
+          className="ml-2 px-3.5 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-700 text-white text-xs font-bold shadow-glow-red-sm flex items-center gap-1.5 disabled:opacity-50 touch-target hover:scale-105"
         >
           <Play className="w-3.5 h-3.5 fill-white" />
           <span>{running ? '...' : 'Run'}</span>
@@ -356,7 +356,7 @@ export const PlaygroundPage: React.FC = () => {
             </span>
           </div>
 
-          <div className="h-[420px] sm:h-[500px] rounded-2xl overflow-hidden border border-light-border dark:border-dark-700 shadow-xs">
+          <div className="h-[420px] sm:h-[500px] rounded-2xl overflow-hidden border border-light-border dark:border-white/10 shadow-xs">
             <CodeEditor
               code={code}
               language={language}
@@ -378,7 +378,7 @@ export const PlaygroundPage: React.FC = () => {
             </span>
           </div>
 
-          <div className="h-[420px] rounded-2xl p-4 bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 flex flex-col space-y-3">
+          <div className="h-[420px] rounded-2xl p-4 bg-white dark:bg-[#0f0f13]/90 border border-light-border dark:border-white/10 flex flex-col space-y-3">
             <label className="text-xs text-light-textSecondary dark:text-dark-300 font-medium">
               Enter input lines below (e.g. test cases, numbers, strings):
             </label>
@@ -386,12 +386,12 @@ export const PlaygroundPage: React.FC = () => {
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
               placeholder="Enter stdin input for your program here..."
-              className="flex-1 w-full p-3 rounded-xl bg-light-secondary dark:bg-dark-950 border border-light-borderStrong dark:border-dark-700 text-xs font-mono outline-none focus:border-brand-500 resize-none"
+              className="flex-1 w-full p-3 rounded-xl bg-light-secondary dark:bg-[#141419] border border-light-borderStrong dark:border-white/10 text-xs font-mono outline-none focus:border-crimson-500 resize-none text-light-textStrong dark:text-white"
             />
             <button
               onClick={handleRunAndSwitch}
               disabled={running}
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm touch-target"
+              className="w-full py-3 rounded-xl bg-crimson-600 hover:bg-crimson-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-glow-red-sm touch-target"
             >
               <Play className="w-4 h-4 fill-white" />
               <span>Run Code with This Stdin</span>
@@ -409,14 +409,14 @@ export const PlaygroundPage: React.FC = () => {
             <button
               onClick={handleRunAndSwitch}
               disabled={running}
-              className="hidden lg:flex px-4 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-xs transition-all items-center gap-2 disabled:opacity-50"
+              className="hidden lg:flex px-4 py-1.5 rounded-xl bg-gradient-to-r from-crimson-600 to-rose-600 hover:from-crimson-500 hover:to-rose-500 text-white text-xs font-bold shadow-glow-red-sm transition-all items-center gap-2 disabled:opacity-50 hover:scale-105"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
               <span>{running ? 'Running...' : 'Run Code'}</span>
             </button>
           </div>
 
-          <div className="h-[420px] sm:h-[500px] rounded-2xl overflow-hidden border border-light-border dark:border-dark-700 shadow-xs">
+          <div className="h-[420px] sm:h-[500px] rounded-2xl overflow-hidden border border-light-border dark:border-white/10 shadow-xs">
             <OutputTerminal
               result={result}
               isRunning={running}

@@ -72,14 +72,14 @@ export const PlaybackControlBar: React.FC<PlaybackControlBarProps> = ({
   }, [isPlaying, onPlay, onPause, onNext, onPrevious, onRestart]);
 
   return (
-    <div className="rounded-2xl border border-light-border dark:border-dark-700/80 bg-white dark:bg-dark-900/95 p-4 sm:p-5 shadow-card-light dark:shadow-2xl flex flex-col space-y-4 transition-colors duration-200">
+    <div className="rounded-2xl border border-light-border dark:border-white/10 bg-white dark:bg-[#0f0f13]/90 p-4 sm:p-5 shadow-card-light dark:shadow-2xl flex flex-col space-y-4 transition-colors duration-200 backdrop-blur-xl">
       {/* Timeline Slider */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center justify-between sm:justify-start gap-3 w-full">
           <span className="font-mono text-xs font-bold text-light-textStrong dark:text-dark-200 select-none">
             Timeline
           </span>
-          <span className="px-2.5 py-0.5 rounded-full bg-light-blueSoft dark:bg-dark-800 border border-light-blueBorder/40 dark:border-dark-700 font-mono text-xs font-bold text-light-blue dark:text-brand-400 select-none">
+          <span className="px-2.5 py-0.5 rounded-full bg-crimson-500/10 dark:bg-crimson-500/15 border border-crimson-500/30 font-mono text-xs font-bold text-crimson-600 dark:text-crimson-400 select-none">
             Step {currentStepIndex + 1} / {totalSteps}
           </span>
         </div>
@@ -92,23 +92,23 @@ export const PlaybackControlBar: React.FC<PlaybackControlBarProps> = ({
             max={Math.max(0, totalSteps - 1)}
             value={currentStepIndex}
             onChange={(e) => onStepChange(Number(e.target.value))}
-            className="w-full h-2 bg-slate-200 dark:bg-dark-800 rounded-lg appearance-none cursor-pointer accent-light-blue dark:accent-brand-500"
+            className="w-full h-2 bg-slate-200 dark:bg-[#141419] rounded-lg appearance-none cursor-pointer accent-crimson-500"
             title="Drag to jump steps"
           />
         </div>
       </div>
 
       {/* Action Buttons & Speed Selector */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-light-border dark:border-dark-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-light-border dark:border-white/10">
         {/* Left: Playback Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Restart */}
           <button
             onClick={onRestart}
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-light-secondary hover:bg-white text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 dark:text-dark-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-card-light"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-light-secondary hover:bg-white text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-[#141419] dark:hover:bg-[#1c1c24] dark:border-white/10 dark:text-dark-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-card-light hover:border-crimson-500/40"
             title="Restart simulation (R)"
           >
-            <RotateCcw className="w-4 h-4 text-light-textMuted dark:text-slate-500" />
+            <RotateCcw className="w-4 h-4 text-light-textMuted dark:text-dark-400" />
             <span className="hidden sm:inline">Restart</span>
           </button>
 
@@ -116,10 +116,10 @@ export const PlaybackControlBar: React.FC<PlaybackControlBarProps> = ({
           <button
             onClick={onPrevious}
             disabled={currentStepIndex === 0}
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-light-secondary hover:bg-white text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 disabled:opacity-40 dark:text-dark-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-card-light"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-light-secondary hover:bg-white text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-[#141419] dark:hover:bg-[#1c1c24] dark:border-white/10 disabled:opacity-40 dark:text-crimson-400 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-card-light hover:border-crimson-500/40"
             title="Previous Step (Left Arrow)"
           >
-            <SkipBack className="w-4 h-4 text-light-blue dark:text-brand-500" />
+            <SkipBack className="w-4 h-4 text-crimson-600 dark:text-crimson-400" />
             <span className="hidden sm:inline">Prev</span>
           </button>
 
@@ -136,7 +136,7 @@ export const PlaybackControlBar: React.FC<PlaybackControlBarProps> = ({
           ) : (
             <button
               onClick={onPlay}
-              className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm dark:shadow-lg dark:shadow-brand-500/25 transition-transform active:scale-95"
+              className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-700 dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-glow-red-sm transition-transform active:scale-95 hover:scale-105"
               title="Play (Space)"
             >
               <Play className="w-4 h-4 fill-white" />
@@ -148,27 +148,27 @@ export const PlaybackControlBar: React.FC<PlaybackControlBarProps> = ({
           <button
             onClick={onNext}
             disabled={currentStepIndex >= totalSteps - 1}
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-light-secondary hover:bg-white text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 disabled:opacity-40 dark:text-dark-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-card-light"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-light-secondary hover:bg-white text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-[#141419] dark:hover:bg-[#1c1c24] dark:border-white/10 disabled:opacity-40 dark:text-crimson-400 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-card-light hover:border-crimson-500/40"
             title="Next Step (Right Arrow)"
           >
             <span className="hidden sm:inline">Next</span>
-            <SkipForward className="w-4 h-4 text-light-blue dark:text-brand-500" />
+            <SkipForward className="w-4 h-4 text-crimson-600 dark:text-crimson-400" />
           </button>
 
           {/* Jump To End */}
           <button
             onClick={onJumpToEnd}
             disabled={currentStepIndex >= totalSteps - 1}
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-light-secondary hover:bg-white text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-dark-800 dark:hover:bg-dark-750 disabled:opacity-40 dark:text-dark-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-card-light"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-light-secondary hover:bg-white text-light-textNormal hover:text-light-textStrong border border-light-border dark:bg-[#141419] dark:hover:bg-[#1c1c24] dark:border-white/10 disabled:opacity-40 dark:text-dark-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-card-light hover:border-crimson-500/40"
             title="Jump to End"
           >
-            <FastForward className="w-4 h-4 text-light-textMuted dark:text-slate-500" />
+            <FastForward className="w-4 h-4 text-light-textMuted dark:text-dark-400" />
           </button>
         </div>
 
         {/* Right: Speed Control */}
-        <div className="flex items-center gap-1 bg-light-secondary dark:bg-dark-800/90 p-1 rounded-xl border border-light-border dark:border-dark-700 shadow-card-light">
-          <Gauge className="w-3.5 h-3.5 text-light-textMuted dark:text-slate-400 mx-1 hidden sm:block" />
+        <div className="flex items-center gap-1 bg-light-secondary dark:bg-[#141419] p-1 rounded-xl border border-light-border dark:border-white/10 shadow-card-light">
+          <Gauge className="w-3.5 h-3.5 text-light-textMuted dark:text-dark-400 mx-1 hidden sm:block" />
           {(['slow', 'normal', 'fast'] as PlaybackSpeed[]).map((spd) => {
             const label = spd === 'slow' ? 'Slow' : spd === 'normal' ? 'Normal' : 'Fast';
             const hint =
@@ -185,7 +185,7 @@ export const PlaybackControlBar: React.FC<PlaybackControlBarProps> = ({
                 title={hint}
                 className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
                   speed === spd
-                    ? 'bg-white dark:bg-dark-700 text-light-blue dark:text-white shadow-sm'
+                    ? 'bg-crimson-600 text-white shadow-glow-red-sm'
                     : 'text-light-textSecondary dark:text-dark-400 hover:text-light-textStrong dark:hover:text-white'
                 }`}
               >

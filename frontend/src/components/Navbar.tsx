@@ -38,20 +38,20 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 dark:bg-dark-950/90 backdrop-blur-md border-b border-[#E5E9F0] dark:border-[#1e2746]/80 px-3 sm:px-6 py-2.5 sm:py-3 transition-colors duration-200 shadow-[0_1px_3px_rgba(16,24,40,0.04)]">
+    <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#08080c]/85 backdrop-blur-xl border-b border-[#E5E9F0] dark:border-white/10 px-3 sm:px-6 py-2.5 sm:py-3 transition-colors duration-200 shadow-[0_1px_3px_rgba(16,24,40,0.04)]">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
         
         {/* Brand Logo - Compact on mobile, expanded on desktop */}
         <Link to="/" className="flex items-center gap-2 sm:gap-3 group shrink-0 touch-target">
           <div className="relative">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-light-blue via-indigo-600 to-purple-600 dark:from-neon-blue dark:via-brand-600 dark:to-neon-purple flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-all duration-300">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-crimson-600 via-red-600 to-rose-600 flex items-center justify-center text-white shadow-glow-red-sm group-hover:scale-105 transition-all duration-300">
               <Code2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div className="absolute -inset-1 bg-gradient-to-r from-light-blue to-purple-600 rounded-2xl blur opacity-25 dark:opacity-40 group-hover:opacity-60 transition duration-300 -z-10" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-crimson-500 to-red-700 rounded-2xl blur opacity-25 dark:opacity-40 group-hover:opacity-60 transition duration-300 -z-10" />
           </div>
           <div>
             <span className="font-extrabold text-base sm:text-lg tracking-tight text-light-textStrong dark:text-white flex items-center gap-1 font-sans">
-              CodeVault <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-light-blueSoft text-light-blue dark:bg-purple-500/20 dark:text-purple-300 font-bold border border-light-blueBorder/40 dark:border-purple-500/30">PRO</span>
+              CodeVault <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-crimson-500/15 text-crimson-500 dark:text-crimson-400 font-bold border border-crimson-500/30">PRO</span>
             </span>
             <span className="hidden sm:block text-[10px] text-light-textMuted dark:text-dark-400 -mt-1 font-medium">Next-Gen Code & AI Platform</span>
           </div>
@@ -67,13 +67,13 @@ export const Navbar: React.FC = () => {
         )}
 
         {/* Desktop Navigation Links (Hidden on mobile - mobile uses MobileBottomNav) */}
-        <div className="hidden lg:flex items-center gap-1 bg-light-secondary dark:bg-dark-900/60 p-1 rounded-2xl border border-light-border dark:border-[#1b223c]">
+        <div className="hidden lg:flex items-center gap-1 bg-light-secondary dark:bg-[#111116]/80 p-1 rounded-2xl border border-light-border dark:border-white/10">
           <Link
             to="/"
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
               isActive('/') && location.pathname === '/'
-                ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
-                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
+                ? 'text-white bg-crimson-600 shadow-sm dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 dark:shadow-glow-red-sm' 
+                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-[#1c1c24]'
             }`}
           >
             Home
@@ -83,11 +83,11 @@ export const Navbar: React.FC = () => {
             to="/programs"
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
               isActive('/programs') 
-                ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
-                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
+                ? 'text-white bg-crimson-600 shadow-sm dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 dark:shadow-glow-red-sm' 
+                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-[#1c1c24]'
             }`}
           >
-            <Layers className="w-3.5 h-3.5 text-brand-500 dark:text-brand-400" />
+            <Layers className="w-3.5 h-3.5 text-crimson-500 dark:text-crimson-400" />
             Programs
           </Link>
 
@@ -95,11 +95,11 @@ export const Navbar: React.FC = () => {
             to="/my-class"
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
               isActive('/my-class') 
-                ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
-                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
+                ? 'text-white bg-crimson-600 shadow-sm dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 dark:shadow-glow-red-sm' 
+                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-[#1c1c24]'
             }`}
           >
-            <GraduationCap className="w-3.5 h-3.5 text-amber-500 dark:text-accent-amber" />
+            <GraduationCap className="w-3.5 h-3.5 text-crimson-500 dark:text-crimson-400" />
             My Class
           </Link>
 
@@ -107,11 +107,11 @@ export const Navbar: React.FC = () => {
             to="/playground"
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
               isActive('/playground') 
-                ? 'text-white bg-light-blue shadow-sm dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 dark:shadow-brand-500/25' 
-                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-dark-800'
+                ? 'text-white bg-crimson-600 shadow-sm dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 dark:shadow-glow-red-sm' 
+                : 'text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:bg-white dark:hover:bg-[#1c1c24]'
             }`}
           >
-            <Users className="w-3.5 h-3.5 text-purple-600 dark:text-accent-violet" />
+            <Users className="w-3.5 h-3.5 text-crimson-500 dark:text-crimson-400" />
             Playground
           </Link>
 
@@ -175,14 +175,14 @@ export const Navbar: React.FC = () => {
           {/* Quick AI Assistant Trigger in Navbar */}
           <button
             onClick={toggleChat}
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-light-blueSoft dark:bg-gradient-to-r dark:from-purple-950/50 dark:to-dark-900 border border-light-blueBorder/50 dark:border-purple-500/40 text-light-blue dark:text-purple-300 text-xs font-bold shadow-xs hover:shadow-sm transition-all duration-200 hover:scale-105 group"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-crimson-500/10 dark:bg-[#141418] border border-crimson-500/30 text-crimson-600 dark:text-crimson-400 text-xs font-bold shadow-xs hover:shadow-glow-red-sm transition-all duration-200 hover:scale-105 group"
             title="Open CodeVault AI Assistant"
           >
             <div className="relative">
-              <Sparkles className="w-3.5 h-3.5 text-light-blue dark:text-neon-purple group-hover:rotate-12 transition-transform" />
+              <Sparkles className="w-3.5 h-3.5 text-crimson-500 dark:text-crimson-400 group-hover:rotate-12 transition-transform" />
               <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
                 offlineState.status === 'ready' 
-                  ? 'bg-cyan-500' 
+                  ? 'bg-crimson-400' 
                   : healthStatus === 'ONLINE_HEALTHY' 
                   ? 'bg-emerald-500' 
                   : 'bg-amber-500'
@@ -194,11 +194,11 @@ export const Navbar: React.FC = () => {
           {/* Theme Toggle Button (Touch-friendly 44px min target) */}
           <button
             onClick={toggleTheme}
-            className="w-10 h-10 rounded-xl bg-light-secondary dark:bg-dark-900 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white border border-light-border dark:border-[#1b223c] flex items-center justify-center transition-all shadow-xs"
+            className="w-10 h-10 rounded-xl bg-light-secondary dark:bg-[#111116] text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white border border-light-border dark:border-white/10 flex items-center justify-center transition-all shadow-xs hover:border-crimson-500/40"
             title={isDark ? "Switch to Light Theme" : "Switch to Dark Theme"}
             aria-label="Toggle light and dark theme"
           >
-            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-light-blue" />}
+            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-crimson-500" />}
           </button>
 
           {/* User Profile / Auth State */}
@@ -209,7 +209,7 @@ export const Navbar: React.FC = () => {
               </span>
               <button
                 onClick={logout}
-                className="w-10 h-10 rounded-xl bg-light-secondary dark:bg-dark-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-light-textMuted dark:text-dark-400 hover:text-rose-600 dark:hover:text-rose-400 border border-light-border dark:border-[#1b223c] flex items-center justify-center transition-all shadow-xs"
+                className="w-10 h-10 rounded-xl bg-light-secondary dark:bg-[#111116] hover:bg-rose-50 dark:hover:bg-rose-950/40 text-light-textMuted dark:text-dark-400 hover:text-crimson-500 dark:hover:text-crimson-400 border border-light-border dark:border-white/10 flex items-center justify-center transition-all shadow-xs"
                 title="Log Out"
                 aria-label="Log out"
               >
@@ -219,7 +219,7 @@ export const Navbar: React.FC = () => {
           ) : (
             <Link
               to="/login"
-              className="h-10 px-3.5 rounded-xl bg-light-blue hover:bg-light-blueHover dark:bg-gradient-to-r dark:from-brand-600 dark:to-indigo-600 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all"
+              className="h-10 px-3.5 rounded-xl bg-crimson-600 hover:bg-crimson-700 dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all shadow-glow-red-sm hover:scale-105"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Login</span>
@@ -229,7 +229,7 @@ export const Navbar: React.FC = () => {
           {/* Mobile Secondary Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden w-10 h-10 rounded-xl bg-light-secondary dark:bg-dark-900 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white border border-light-border dark:border-[#1b223c] flex items-center justify-center transition-all shadow-xs"
+            className="lg:hidden w-10 h-10 rounded-xl bg-light-secondary dark:bg-[#111116] text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white border border-light-border dark:border-white/10 flex items-center justify-center transition-all shadow-xs"
             aria-label="More navigation items"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

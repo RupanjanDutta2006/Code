@@ -24,33 +24,49 @@ export default {
           blueSoft: '#EEF5FF',
           blueBorder: '#65A1EF',
         },
+        crimson: {
+          50: '#fff1f2',
+          100: '#ffe4e6',
+          200: '#fecdd3',
+          300: '#fda4af',
+          400: '#fb7185',
+          500: '#ff4d5a', // Primary vibrant crimson red
+          600: '#e11d48',
+          700: '#be123c',
+          800: '#9f1239',
+          900: '#881337',
+          950: '#4c0519',
+        },
         dark: {
-          950: '#040308', // Deepest OkyAi obsidian black
-          900: '#080a14', // Deep navy black
-          850: '#0e1222', // Card backdrop
-          800: '#141a2e', // Elevated panel
-          750: '#1b223c', // Border / subtle highlight
-          700: '#232b4b', // Inset / Divider
-          600: '#333d66',
-          500: '#52608f',
-          400: '#8f97a6',
-          300: '#b8c0cc',
-          200: '#d0d3d8',
-          100: '#f1f4f9',
+          950: '#060608', // Deep pitch black
+          900: '#0a0a0d', // Ultra deep charcoal
+          850: '#111115', // Dark glass backdrop
+          800: '#17171d', // Elevated panel
+          750: '#202028', // Border / subtle highlight
+          700: '#2a2a34', // Divider
+          600: '#3d3d4b',
+          500: '#585868',
+          400: '#8a8a9a',
+          300: '#b8b8c8',
+          200: '#dcdce5',
+          100: '#f2f2f8',
         },
         brand: {
-          50: '#f0f3ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#3730a3',
-          800: '#241a8a',
-          900: '#1e1470',
+          50: '#fff1f2',
+          100: '#ffe4e6',
+          200: '#fecdd3',
+          300: '#fda4af',
+          400: '#fb7185',
+          500: '#ff4d5a',
+          600: '#e11d48',
+          700: '#be123c',
+          800: '#9f1239',
+          900: '#881337',
         },
         neon: {
+          red: '#ff334b',
+          crimson: '#ff4d5a',
+          ruby: '#e11d48',
           blue: '#3412fd',
           purple: '#880acc',
           cyan: '#00f0ff',
@@ -59,6 +75,7 @@ export default {
           indigo: '#5b21b6',
         },
         accent: {
+          red: '#ff4d5a',
           cyan: '#06b6d4',
           emerald: '#10b981',
           amber: '#f59e0b',
@@ -74,11 +91,14 @@ export default {
         'subtle': '0 1px 3px rgba(16, 24, 40, 0.04), 0 1px 2px rgba(16, 24, 40, 0.03)',
         'card-light': '0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04)',
         'card-hover-light': '0 8px 24px -4px rgba(16, 24, 40, 0.08), 0 2px 6px -1px rgba(16, 24, 40, 0.04)',
+        'glow-red': '0 0 25px -4px rgba(255, 77, 90, 0.45)',
+        'glow-red-lg': '0 0 45px -8px rgba(255, 77, 90, 0.35)',
+        'glow-red-sm': '0 0 14px -2px rgba(255, 77, 90, 0.5)',
         'neon-blue': '0 0 25px -4px rgba(52, 18, 253, 0.45)',
         'neon-purple': '0 0 25px -4px rgba(136, 10, 204, 0.45)',
         'neon-cyan': '0 0 25px -4px rgba(0, 240, 255, 0.35)',
-        'glass-card': '0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-        'glass-hover': '0 24px 48px -12px rgba(136, 10, 204, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+        'glass-card': '0 16px 40px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+        'glass-hover': '0 20px 48px -10px rgba(255, 77, 90, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
       },
       animation: {
         'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -87,6 +107,8 @@ export default {
         'slide-down': 'slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-left': 'slideLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
         'glow-pulse': 'glowPulse 4s ease-in-out infinite',
+        'aurora-slow': 'auroraSlow 16s ease-in-out infinite alternate',
+        'aurora-float': 'auroraFloat 22s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -108,6 +130,17 @@ export default {
         glowPulse: {
           '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
           '50%': { opacity: '0.7', transform: 'scale(1.05)' },
+        },
+        auroraSlow: {
+          '0%': { transform: 'translate(0px, 0px) scale(1)', opacity: '0.25' },
+          '50%': { transform: 'translate(40px, -30px) scale(1.15)', opacity: '0.45' },
+          '100%': { transform: 'translate(-30px, 20px) scale(0.95)', opacity: '0.3' },
+        },
+        auroraFloat: {
+          '0%': { transform: 'rotate(0deg) translate(0px, 0px) scale(1)' },
+          '33%': { transform: 'rotate(120deg) translate(30px, -40px) scale(1.1)' },
+          '66%': { transform: 'rotate(240deg) translate(-30px, 20px) scale(0.95)' },
+          '100%': { transform: 'rotate(360deg) translate(0px, 0px) scale(1)' },
         },
       }
     },

@@ -32,27 +32,27 @@ export const CodeViewerPanel: React.FC<CodeViewerPanelProps> = ({
   }, [activeLineNumber]);
 
   return (
-    <div className="flex flex-col h-full rounded-2xl border border-slate-300 dark:border-dark-700/80 bg-slate-950 text-slate-100 overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full rounded-2xl border border-light-border dark:border-white/10 bg-[#08080c] text-slate-100 overflow-hidden shadow-xl">
       {/* Code Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 select-none">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#0e0e13] border-b border-white/10 select-none">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+            <span className="w-2.5 h-2.5 rounded-full bg-crimson-500/80" />
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
           </div>
-          <span className="text-xs font-mono font-semibold text-slate-300 ml-2">
+          <span className="text-xs font-mono font-semibold text-dark-200 ml-2">
             Source Code
           </span>
         </div>
 
         {/* Language Selector */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-slate-400 font-mono">Language:</span>
+          <span className="text-[11px] text-dark-400 font-mono">Language:</span>
           <select
             value={selectedLanguage}
             onChange={(e) => onSelectLanguage(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-2.5 py-1 font-mono outline-none focus:border-brand-500 transition-colors"
+            className="bg-[#14141a] border border-white/10 text-white text-xs rounded-lg px-2.5 py-1 font-mono outline-none focus:border-crimson-500 transition-colors"
           >
             {availableLanguages.map((lang) => (
               <option key={lang} value={lang}>
@@ -78,14 +78,14 @@ export const CodeViewerPanel: React.FC<CodeViewerPanelProps> = ({
               ref={isActive ? activeLineRef : null}
               className={`flex items-center gap-3 px-2 py-0.5 rounded-md transition-all duration-200 ${
                 isActive
-                  ? 'bg-brand-500/25 border-l-4 border-brand-400 text-white font-medium shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-900/50'
+                  ? 'bg-crimson-500/25 border-l-4 border-crimson-500 text-white font-medium shadow-sm'
+                  : 'text-dark-300 hover:bg-[#121218]/60'
               }`}
             >
               {/* Active Arrow Indicator */}
               <div className="w-4 flex items-center justify-center">
                 {isActive ? (
-                  <Play className="w-3 h-3 text-brand-400 fill-brand-400 animate-pulse" />
+                  <Play className="w-3 h-3 text-crimson-400 fill-crimson-400 animate-pulse" />
                 ) : (
                   <span className="w-3" />
                 )}
@@ -94,7 +94,7 @@ export const CodeViewerPanel: React.FC<CodeViewerPanelProps> = ({
               {/* Line Number */}
               <span
                 className={`w-6 text-right select-none font-mono text-[11px] ${
-                  isActive ? 'text-brand-300 font-bold' : 'text-slate-600'
+                  isActive ? 'text-crimson-400 font-bold' : 'text-dark-500'
                 }`}
               >
                 {lineNum}

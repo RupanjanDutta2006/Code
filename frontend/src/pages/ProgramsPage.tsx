@@ -76,7 +76,7 @@ export const ProgramsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-1 sm:pb-2">
         <div>
           <h1 className="text-xl sm:text-4xl font-extrabold text-light-textStrong dark:text-white flex items-center gap-2.5 sm:gap-3 font-sans">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-light-blue dark:bg-gradient-to-tr dark:from-neon-blue dark:to-neon-purple text-white flex items-center justify-center shadow-md dark:shadow-brand-500/25 shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-crimson-600 dark:bg-gradient-to-tr dark:from-crimson-600 dark:to-rose-600 text-white flex items-center justify-center shadow-glow-red-sm shrink-0">
               <Layers className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             Programs Library
@@ -94,7 +94,7 @@ export const ProgramsPage: React.FC = () => {
             placeholder="Search programs by title..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white dark:bg-[#0e1222]/90 border border-light-borderStrong dark:border-[#232b4b] rounded-2xl text-sm sm:text-xs text-light-textStrong dark:text-white placeholder-light-textMuted dark:placeholder-dark-400 focus:border-light-blue dark:focus:border-purple-500 outline-none transition-colors shadow-xs touch-target"
+            className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white dark:bg-[#0e0e13]/90 border border-light-borderStrong dark:border-white/10 rounded-2xl text-sm sm:text-xs text-light-textStrong dark:text-white placeholder-light-textMuted dark:placeholder-dark-400 focus:border-crimson-500 outline-none transition-colors shadow-xs touch-target"
           />
         </form>
       </div>
@@ -107,8 +107,8 @@ export const ProgramsPage: React.FC = () => {
             onClick={() => setSelectedLang(f.id)}
             className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all border shadow-card-light ${
               selectedLang === f.id
-                ? 'bg-light-blue border-light-blue text-white shadow-sm dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple dark:border-purple-400 dark:shadow-md dark:shadow-brand-500/25 scale-105'
-                : 'bg-white dark:bg-dark-900/80 border-light-border dark:border-[#1b223c] text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:border-light-blueBorder dark:hover:border-purple-500/30'
+                ? 'bg-crimson-600 border-crimson-500 text-white shadow-glow-red-sm dark:bg-gradient-to-r dark:from-crimson-600 dark:to-rose-600 dark:border-crimson-400 scale-105'
+                : 'bg-white dark:bg-[#111116]/80 border-light-border dark:border-white/10 text-light-textNormal dark:text-dark-300 hover:text-light-textStrong dark:hover:text-white hover:border-crimson-500/30 dark:hover:border-crimson-500/30'
             }`}
           >
             {f.name}
@@ -122,7 +122,7 @@ export const ProgramsPage: React.FC = () => {
           Loading CodeVault program repository...
         </div>
       ) : programs.length === 0 ? (
-        <div className="py-20 text-center text-light-textSecondary dark:text-dark-400 bg-white dark:bg-dark-900/80 rounded-3xl border border-light-border dark:border-[#232b4b] space-y-3 shadow-card-light">
+        <div className="py-20 text-center text-light-textSecondary dark:text-dark-400 bg-white dark:bg-[#0e0e13]/80 rounded-3xl border border-light-border dark:border-white/10 space-y-3 shadow-card-light">
           <p className="text-base font-bold text-light-textStrong dark:text-white">No programs found.</p>
           <p className="text-xs text-light-textMuted dark:text-dark-300">Try adjusting your search query or language filter.</p>
         </div>
@@ -132,20 +132,20 @@ export const ProgramsPage: React.FC = () => {
             <Link
               key={p.id}
               to={`/programs/${p.id}`}
-              className="group p-6 rounded-3xl bg-white dark:bg-[#0e1222]/80 border border-light-border dark:border-[#232b4b] hover:border-light-blueBorder dark:hover:border-purple-500/40 transition-all duration-200 flex flex-col justify-between shadow-card-light hover:shadow-card-hover-light"
+              className="group p-6 rounded-3xl bg-white dark:bg-[#0f0f13]/85 border border-light-border dark:border-white/10 hover:border-crimson-500/40 dark:hover:border-crimson-500/40 transition-all duration-200 flex flex-col justify-between shadow-card-light hover:shadow-glow-red-sm backdrop-blur-xl hover:translate-y-[-2px]"
             >
               <div className="space-y-3.5">
                 <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-xl bg-light-blueSoft text-light-blue border border-light-blueBorder/40 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/25 font-mono text-[10px] font-bold uppercase">
+                  <span className="px-3 py-1 rounded-xl bg-crimson-500/10 text-crimson-600 border border-crimson-500/30 dark:bg-crimson-500/10 dark:text-crimson-400 dark:border-crimson-500/25 font-mono text-[10px] font-bold uppercase">
                     {p.language}
                   </span>
                   <span className="text-[11px] text-light-textMuted dark:text-dark-400 flex items-center gap-1.5 font-medium">
-                    <Folder className="w-3.5 h-3.5 text-light-blue dark:text-indigo-400" />
+                    <Folder className="w-3.5 h-3.5 text-crimson-500 dark:text-crimson-400" />
                     {p.category}
                   </span>
                 </div>
 
-                <h3 className="text-lg font-bold text-light-textStrong dark:text-white group-hover:text-light-blue dark:group-hover:text-purple-300 transition-colors line-clamp-1 font-sans">
+                <h3 className="text-lg font-bold text-light-textStrong dark:text-white group-hover:text-crimson-600 dark:group-hover:text-crimson-400 transition-colors line-clamp-1 font-sans">
                   {p.title}
                 </h3>
 
@@ -154,7 +154,7 @@ export const ProgramsPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-light-border dark:border-[#1b223c] flex items-center justify-between text-xs text-light-textMuted dark:text-dark-400">
+              <div className="mt-6 pt-4 border-t border-light-border dark:border-white/10 flex items-center justify-between text-xs text-light-textMuted dark:text-dark-400">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1 font-mono text-[11px]" title="Versions">
                     <History className="w-3.5 h-3.5 text-light-textMuted dark:text-dark-400" />
@@ -169,7 +169,7 @@ export const ProgramsPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5 text-light-blue dark:text-purple-400 font-bold group-hover:translate-x-1 transition-transform">
+                <div className="flex items-center gap-1.5 text-crimson-600 dark:text-crimson-400 font-bold group-hover:translate-x-1 transition-transform">
                   <span>Open Studio</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>
