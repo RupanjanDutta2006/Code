@@ -13,7 +13,9 @@ import {
   serverTimestamp, 
   Timestamp,
   increment,
-  writeBatch
+  writeBatch,
+  onSnapshot,
+  Unsubscribe
 } from 'firebase/firestore';
 import { 
   ref, 
@@ -501,95 +503,54 @@ export const getFirestoreClassrooms = async (userUid: string): Promise<Firestore
 
   const classroomMap = new Map<string, FirestoreClassroom>();
 
-  // 1. Direct query: classrooms created/owned by user
   try {
-    const qOwner = query(collection(db, 'classrooms'), where('owner_id', '==', userUid));
-    const ownerSnap = await getDocs(qOwner);
-    for (const docSnap of ownerSnap.docs) {
-      const data = docSnap.data();
-      classroomMap.set(docSnap.id, {
-        id: docSnap.id,
-        name: data.name,
-        subject: data.subject || '',
-        description: data.description,
-        section: data.section,
-        academic_level: data.academic_level,
-        owner_id: data.owner_id || userUid,
-        ownerUid: data.ownerUid || userUid,
-        owner_name: data.owner_name || 'Instructor',
-        owner_email: data.owner_email,
-        invite_code: data.invite_code || data.access_key,
-        access_key: data.access_key || data.invite_code,
-        accessKeyNormalized: data.accessKeyNormalized || normalizeAccessKey(data.invite_code || ''),
-        joining_enabled: data.joining_enabled !== false,
-        member_count: data.member_count || 1,
-        created_at: formatTimestamp(data.created_at),
-        updated_at: formatTimestamp(data.updated_at),
-        my_role: 'owner',
-        is_teacher: true,
-        is_member: true,
-        teacher_name: data.owner_name || 'Instructor',
-      });
-    }
-  } catch (err) {
-    console.warn('Error fetching owned classrooms:', err);
-  }
+    const [ownerSnap1, ownerSnap2, userIndexSnap] = await Promise.allSettled([
+      getDocs(query(collection(db, 'classrooms'), where('owner_id', '==', userUid))),
+      getDocs(query(collection(db, 'classrooms'), where('ownerUid', '==', userUid))),
+      getDocs(collection(db, 'users', userUid, 'classrooms')),
+    ]);
 
-  // 2. Query user-side membership index: users/{userUid}/classrooms
-  try {
-    const userClassSnap = await getDocs(collection(db, 'users', userUid, 'classrooms'));
-    for (const uDoc of userClassSnap.docs) {
-      const classId = uDoc.id;
-      const refData = uDoc.data();
-      if (!classroomMap.has(classId)) {
-        try {
-          const classDoc = await getDoc(doc(db, 'classrooms', classId));
-          if (classDoc.exists()) {
-            const data = classDoc.data();
-            const isOwner = (data.owner_id === userUid || data.ownerUid === userUid);
-            const role = isOwner ? 'owner' : (refData.role || 'student');
-            classroomMap.set(classId, {
-              id: classId,
-              name: data.name,
-              subject: data.subject || '',
-              description: data.description,
-              section: data.section,
-              academic_level: data.academic_level,
-              owner_id: data.owner_id || data.ownerUid,
-              ownerUid: data.ownerUid || data.owner_id,
-              owner_name: data.owner_name || 'Instructor',
-              owner_email: data.owner_email,
-              invite_code: data.invite_code || data.access_key,
-              access_key: data.access_key || data.invite_code,
-              accessKeyNormalized: data.accessKeyNormalized || normalizeAccessKey(data.invite_code || ''),
-              joining_enabled: data.joining_enabled !== false,
-              member_count: data.member_count || 1,
-              created_at: formatTimestamp(data.created_at),
-              updated_at: formatTimestamp(data.updated_at),
-              my_role: role,
-              is_teacher: role === 'owner',
-              is_member: true,
-              teacher_name: data.owner_name || 'Instructor',
-            });
-          }
-        } catch (e) {}
+    // 1. Process owner matches
+    if (ownerSnap1.status === 'fulfilled') {
+      for (const docSnap of ownerSnap1.value.docs) {
+        const data = docSnap.data();
+        classroomMap.set(docSnap.id, {
+          id: docSnap.id,
+          name: data.name || 'Untitled Classroom',
+          subject: data.subject || 'General',
+          description: data.description,
+          section: data.section,
+          academic_level: data.academic_level,
+          owner_id: data.owner_id || userUid,
+          ownerUid: data.ownerUid || userUid,
+          owner_name: data.owner_name || 'Instructor',
+          owner_email: data.owner_email,
+          invite_code: data.invite_code || data.access_key || '',
+          access_key: data.access_key || data.invite_code || '',
+          accessKeyNormalized: data.accessKeyNormalized || normalizeAccessKey(data.invite_code || ''),
+          joining_enabled: data.joining_enabled !== false,
+          member_count: data.member_count || 1,
+          resource_count: data.resource_count || 0,
+          assignment_count: data.assignment_count || 0,
+          announcement_count: data.announcement_count || 0,
+          created_at: formatTimestamp(data.created_at),
+          updated_at: formatTimestamp(data.updated_at),
+          my_role: 'owner',
+          is_teacher: true,
+          is_member: true,
+          teacher_name: data.owner_name || 'Instructor',
+        });
       }
     }
-  } catch (err) {
-    console.warn('Error fetching indexed user classrooms:', err);
-  }
 
-  // 3. Fallback: Query all classrooms for membership if index was empty
-  if (classroomMap.size === 0) {
-    try {
-      const allClassSnap = await getDocs(collection(db, 'classrooms'));
-      for (const cDoc of allClassSnap.docs) {
-        const data = cDoc.data();
-        if (data.owner_id === userUid || data.ownerUid === userUid) {
-          classroomMap.set(cDoc.id, {
-            id: cDoc.id,
-            name: data.name,
-            subject: data.subject || '',
+    if (ownerSnap2.status === 'fulfilled') {
+      for (const docSnap of ownerSnap2.value.docs) {
+        if (!classroomMap.has(docSnap.id)) {
+          const data = docSnap.data();
+          classroomMap.set(docSnap.id, {
+            id: docSnap.id,
+            name: data.name || 'Untitled Classroom',
+            subject: data.subject || 'General',
             description: data.description,
             section: data.section,
             academic_level: data.academic_level,
@@ -597,11 +558,14 @@ export const getFirestoreClassrooms = async (userUid: string): Promise<Firestore
             ownerUid: data.ownerUid || userUid,
             owner_name: data.owner_name || 'Instructor',
             owner_email: data.owner_email,
-            invite_code: data.invite_code || data.access_key,
-            access_key: data.access_key || data.invite_code,
+            invite_code: data.invite_code || data.access_key || '',
+            access_key: data.access_key || data.invite_code || '',
             accessKeyNormalized: data.accessKeyNormalized || normalizeAccessKey(data.invite_code || ''),
             joining_enabled: data.joining_enabled !== false,
             member_count: data.member_count || 1,
+            resource_count: data.resource_count || 0,
+            assignment_count: data.assignment_count || 0,
+            announcement_count: data.announcement_count || 0,
             created_at: formatTimestamp(data.created_at),
             updated_at: formatTimestamp(data.updated_at),
             my_role: 'owner',
@@ -611,7 +575,59 @@ export const getFirestoreClassrooms = async (userUid: string): Promise<Firestore
           });
         }
       }
-    } catch (e) {}
+    }
+
+    // 2. Process indexed user classrooms (including enrolled student classrooms)
+    if (userIndexSnap.status === 'fulfilled' && userIndexSnap.value.docs.length > 0) {
+      const pendingClassDocPromises = userIndexSnap.value.docs
+        .filter((uDoc) => !classroomMap.has(uDoc.id))
+        .map(async (uDoc) => {
+          try {
+            const classDoc = await getDoc(doc(db, 'classrooms', uDoc.id));
+            if (classDoc.exists()) {
+              const data = classDoc.data();
+              const isOwner = data.owner_id === userUid || data.ownerUid === userUid;
+              const role = isOwner ? 'owner' : (uDoc.data()?.role || 'student');
+              return {
+                id: classDoc.id,
+                name: data.name || 'Untitled Classroom',
+                subject: data.subject || 'General',
+                description: data.description,
+                section: data.section,
+                academic_level: data.academic_level,
+                owner_id: data.owner_id || data.ownerUid,
+                ownerUid: data.ownerUid || data.owner_id,
+                owner_name: data.owner_name || 'Instructor',
+                owner_email: data.owner_email,
+                invite_code: data.invite_code || data.access_key || '',
+                access_key: data.access_key || data.invite_code || '',
+                accessKeyNormalized: data.accessKeyNormalized || normalizeAccessKey(data.invite_code || ''),
+                joining_enabled: data.joining_enabled !== false,
+                member_count: data.member_count || 1,
+                resource_count: data.resource_count || 0,
+                assignment_count: data.assignment_count || 0,
+                announcement_count: data.announcement_count || 0,
+                created_at: formatTimestamp(data.created_at),
+                updated_at: formatTimestamp(data.updated_at),
+                my_role: role as 'owner' | 'student',
+                is_teacher: role === 'owner',
+                is_member: true,
+                teacher_name: data.owner_name || 'Instructor',
+              };
+            }
+          } catch (e) {}
+          return null;
+        });
+
+      const resolved = await Promise.all(pendingClassDocPromises);
+      for (const item of resolved) {
+        if (item && !classroomMap.has(item.id)) {
+          classroomMap.set(item.id, item);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching classrooms:', err);
   }
 
   return Array.from(classroomMap.values()).sort((a, b) => 
@@ -620,34 +636,93 @@ export const getFirestoreClassrooms = async (userUid: string): Promise<Firestore
 };
 
 // -------------------------------------------------------------
+// REALTIME SUBSCRIPTION FOR USER CLASSROOMS
+// -------------------------------------------------------------
+
+export const subscribeUserClassrooms = (
+  userUid: string,
+  onUpdate: (classrooms: FirestoreClassroom[]) => void,
+  onError?: (err: any) => void
+): Unsubscribe => {
+  if (!userUid) {
+    onUpdate([]);
+    return () => {};
+  }
+
+  let isUnsubscribed = false;
+
+  const triggerRefresh = async () => {
+    if (isUnsubscribed) return;
+    try {
+      const list = await getFirestoreClassrooms(userUid);
+      if (!isUnsubscribed) {
+        onUpdate(list);
+      }
+    } catch (err) {
+      if (onError && !isUnsubscribed) onError(err);
+    }
+  };
+
+  // Initial immediate fetch
+  triggerRefresh();
+
+  // Listen to changes in the user-side classroom index
+  const unsubUserClassrooms = onSnapshot(
+    collection(db, 'users', userUid, 'classrooms'),
+    () => { triggerRefresh(); },
+    (err) => { if (onError && !isUnsubscribed) onError(err); }
+  );
+
+  // Listen to changes in owned classrooms
+  const unsubOwned = onSnapshot(
+    query(collection(db, 'classrooms'), where('owner_id', '==', userUid)),
+    () => { triggerRefresh(); },
+    (err) => { if (onError && !isUnsubscribed) onError(err); }
+  );
+
+  return () => {
+    isUnsubscribed = true;
+    unsubUserClassrooms();
+    unsubOwned();
+  };
+};
+
+// -------------------------------------------------------------
 // GET SINGLE CLASSROOM BY FIRESTORE DOCUMENT ID
 // -------------------------------------------------------------
 
-export const getFirestoreClassroom = async (classId: string, userUid: string): Promise<FirestoreClassroom> => {
+export const getFirestoreClassroom = async (
+  classId: string, 
+  userUid?: string
+): Promise<FirestoreClassroom> => {
   if (!classId) {
     throw new Error('Classroom ID is required.');
   }
 
   const classDoc = await getDoc(doc(db, 'classrooms', classId));
   if (!classDoc.exists()) {
-    throw new Error('Classroom not found or access denied.');
+    throw new Error('Classroom not found.');
   }
 
   const data = classDoc.data();
-  const isOwner = data.owner_id === userUid || data.ownerUid === userUid;
+  const isOwner = userUid ? (data.owner_id === userUid || data.ownerUid === userUid) : false;
   let myRole: 'owner' | 'student' = isOwner ? 'owner' : 'student';
+  let isMember = isOwner;
 
   if (!isOwner && userUid) {
-    const memberDoc = await getDoc(doc(db, 'classrooms', classId, 'members', userUid));
-    if (memberDoc.exists()) {
-      myRole = memberDoc.data()?.role || 'student';
-    }
+    try {
+      const memberDoc = await getDoc(doc(db, 'classrooms', classId, 'members', userUid));
+      if (memberDoc.exists()) {
+        myRole = memberDoc.data()?.role || 'student';
+        isMember = true;
+      }
+    } catch (e) {}
   }
 
   return {
     id: classDoc.id,
-    name: data.name,
-    subject: data.subject,
+    name: data.name || 'Untitled Classroom',
+    subject: data.subject || 'General',
     description: data.description,
     section: data.section,
     academic_level: data.academic_level,
@@ -655,16 +730,19 @@ export const getFirestoreClassroom = async (classId: string, userUid: string): P
     ownerUid: data.ownerUid || data.owner_id,
     owner_name: data.owner_name || 'Instructor',
     owner_email: data.owner_email,
-    invite_code: data.invite_code || data.access_key,
-    access_key: data.access_key || data.invite_code,
+    invite_code: data.invite_code || data.access_key || '',
+    access_key: data.access_key || data.invite_code || '',
     accessKeyNormalized: data.accessKeyNormalized || normalizeAccessKey(data.invite_code || ''),
     joining_enabled: data.joining_enabled !== false,
     member_count: data.member_count || 1,
+    resource_count: data.resource_count || 0,
+    assignment_count: data.assignment_count || 0,
+    announcement_count: data.announcement_count || 0,
     created_at: formatTimestamp(data.created_at),
     updated_at: formatTimestamp(data.updated_at),
     my_role: myRole,
     is_teacher: myRole === 'owner',
-    is_member: true,
+    is_member: isMember,
     teacher_name: data.owner_name || 'Instructor',
   };
 };

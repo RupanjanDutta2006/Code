@@ -31,11 +31,9 @@ import { AlgorithmCategory } from '../learning/core/types';
 import { useAuth } from '../context/AuthContext';
 import {
   FirestoreClassroom,
-  getFirestoreClassrooms,
-  createFirestoreClassroom,
-  joinFirestoreClassroom,
   normalizeAccessKey
 } from '../services/classroomFirestore';
+import { useUserClassrooms } from '../hooks/useUserClassrooms';
 import { OfflineDownloadsTab } from '../components/OfflineDownloadsTab';
 import { ModalPortal } from '../components/ModalPortal';
 
@@ -74,11 +72,18 @@ export const MyClassPage: React.FC = () => {
   ];
 
   // -------------------------------------------------------------
-  // MULTI-TEACHER CLASSROOMS STATE (FIRESTORE POWERED)
+  // MULTI-TEACHER CLASSROOMS STATE (CANONICAL REALTIME HOOK)
   // -------------------------------------------------------------
   const { user, firebaseUser } = useAuth();
-  const [classrooms, setClassrooms] = useState<FirestoreClassroom[]>([]);
-  const [classroomLoading, setClassroomLoading] = useState(false);
+  const activeUid = firebaseUser?.uid || user?.uid || null;
+  const { 
+    classrooms, 
+    loading: classroomLoading, 
+    createClass, 
+    joinClass,
+    refresh: fetchClassrooms 
+  } = useUserClassrooms(activeUid);
+
   const [classFilter, setClassFilter] = useState<'all' | 'enrolled' | 'created'>('all');
   const [classSearchQuery, setClassSearchQuery] = useState('');
 
@@ -96,36 +101,28 @@ export const MyClassPage: React.FC = () => {
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [createdClassInfo, setCreatedClassInfo] = useState<FirestoreClassroom | null>(null);
 
-  const fetchClassrooms = async () => {
-    const uid = firebaseUser?.uid || user?.uid;
-    if (!uid) {
-      setClassrooms([]);
-      return;
-    }
-
-    setClassroomLoading(true);
-    try {
-      const list = await getFirestoreClassrooms(uid);
-      setClassrooms(list);
-    } catch (err) {
-      console.error('Failed to load Firestore classrooms:', err);
-    } finally {
-      setClassroomLoading(false);
-    }
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false);
+    setCreatedClassInfo(null);
+    setActionError(null);
+    setClassName('');
+    setClassSubject('');
+    setClassSection('');
+    setClassAcademicLevel('');
+    setClassDesc('');
   };
 
-  useEffect(() => {
-    if (activeTab === 'classrooms') {
-      fetchClassrooms();
-    }
-  }, [activeTab, user, firebaseUser]);
+  const handleCloseJoinModal = () => {
+    setShowJoinModal(false);
+    setActionError(null);
+    setInviteCodeInput('');
+  };
 
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!className.trim()) return;
 
-    const uid = firebaseUser?.uid || user?.uid;
-    if (!uid) {
+    if (!activeUid) {
       setActionError('Please log in with Google or email to create a classroom.');
       return;
     }
@@ -136,7 +133,7 @@ export const MyClassPage: React.FC = () => {
       const ownerName = user?.full_name || firebaseUser?.displayName || user?.username || 'Instructor';
       const ownerEmail = user?.email || firebaseUser?.email || '';
 
-      const created = await createFirestoreClassroom(uid, ownerName, ownerEmail, {
+      const created = await createClass(ownerName, ownerEmail, {
         name: className.trim(),
         subject: classSubject.trim() || 'General',
         section: classSection.trim() || undefined,
@@ -144,7 +141,6 @@ export const MyClassPage: React.FC = () => {
         description: classDesc.trim() || undefined,
       });
 
-      setClassrooms((prev) => [created, ...prev.filter((c) => c.id !== created.id)]);
       setCreatedClassInfo(created);
       setClassName('');
       setClassSubject('');
@@ -163,8 +159,7 @@ export const MyClassPage: React.FC = () => {
     const cleanKey = normalizeAccessKey(inviteCodeInput);
     if (!cleanKey) return;
 
-    const uid = firebaseUser?.uid || user?.uid;
-    if (!uid) {
+    if (!activeUid) {
       setActionError('Please log in to join a classroom.');
       return;
     }
@@ -175,14 +170,8 @@ export const MyClassPage: React.FC = () => {
       const studentName = user?.full_name || firebaseUser?.displayName || user?.username || 'Student';
       const studentEmail = user?.email || firebaseUser?.email || '';
 
-      const joined = await joinFirestoreClassroom(uid, studentName, studentEmail, cleanKey);
-
-      setClassrooms((prev) => {
-        const filtered = prev.filter((c) => c.id !== joined.id);
-        return [joined, ...filtered];
-      });
-      setShowJoinModal(false);
-      setInviteCodeInput('');
+      await joinClass(studentName, studentEmail, cleanKey);
+      handleCloseJoinModal();
     } catch (err: any) {
       setActionError(err.message || 'Invalid or expired classroom access key.');
     } finally {
@@ -585,7 +574,7 @@ export const MyClassPage: React.FC = () => {
       {/* ============================================================== */}
       <ModalPortal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={handleCloseCreateModal}
         title="Create Classroom"
         subtitle="Generate an isolated workspace with a unique access key"
         icon={<PlusCircle className="w-5 h-5" />}
@@ -638,12 +627,20 @@ export const MyClassPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
+            <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCloseCreateModal}
+                className="w-full sm:w-1/2 py-2.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-dark-750 transition-all text-center block"
+              >
+                Done
+              </button>
               <Link
                 to={`/classrooms/${createdClassInfo.id}`}
-                className="w-full py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm transition-all text-center block"
+                onClick={handleCloseCreateModal}
+                className="w-full sm:w-1/2 py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm transition-all text-center block"
               >
-                Open Classroom Workspace →
+                Open Classroom →
               </Link>
             </div>
           </div>
@@ -707,7 +704,7 @@ export const MyClassPage: React.FC = () => {
             <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/10">
               <button
                 type="button"
-                onClick={() => setShowCreateModal(false)}
+                onClick={handleCloseCreateModal}
                 className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-dark-750 transition-all"
               >
                 Cancel
@@ -729,7 +726,7 @@ export const MyClassPage: React.FC = () => {
       {/* ============================================================== */}
       <ModalPortal
         isOpen={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
+        onClose={handleCloseJoinModal}
         title="Join Classroom"
         subtitle="Enter the access key provided by your instructor"
         icon={<Key className="w-5 h-5" />}
@@ -762,7 +759,7 @@ export const MyClassPage: React.FC = () => {
           <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/10">
             <button
               type="button"
-              onClick={() => setShowJoinModal(false)}
+              onClick={handleCloseJoinModal}
               className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-dark-750 transition-all"
             >
               Cancel
@@ -772,7 +769,7 @@ export const MyClassPage: React.FC = () => {
               disabled={actionLoading}
               className="px-5 py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50 transition-all"
             >
-              {actionLoading ? 'Validating Key...' : 'Join Classroom'}
+              {actionLoading ? 'Joining...' : 'Join Classroom'}
             </button>
           </div>
         </form>

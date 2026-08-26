@@ -1,4 +1,4 @@
-rules_version = '2';
+﻿rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -12,7 +12,7 @@ service cloud.firestore {
     }
 
     function isClassOwner(classId) {
-      return isSignedIn() && (
+      return isSignedIn() && exists(/databases/$(database)/documents/classrooms/$(classId)) && (
         get(/databases/$(database)/documents/classrooms/$(classId)).data.owner_id == request.auth.uid ||
         get(/databases/$(database)/documents/classrooms/$(classId)).data.ownerUid == request.auth.uid
       );
@@ -56,7 +56,7 @@ service cloud.firestore {
       // Owner can edit settings or delete classroom; members can increment member_count on join
       allow update: if isSignedIn() && (
         isClassOwner(classId) ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member_count', 'updated_at'])
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member_count', 'updated_at', 'resource_count', 'assignment_count', 'announcement_count'])
       );
       allow delete: if isClassOwner(classId);
 

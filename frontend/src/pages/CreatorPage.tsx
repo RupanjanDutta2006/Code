@@ -21,7 +21,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { FirestoreClassroom, getFirestoreClassrooms } from '../services/classroomFirestore';
+import { FirestoreClassroom } from '../services/classroomFirestore';
+import { useUserClassrooms } from '../hooks/useUserClassrooms';
 
 // Custom SVG Brand Icons
 const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
@@ -185,25 +186,14 @@ const RESOURCE_CATEGORIES: ResourceCategory[] = [
 export const CreatorPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const { user, firebaseUser } = useAuth();
-  const [userClassrooms, setUserClassrooms] = useState<FirestoreClassroom[]>([]);
-  const [classroomsLoading, setClassroomsLoading] = useState(false);
+  const activeUid = firebaseUser?.uid || user?.uid || null;
+  const { classrooms: userClassrooms, loading: classroomsLoading } = useUserClassrooms(activeUid);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2200);
   };
-
-  useEffect(() => {
-    const uid = firebaseUser?.uid || user?.uid;
-    if (uid) {
-      setClassroomsLoading(true);
-      getFirestoreClassrooms(uid)
-        .then((list) => setUserClassrooms(list))
-        .catch((err) => console.warn('Profile classrooms fetch error:', err))
-        .finally(() => setClassroomsLoading(false));
-    }
-  }, [user, firebaseUser]);
 
   return (
     <div className="min-h-[calc(100vh-80px)] py-10 px-4 sm:px-6 max-w-4xl mx-auto space-y-10 animate-fade-in">
