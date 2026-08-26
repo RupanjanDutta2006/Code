@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Sparkles,
   X,
@@ -248,7 +248,7 @@ export const CodeVaultAIChat: React.FC = () => {
   return (
     /* Outer shell — relative + overflow:hidden so glass backdrop stays fixed */
     <div
-      className="fixed bottom-4 right-4 z-50 flex flex-col"
+      className="fixed bottom-4 right-4 z-[900] flex flex-col"
       style={{
         width: 'min(420px, calc(100vw - 32px))',
         height: 'min(620px, calc(100dvh - 80px))',

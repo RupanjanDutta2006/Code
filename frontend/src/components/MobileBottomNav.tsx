@@ -42,7 +42,7 @@ export const MobileBottomNav: React.FC = () => {
   return (
     <nav 
       aria-label="Mobile Navigation" 
-      className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 dark:bg-[#09090d]/90 backdrop-blur-2xl border-t border-light-border dark:border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_30px_rgba(0,0,0,0.8)] transition-colors duration-200"
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 dark:bg-[#09090d]/90 backdrop-blur-2xl border-t border-light-border dark:border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_30px_rgba(0,0,0,0.8)] transition-colors duration-200"
       style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
     >
       <div className="grid grid-cols-5 h-14 items-center px-1">

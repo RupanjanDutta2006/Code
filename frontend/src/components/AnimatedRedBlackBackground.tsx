@@ -15,7 +15,7 @@ import React from 'react';
 export const AnimatedRedBlackBackground: React.FC = () => {
   return (
     <div 
-      className="fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none"
+      className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
       aria-hidden="true"
     >
       {/* Dark Mode Ambient Aurora Layer */}

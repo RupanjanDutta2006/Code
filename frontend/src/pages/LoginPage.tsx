@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { mapAuthErrorToMessage } from '../services/firebase';
+import { ModalPortal } from '../components/ModalPortal';
 
 export const LoginPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -359,83 +360,75 @@ export const LoginPage: React.FC = () => {
       </div>
 
       {/* FORGOT PASSWORD MODAL */}
-      {showForgotModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
-                <KeyRound className="w-4 h-4 text-crimson-500" />
-                <span>Reset Password</span>
-              </h3>
-              <button onClick={() => setShowForgotModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
+      <ModalPortal
+        isOpen={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+        title="Reset Password"
+        icon={<KeyRound className="w-4 h-4 text-crimson-500" />}
+        maxWidth="sm"
+      >
+        {forgotSent ? (
+          <div className="space-y-3 text-center py-2">
+            <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+              Reset Email Sent!
+            </h4>
+            <p className="text-[11px] text-slate-600 dark:text-dark-300 leading-relaxed">
+              We've sent a password reset link to <span className="font-mono text-crimson-500">{forgotEmail}</span>. Check your inbox and follow the link.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowForgotModal(false)}
+              className="w-full py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold"
+            >
+              Back to Sign In
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleForgotPassword} className="space-y-3">
+            <p className="text-[11px] text-slate-600 dark:text-dark-300 leading-relaxed">
+              Enter your email address and we'll send you an official Google Firebase password reset link.
+            </p>
+
+            {forgotError && (
+              <div className="p-2 rounded-lg bg-rose-500/10 text-rose-500 text-[11px]">
+                {forgotError}
+              </div>
+            )}
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-700 dark:text-dark-200 block mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                required
+                placeholder="you@example.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+              />
             </div>
 
-            {forgotSent ? (
-              <div className="space-y-3 text-center py-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-                <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Reset Email Sent!
-                </h4>
-                <p className="text-[11px] text-slate-600 dark:text-dark-300 leading-relaxed">
-                  We've sent a password reset link to <span className="font-mono text-crimson-500">{forgotEmail}</span>. Check your inbox and follow the link.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowForgotModal(false)}
-                  className="w-full py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold"
-                >
-                  Back to Sign In
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleForgotPassword} className="space-y-3">
-                <p className="text-[11px] text-slate-600 dark:text-dark-300 leading-relaxed">
-                  Enter your email address and we'll send you an official Google Firebase password reset link.
-                </p>
-
-                {forgotError && (
-                  <div className="p-2 rounded-lg bg-rose-500/10 text-rose-500 text-[11px]">
-                    {forgotError}
-                  </div>
-                )}
-
-                <div>
-                  <label className="text-[11px] font-bold text-slate-700 dark:text-dark-200 block mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="you@example.com"
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-                  />
-                </div>
-
-                <div className="pt-2 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotModal(false)}
-                    className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={forgotLoading}
-                    className="px-4 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
-                  >
-                    {forgotLoading ? 'Sending...' : 'Send Link'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+            <div className="pt-2 flex justify-end gap-2 border-t border-slate-200 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={forgotLoading}
+                className="px-4 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
+              >
+                {forgotLoading ? 'Sending...' : 'Send Link'}
+              </button>
+            </div>
+          </form>
+        )}
+      </ModalPortal>
 
     </div>
   );

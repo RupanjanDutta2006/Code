@@ -58,6 +58,7 @@ import {
   leaveFirestoreClassroom,
   removeFirestoreMember
 } from '../services/classroomFirestore';
+import { ModalPortal } from '../components/ModalPortal';
 
 export const ClassroomDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -967,377 +968,364 @@ export const ClassroomDetailPage: React.FC = () => {
       )}
 
       {/* REGENERATE CONFIRM MODAL */}
-      {showRegenerateConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Regenerate Access Key?</h3>
-            <p className="text-xs text-slate-500 dark:text-dark-400 leading-relaxed">
-              The existing key will stop working for new joins. Existing enrolled members will retain full access.
-            </p>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                onClick={() => setShowRegenerateConfirm(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold text-slate-700 dark:text-dark-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRegenerateKey}
-                disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
-              >
-                {actionLoading ? 'Regenerating...' : 'Regenerate'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ModalPortal
+        isOpen={showRegenerateConfirm}
+        onClose={() => setShowRegenerateConfirm(false)}
+        title="Regenerate Access Key?"
+        maxWidth="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowRegenerateConfirm(false)}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold text-slate-700 dark:text-dark-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleRegenerateKey}
+              disabled={actionLoading}
+              className="px-4 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
+            >
+              {actionLoading ? 'Regenerating...' : 'Regenerate'}
+            </button>
+          </>
+        }
+      >
+        <p className="text-xs text-slate-500 dark:text-dark-400 leading-relaxed">
+          The existing key will stop working for new joins. Existing enrolled members will retain full access.
+        </p>
+      </ModalPortal>
 
       {/* DELETE CONFIRM MODAL */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Delete Classroom?</h3>
-            <p className="text-xs text-rose-500 dark:text-rose-400 leading-relaxed">
-              This action cannot be undone. All notes, announcements, and assignments will be permanently deleted.
-            </p>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold text-slate-700 dark:text-dark-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteClassroom}
-                disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-glow-red-sm"
-              >
-                {actionLoading ? 'Deleting...' : 'Delete Permanently'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ModalPortal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete Classroom?"
+        maxWidth="sm"
+        role="alertdialog"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(false)}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold text-slate-700 dark:text-dark-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteClassroom}
+              disabled={actionLoading}
+              className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
+            >
+              {actionLoading ? 'Deleting...' : 'Delete Permanently'}
+            </button>
+          </>
+        }
+      >
+        <p className="text-xs text-rose-500 dark:text-rose-400 leading-relaxed">
+          This action cannot be undone. All notes, announcements, and assignments will be permanently deleted.
+        </p>
+      </ModalPortal>
 
       {/* LEAVE CONFIRM MODAL */}
-      {showLeaveConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Leave Classroom?</h3>
-            <p className="text-xs text-slate-500 dark:text-dark-400 leading-relaxed">
-              You will lose access to classroom resources until you re-join with a valid access key.
-            </p>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                onClick={() => setShowLeaveConfirm(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold text-slate-700 dark:text-dark-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleLeaveClassroom}
-                disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-glow-red-sm"
-              >
-                {actionLoading ? 'Leaving...' : 'Leave Class'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ModalPortal
+        isOpen={showLeaveConfirm}
+        onClose={() => setShowLeaveConfirm(false)}
+        title="Leave Classroom?"
+        maxWidth="sm"
+        role="alertdialog"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowLeaveConfirm(false)}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold text-slate-700 dark:text-dark-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleLeaveClassroom}
+              disabled={actionLoading}
+              className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
+            >
+              {actionLoading ? 'Leaving...' : 'Leave Class'}
+            </button>
+          </>
+        }
+      >
+        <p className="text-xs text-slate-500 dark:text-dark-400 leading-relaxed">
+          You will lose access to classroom resources until you re-join with a valid access key.
+        </p>
+      </ModalPortal>
 
       {/* ANNOUNCEMENT MODAL */}
-      {showAnnouncementModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Post Announcement</h3>
-              <button onClick={() => setShowAnnouncementModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleCreateAnnouncement} className="space-y-3">
-              <input
-                type="text"
-                required
-                placeholder="Announcement Title"
-                value={annTitle}
-                onChange={(e) => setAnnTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-              />
-              <textarea
-                required
-                rows={4}
-                placeholder="Write your announcement message..."
-                value={annContent}
-                onChange={(e) => setAnnContent(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
-              />
-              <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-dark-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={annPinned}
-                  onChange={(e) => setAnnPinned(e.target.checked)}
-                  className="rounded text-crimson-600 focus:ring-crimson-500"
-                />
-                <span>Pin announcement to the top</span>
-              </label>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAnnouncementModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
-                >
-                  {actionLoading ? 'Posting...' : 'Post'}
-                </button>
-              </div>
-            </form>
+      <ModalPortal
+        isOpen={showAnnouncementModal}
+        onClose={() => setShowAnnouncementModal(false)}
+        title="Post Announcement"
+        maxWidth="lg"
+      >
+        <form onSubmit={handleCreateAnnouncement} className="space-y-3">
+          <input
+            type="text"
+            required
+            placeholder="Announcement Title"
+            value={annTitle}
+            onChange={(e) => setAnnTitle(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+          />
+          <textarea
+            required
+            rows={4}
+            placeholder="Write your announcement message..."
+            value={annContent}
+            onChange={(e) => setAnnContent(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
+          />
+          <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-dark-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={annPinned}
+              onChange={(e) => setAnnPinned(e.target.checked)}
+              className="rounded text-crimson-600 focus:ring-crimson-500"
+            />
+            <span>Pin announcement to the top</span>
+          </label>
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => setShowAnnouncementModal(false)}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={actionLoading}
+              className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
+            >
+              {actionLoading ? 'Posting...' : 'Post'}
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </ModalPortal>
 
       {/* NOTE UPLOAD MODAL */}
-      {showNoteModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Upload Note / Document</h3>
-              <button onClick={() => setShowNoteModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleCreateNote} className="space-y-3">
-              <input
-                type="text"
-                required
-                placeholder="Document Title"
-                value={noteTitle}
-                onChange={(e) => setNoteTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-              />
-              <input
-                type="text"
-                placeholder="Category (e.g. Trees, Algorithms)"
-                value={noteCategory}
-                onChange={(e) => setNoteCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-              />
-              <textarea
-                rows={2}
-                placeholder="Description"
-                value={noteDesc}
-                onChange={(e) => setNoteDesc(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
-              />
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block">Attach File</label>
-                <input
-                  type="file"
-                  onChange={(e) => setNoteFile(e.target.files ? e.target.files[0] : null)}
-                  className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-crimson-500/10 file:text-crimson-500 hover:file:bg-crimson-500/20"
-                />
-              </div>
-              <input
-                type="url"
-                placeholder="Or external URL (Drive, Mega, etc.)"
-                value={noteUrl}
-                onChange={(e) => setNoteUrl(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-              />
-              {uploadProgress !== null && (
-                <div className="w-full bg-slate-200 dark:bg-dark-800 rounded-full h-2">
-                  <div className="bg-crimson-500 h-2 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} />
-                </div>
-              )}
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowNoteModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
-                >
-                  {actionLoading ? 'Uploading...' : 'Save Resource'}
-                </button>
-              </div>
-            </form>
+      <ModalPortal
+        isOpen={showNoteModal}
+        onClose={() => setShowNoteModal(false)}
+        title="Upload Note / Document"
+        maxWidth="lg"
+      >
+        <form onSubmit={handleCreateNote} className="space-y-3">
+          <input
+            type="text"
+            required
+            placeholder="Document Title"
+            value={noteTitle}
+            onChange={(e) => setNoteTitle(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+          />
+          <input
+            type="text"
+            placeholder="Category (e.g. Trees, Algorithms)"
+            value={noteCategory}
+            onChange={(e) => setNoteCategory(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+          />
+          <textarea
+            rows={2}
+            placeholder="Description"
+            value={noteDesc}
+            onChange={(e) => setNoteDesc(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
+          />
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block">Attach File</label>
+            <input
+              type="file"
+              onChange={(e) => setNoteFile(e.target.files ? e.target.files[0] : null)}
+              className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-crimson-500/10 file:text-crimson-500 hover:file:bg-crimson-500/20"
+            />
           </div>
-        </div>
-      )}
+          <input
+            type="url"
+            placeholder="Or external URL (Drive, Mega, etc.)"
+            value={noteUrl}
+            onChange={(e) => setNoteUrl(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+          />
+          {uploadProgress !== null && (
+            <div className="w-full bg-slate-200 dark:bg-dark-800 rounded-full h-2">
+              <div className="bg-crimson-500 h-2 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} />
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(false)}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={actionLoading}
+              className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
+            >
+              {actionLoading ? 'Uploading...' : 'Save Resource'}
+            </button>
+          </div>
+        </form>
+      </ModalPortal>
 
       {/* CODE SHARE MODAL */}
-      {showCodeModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Share Code Snippet</h3>
-              <button onClick={() => setShowCodeModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleCreateCodeResource} className="space-y-3">
-              <input
-                type="text"
-                required
-                placeholder="Snippet Title"
-                value={codeTitle}
-                onChange={(e) => setCodeTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-              />
-              <select
-                value={codeLang}
-                onChange={(e) => setCodeLang(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-              >
-                <option value="cpp">C++</option>
-                <option value="c">C</option>
-                <option value="python">Python</option>
-                <option value="java">Java</option>
-                <option value="javascript">JavaScript</option>
-              </select>
-              <textarea
-                required
-                rows={6}
-                placeholder="Paste code snippet here..."
-                value={codeSource}
-                onChange={(e) => setCodeSource(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 font-mono text-emerald-400 border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-crimson-500 resize-none"
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCodeModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
-                >
-                  {actionLoading ? 'Saving...' : 'Share Code'}
-                </button>
-              </div>
-            </form>
+      <ModalPortal
+        isOpen={showCodeModal}
+        onClose={() => setShowCodeModal(false)}
+        title="Share Code Snippet"
+        maxWidth="lg"
+      >
+        <form onSubmit={handleCreateCodeResource} className="space-y-3">
+          <input
+            type="text"
+            required
+            placeholder="Snippet Title"
+            value={codeTitle}
+            onChange={(e) => setCodeTitle(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+          />
+          <select
+            value={codeLang}
+            onChange={(e) => setCodeLang(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+          >
+            <option value="cpp">C++</option>
+            <option value="c">C</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="javascript">JavaScript</option>
+          </select>
+          <textarea
+            required
+            rows={6}
+            placeholder="Paste code snippet here..."
+            value={codeSource}
+            onChange={(e) => setCodeSource(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 font-mono text-emerald-400 border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-crimson-500 resize-none"
+          />
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => setShowCodeModal(false)}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={actionLoading}
+              className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
+            >
+              {actionLoading ? 'Saving...' : 'Share Code'}
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </ModalPortal>
 
       {/* ASSIGNMENT CREATE MODAL */}
-      {showAssignModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Create Assignment</h3>
-              <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleAssignSubmit} className="space-y-3">
-              <input
-                type="text"
-                required
-                placeholder="Problem Title"
-                value={assignTitle}
-                onChange={(e) => setAssignTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-              />
-              <textarea
-                rows={2}
-                placeholder="Problem description and task"
-                value={assignDesc}
-                onChange={(e) => setAssignDesc(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
-              />
-              <textarea
-                rows={4}
-                placeholder="Starter code (optional)"
-                value={assignStarterCode}
-                onChange={(e) => setAssignStarterCode(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 font-mono text-emerald-400 border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-crimson-500 resize-none"
-              />
-              <input
-                type="date"
-                value={assignDueDate}
-                onChange={(e) => setAssignDueDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAssignModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
-                >
-                  {actionLoading ? 'Creating...' : 'Create Assignment'}
-                </button>
-              </div>
-            </form>
+      <ModalPortal
+        isOpen={showAssignModal}
+        onClose={() => setShowAssignModal(false)}
+        title="Create Assignment"
+        maxWidth="lg"
+      >
+        <form onSubmit={handleAssignSubmit} className="space-y-3">
+          <input
+            type="text"
+            required
+            placeholder="Problem Title"
+            value={assignTitle}
+            onChange={(e) => setAssignTitle(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+          />
+          <textarea
+            rows={2}
+            placeholder="Problem description and task"
+            value={assignDesc}
+            onChange={(e) => setAssignDesc(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500 resize-none"
+          />
+          <textarea
+            rows={4}
+            placeholder="Starter code (optional)"
+            value={assignStarterCode}
+            onChange={(e) => setAssignStarterCode(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 font-mono text-emerald-400 border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-crimson-500 resize-none"
+          />
+          <input
+            type="date"
+            value={assignDueDate}
+            onChange={(e) => setAssignDueDate(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-crimson-500"
+          />
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => setShowAssignModal(false)}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={actionLoading}
+              className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
+            >
+              {actionLoading ? 'Creating...' : 'Create Assignment'}
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </ModalPortal>
 
       {/* SUBMIT SOLUTION MODAL */}
-      {showSubmitModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Submit Solution: {showSubmitModal.title}
-              </h3>
-              <button onClick={() => setShowSubmitModal(null)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleSubmitSolution} className="space-y-3">
-              <textarea
-                required
-                rows={8}
-                placeholder="Paste your completed solution code here..."
-                value={submitCode}
-                onChange={(e) => setSubmitCode(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 font-mono text-emerald-400 border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-crimson-500 resize-none"
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSubmitModal(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm"
-                >
-                  {actionLoading ? 'Submitting...' : 'Submit Solution'}
-                </button>
-              </div>
-            </form>
+      <ModalPortal
+        isOpen={Boolean(showSubmitModal)}
+        onClose={() => setShowSubmitModal(null)}
+        title={`Submit Solution: ${showSubmitModal?.title || ''}`}
+        maxWidth="lg"
+      >
+        <form onSubmit={handleSubmitSolution} className="space-y-3">
+          <textarea
+            required
+            rows={8}
+            placeholder="Paste your completed solution code here..."
+            value={submitCode}
+            onChange={(e) => setSubmitCode(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 font-mono text-emerald-400 border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-crimson-500 resize-none"
+          />
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => setShowSubmitModal(null)}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-xs font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={actionLoading}
+              className="px-5 py-2 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50"
+            >
+              {actionLoading ? 'Submitting...' : 'Submit Solution'}
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </ModalPortal>
 
     </div>
   );

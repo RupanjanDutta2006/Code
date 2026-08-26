@@ -113,6 +113,22 @@
   min-width: 44px;
 }
 
+/* Modal and Overlay Scroll Containment Utilities */
+.overscroll-contain {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-backdrop-fixed {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 1000;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
 /* Custom sleek scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

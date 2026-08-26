@@ -40,7 +40,7 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#08080c]/85 backdrop-blur-xl border-b border-[#E5E9F0] dark:border-white/10 px-3 sm:px-6 py-2.5 sm:py-3 transition-colors duration-200 shadow-[0_1px_3px_rgba(16,24,40,0.04)]">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#08080c]/85 backdrop-blur-xl border-b border-[#E5E9F0] dark:border-white/10 px-3 sm:px-6 py-2.5 sm:py-3 transition-colors duration-200 shadow-[0_1px_3px_rgba(16,24,40,0.04)]">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
         
         {/* Brand Logo - Compact on mobile, expanded on desktop */}

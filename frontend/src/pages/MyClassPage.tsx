@@ -37,6 +37,7 @@ import {
   normalizeAccessKey
 } from '../services/classroomFirestore';
 import { OfflineDownloadsTab } from '../components/OfflineDownloadsTab';
+import { ModalPortal } from '../components/ModalPortal';
 
 export const MyClassPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -582,236 +583,200 @@ export const MyClassPage: React.FC = () => {
       {/* ============================================================== */}
       {/* CREATE CLASSROOM MODAL / BOTTOM SHEET                          */}
       {/* ============================================================== */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5 animate-slide-up max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-crimson-500/10 text-crimson-500 border border-crimson-500/30">
-                  <PlusCircle className="w-5 h-5" />
-                </span>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    Create Classroom
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-dark-400">
-                    Generate an isolated workspace with a unique access key
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
+      <ModalPortal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Create Classroom"
+        subtitle="Generate an isolated workspace with a unique access key"
+        icon={<PlusCircle className="w-5 h-5" />}
+        maxWidth="lg"
+      >
+        {actionError && (
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+            {actionError}
+          </div>
+        )}
+
+        {createdClassInfo ? (
+          <div className="space-y-4 py-2 text-center">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto">
+              <Check className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Class Created Successfully!
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-dark-400 mt-1">
+                Share this unique access key with your students to let them join.
+              </p>
             </div>
 
-            {actionError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold">
-                {actionError}
+            <div className="p-4 rounded-2xl bg-slate-100 dark:bg-dark-950 border border-crimson-500/30 space-y-2">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-dark-400 uppercase tracking-wider block">
+                Class Access Key
+              </span>
+              <div className="font-mono text-2xl font-extrabold text-crimson-600 dark:text-crimson-400 tracking-wider">
+                {createdClassInfo.invite_code}
               </div>
-            )}
-
-            {createdClassInfo ? (
-              <div className="space-y-4 py-2 text-center">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto">
-                  <Check className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Class Created Successfully!
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-dark-400 mt-1">
-                    Share this unique access key with your students to let them join.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-dark-950 border border-crimson-500/30 space-y-2">
-                  <span className="text-[11px] font-semibold text-slate-500 dark:text-dark-400 uppercase tracking-wider block">
-                    Class Access Key
-                  </span>
-                  <div className="font-mono text-2xl font-extrabold text-crimson-600 dark:text-crimson-400 tracking-wider">
-                    {createdClassInfo.invite_code}
-                  </div>
-                  <div className="flex items-center justify-center gap-2 pt-2">
-                    <button
-                      onClick={(e) => handleCopyCode(createdClassInfo.id, createdClassInfo.invite_code, e)}
-                      className="px-4 py-1.5 rounded-xl bg-white dark:bg-dark-800 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:border-crimson-500/40 flex items-center gap-1.5"
-                    >
-                      <Copy className="w-3.5 h-3.5 text-crimson-500" />
-                      <span>{copiedCodeId === createdClassInfo.id ? 'Copied!' : 'Copy Key'}</span>
-                    </button>
-                    <button
-                      onClick={(e) => handleShareKey(createdClassInfo, e)}
-                      className="px-4 py-1.5 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm flex items-center gap-1.5"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span>Share</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex justify-end gap-2">
-                  <Link
-                    to={`/classrooms/${createdClassInfo.id}`}
-                    className="w-full py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm transition-all text-center block"
-                  >
-                    Open Classroom Workspace →
-                  </Link>
-                </div>
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={(e) => handleCopyCode(createdClassInfo.id, createdClassInfo.invite_code, e)}
+                  className="px-4 py-1.5 rounded-xl bg-white dark:bg-dark-800 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:border-crimson-500/40 flex items-center gap-1.5"
+                >
+                  <Copy className="w-3.5 h-3.5 text-crimson-500" />
+                  <span>{copiedCodeId === createdClassInfo.id ? 'Copied!' : 'Copy Key'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => handleShareKey(createdClassInfo, e)}
+                  className="px-4 py-1.5 rounded-xl bg-crimson-600 text-white text-xs font-bold shadow-glow-red-sm flex items-center gap-1.5"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share</span>
+                </button>
               </div>
-            ) : (
-              <form onSubmit={handleCreateClass} className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
-                    Class Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Data Structures & Algorithms"
-                    value={className}
-                    onChange={(e) => setClassName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all"
-                  />
-                </div>
+            </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
-                      Subject / Topic
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Computer Science, Python"
-                      value={classSubject}
-                      onChange={(e) => setClassSubject(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
-                      Section / Batch
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. CSE-A, Batch 2026"
-                      value={classSection}
-                      onChange={(e) => setClassSection(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="e.g. Weekly problem sets, trees, graphs, and competitive coding practice."
-                    value={classDesc}
-                    onChange={(e) => setClassDesc(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all resize-none"
-                  />
-                </div>
-
-                <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-dark-750 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={actionLoading}
-                    className="px-5 py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50 transition-all"
-                  >
-                    {actionLoading ? 'Generating Key...' : 'Create & Generate Key'}
-                  </button>
-                </div>
-              </form>
-            )}
+            <div className="pt-2 flex justify-end gap-2">
+              <Link
+                to={`/classrooms/${createdClassInfo.id}`}
+                className="w-full py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm transition-all text-center block"
+              >
+                Open Classroom Workspace →
+              </Link>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <form onSubmit={handleCreateClass} className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
+                Class Name *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Data Structures & Algorithms"
+                value={className}
+                onChange={(e) => setClassName(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
+                  Subject / Topic
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Computer Science, Python"
+                  value={classSubject}
+                  onChange={(e) => setClassSubject(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
+                  Section / Batch
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. CSE-A, Batch 2026"
+                  value={classSection}
+                  onChange={(e) => setClassSection(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
+                Description (Optional)
+              </label>
+              <textarea
+                rows={2}
+                placeholder="e.g. Weekly problem sets, trees, graphs, and competitive coding practice."
+                value={classDesc}
+                onChange={(e) => setClassDesc(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all resize-none"
+              />
+            </div>
+
+            <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-dark-750 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={actionLoading}
+                className="px-5 py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50 transition-all"
+              >
+                {actionLoading ? 'Generating Key...' : 'Create & Generate Key'}
+              </button>
+            </div>
+          </form>
+        )}
+      </ModalPortal>
 
       {/* ============================================================== */}
       {/* JOIN CLASSROOM MODAL / BOTTOM SHEET                            */}
       {/* ============================================================== */}
-      {showJoinModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-          <div className="bg-white dark:bg-[#0e0e13] border border-slate-200 dark:border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 animate-slide-up">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-crimson-500/10 text-crimson-500 border border-crimson-500/30">
-                  <Key className="w-5 h-5" />
-                </span>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    Join Classroom
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-dark-400">
-                    Enter the access key provided by your instructor
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowJoinModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {actionError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold">
-                {actionError}
-              </div>
-            )}
-
-            <form onSubmit={handleJoinClass} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
-                  Classroom Access Key *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. DSA-7K4P"
-                  value={inviteCodeInput}
-                  onChange={(e) => setInviteCodeInput(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-base font-mono font-extrabold uppercase text-crimson-600 dark:text-crimson-400 tracking-wider placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all text-center"
-                />
-                <p className="text-[11px] text-slate-500 dark:text-dark-400 mt-1.5 text-center">
-                  Case-insensitive. Once joined, this classroom appears permanently in your dashboard.
-                </p>
-              </div>
-
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/10">
-                <button
-                  type="button"
-                  onClick={() => setShowJoinModal(false)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-dark-750 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-5 py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50 transition-all"
-                >
-                  {actionLoading ? 'Validating Key...' : 'Join Classroom'}
-                </button>
-              </div>
-            </form>
+      <ModalPortal
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        title="Join Classroom"
+        subtitle="Enter the access key provided by your instructor"
+        icon={<Key className="w-5 h-5" />}
+        maxWidth="md"
+      >
+        {actionError && (
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+            {actionError}
           </div>
-        </div>
-      )}
+        )}
+
+        <form onSubmit={handleJoinClass} className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
+              Classroom Access Key *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. DSA-7K4P"
+              value={inviteCodeInput}
+              onChange={(e) => setInviteCodeInput(e.target.value.toUpperCase())}
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 rounded-xl text-base font-mono font-extrabold uppercase text-crimson-600 dark:text-crimson-400 tracking-wider placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-all text-center"
+            />
+            <p className="text-[11px] text-slate-500 dark:text-dark-400 mt-1.5 text-center">
+              Case-insensitive. Once joined, this classroom appears permanently in your dashboard.
+            </p>
+          </div>
+
+          <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => setShowJoinModal(false)}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-dark-750 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={actionLoading}
+              className="px-5 py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold shadow-glow-red-sm disabled:opacity-50 transition-all"
+            >
+              {actionLoading ? 'Validating Key...' : 'Join Classroom'}
+            </button>
+          </div>
+        </form>
+      </ModalPortal>
 
       {/* ============================================================== */}
       {/* TAB 3: OFFLINE DOWNLOADS LIBRARY                               */}
