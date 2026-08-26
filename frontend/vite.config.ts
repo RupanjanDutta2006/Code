@@ -14,6 +14,7 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             if (id.includes('@monaco-editor') || id.includes('monaco')) return 'editor';
             if (id.includes('recharts')) return 'charts';
+            if (id.includes('firebase')) return 'firebase';
             if (id.includes('react')) return 'vendor';
             if (id.includes('lucide-react')) return 'ui';
             return 'libs';

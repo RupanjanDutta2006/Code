@@ -11,13 +11,18 @@ export class AIAvailabilityManager {
 
   private constructor() {
     this.setupListeners();
-    this.checkHealth();
+    // Defer initial health check so it never contends with initial page paint
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        this.checkHealth();
+      }, 1500);
+    }
     // Poll health periodically when window is active
     this.checkInterval = setInterval(() => {
       if (document.visibilityState === 'visible' && navigator.onLine) {
         this.checkHealth();
       }
-    }, 45000);
+    }, 60000);
   }
 
   public static getInstance(): AIAvailabilityManager {
