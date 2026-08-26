@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { 
   LogIn, 
@@ -7,18 +7,21 @@ import {
   Mail, 
   Lock, 
   User, 
+  Phone,
+  GraduationCap,
+  BookOpen,
   AlertCircle, 
   CheckCircle2, 
-  X, 
   KeyRound,
-  GraduationCap
+  Check,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { mapAuthErrorToMessage } from '../services/firebase';
 import { ModalPortal } from '../components/ModalPortal';
 
 export const LoginPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { login, register, loginWithGoogle, resetPassword } = useAuth();
 
@@ -30,7 +33,9 @@ export const LoginPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'USER' | 'TEACHER'>('USER');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [profileRole, setProfileRole] = useState<'student' | 'professor' | null>(null);
 
   // Forgot password modal
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -49,34 +54,73 @@ export const LoginPage: React.FC = () => {
     return mapAuthErrorToMessage(err);
   };
 
+  const handleTabSwitch = (registerMode: boolean) => {
+    setIsRegister(registerMode);
+    setError('');
+    setSuccessMsg('');
+    setSearchParams(registerMode ? { tab: 'register' } : { tab: 'signin' });
+  };
+
   // Handle Email / Password Form Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
-    setLoading(true);
 
-    try {
-      if (isRegister) {
-        if (!name.trim()) {
-          setError('Please enter your full name.');
-          setLoading(false);
-          return;
-        }
-        await register(name.trim(), email.trim(), password, role);
-        setSuccessMsg('Account created successfully! Welcome to CodeVault Pro.');
-      } else {
-        await login(email.trim(), password);
-        setSuccessMsg('Signed in successfully.');
+    if (isRegister) {
+      // 1. Mandatory Name Validation
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        setError('Full Name is required.');
+        return;
       }
-      setTimeout(() => {
-        navigate('/my-class?tab=classrooms');
-      }, 400);
-    } catch (err: any) {
-      console.error('Auth error:', err);
-      setError(mapFirebaseError(err));
-    } finally {
-      setLoading(false);
+
+      // 2. Password Confirmation Validation
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters.');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setError('Passwords do not match. Please verify and try again.');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await register({
+          name: trimmedName,
+          email: email.trim(),
+          password,
+          phoneNumber: phoneNumber.trim() || null,
+          profileRole: profileRole || null,
+        });
+
+        setSuccessMsg('Account created successfully! Welcome to CodeVault Pro.');
+        setTimeout(() => {
+          navigate('/my-class?tab=classrooms');
+        }, 400);
+      } catch (err: any) {
+        console.error('Registration error:', err);
+        setError(mapFirebaseError(err) || err.message || 'Failed to create account.');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Sign In Flow (No Name/Phone/Role asked)
+      setLoading(true);
+      try {
+        const loggedInUser = await login(email.trim(), password);
+        setSuccessMsg(`Welcome back, ${loggedInUser.full_name || loggedInUser.username}!`);
+        setTimeout(() => {
+          navigate('/my-class?tab=classrooms');
+        }, 400);
+      } catch (err: any) {
+        console.error('Sign-in error:', err);
+        setError(mapFirebaseError(err) || err.message || 'Failed to sign in.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -86,14 +130,16 @@ export const LoginPage: React.FC = () => {
     setSuccessMsg('');
     setGoogleLoading(true);
     try {
-      const user = await loginWithGoogle(role);
-      setSuccessMsg(`Welcome, ${user.full_name || user.username}!`);
-      setTimeout(() => {
-        navigate('/my-class?tab=classrooms');
-      }, 400);
+      const result = await loginWithGoogle();
+      if (!result.needsOnboarding) {
+        setSuccessMsg(`Welcome, ${result.user.full_name || result.user.username}!`);
+        setTimeout(() => {
+          navigate('/my-class?tab=classrooms');
+        }, 400);
+      }
     } catch (err: any) {
       console.error('Google sign-in error:', err);
-      setError(mapFirebaseError(err));
+      setError(mapFirebaseError(err) || err.message || 'Google sign-in failed.');
     } finally {
       setGoogleLoading(false);
     }
@@ -112,7 +158,7 @@ export const LoginPage: React.FC = () => {
       await resetPassword(forgotEmail.trim());
       setForgotSent(true);
     } catch (err: any) {
-      setForgotError(mapFirebaseError(err));
+      setForgotError(mapFirebaseError(err) || err.message || 'Failed to send reset email.');
     } finally {
       setForgotLoading(false);
     }
@@ -135,7 +181,7 @@ export const LoginPage: React.FC = () => {
           </h1>
           <p className="text-xs text-slate-600 dark:text-dark-300">
             {isRegister 
-              ? 'Create your developer and classroom account' 
+              ? 'Create your CodeVault developer & classroom account' 
               : 'Sign in to access your compiler, workspaces & classes'}
           </p>
         </div>
@@ -144,11 +190,11 @@ export const LoginPage: React.FC = () => {
         <div className="grid grid-cols-2 p-1 rounded-2xl bg-slate-100 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs font-bold">
           <button
             type="button"
-            onClick={() => { setIsRegister(false); setError(''); setSuccessMsg(''); }}
-            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+            onClick={() => handleTabSwitch(false)}
+            className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
               !isRegister
                 ? 'bg-crimson-600 text-white shadow-glow-red-sm'
-                : 'text-slate-600 dark:text-dark-400 hover:text-white'
+                : 'text-slate-600 dark:text-dark-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <LogIn className="w-3.5 h-3.5" />
@@ -156,11 +202,11 @@ export const LoginPage: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => { setIsRegister(true); setError(''); setSuccessMsg(''); }}
-            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+            onClick={() => handleTabSwitch(true)}
+            className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
               isRegister
                 ? 'bg-crimson-600 text-white shadow-glow-red-sm'
-                : 'text-slate-600 dark:text-dark-400 hover:text-white'
+                : 'text-slate-600 dark:text-dark-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
@@ -183,12 +229,14 @@ export const LoginPage: React.FC = () => {
           </div>
         )}
 
-        {/* Form */}
+        {/* Auth Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* CREATE ACCOUNT ONLY: Full Name (Mandatory) */}
           {isRegister && (
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
-                Full Name
+                Full Name <span className="text-crimson-500">*</span>
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -198,15 +246,16 @@ export const LoginPage: React.FC = () => {
                   placeholder="e.g. Souvik Saha"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-colors"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-colors font-medium"
                 />
               </div>
             </div>
           )}
 
+          {/* Email Address */}
           <div>
             <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
-              Email Address
+              Email Address <span className="text-crimson-500">*</span>
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -216,15 +265,16 @@ export const LoginPage: React.FC = () => {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-colors"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-colors font-medium"
               />
             </div>
           </div>
 
+          {/* Password */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-bold text-slate-700 dark:text-dark-200">
-                Password
+                Password <span className="text-crimson-500">*</span>
               </label>
               {!isRegister && (
                 <button
@@ -249,49 +299,109 @@ export const LoginPage: React.FC = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-colors"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-colors font-medium"
               />
             </div>
           </div>
 
+          {/* CREATE ACCOUNT ONLY: Confirm Password */}
           {isRegister && (
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-dark-200 block mb-1.5">
-                Account Purpose
+                Confirm Password <span className="text-crimson-500">*</span>
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-colors font-medium"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* CREATE ACCOUNT ONLY: Optional Phone Number */}
+          {isRegister && (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-dark-200">
+                  Phone Number
+                </label>
+                <span className="text-[10px] text-slate-400 dark:text-dark-400 uppercase font-mono">Optional</span>
+              </div>
+              <div className="relative">
+                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="tel"
+                  placeholder="e.g. +91 98765 43210"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-dark-500 outline-none focus:border-crimson-500 transition-colors font-medium"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* CREATE ACCOUNT ONLY: Optional Role Selection */}
+          {isRegister && (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-dark-200">
+                  Role
+                </label>
+                <span className="text-[10px] text-slate-400 dark:text-dark-400 uppercase font-mono">Optional</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => setRole('USER')}
-                  className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                    role === 'USER'
+                  onClick={() => setProfileRole('student')}
+                  className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                    profileRole === 'student'
                       ? 'bg-crimson-500/15 text-crimson-500 border-crimson-500/40 shadow-glow-red-sm'
                       : 'bg-slate-50 dark:bg-dark-950 text-slate-600 dark:text-dark-400 border-slate-200 dark:border-white/10'
                   }`}
                 >
-                  <User className="w-3.5 h-3.5" />
-                  <span>Student / Learner</span>
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Student</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setRole('TEACHER')}
-                  className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                    role === 'TEACHER'
+                  onClick={() => setProfileRole('professor')}
+                  className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                    profileRole === 'professor'
                       ? 'bg-crimson-500/15 text-crimson-500 border-crimson-500/40 shadow-glow-red-sm'
                       : 'bg-slate-50 dark:bg-dark-950 text-slate-600 dark:text-dark-400 border-slate-200 dark:border-white/10'
                   }`}
                 >
                   <GraduationCap className="w-3.5 h-3.5" />
-                  <span>Teacher / Instructor</span>
+                  <span>Professor</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setProfileRole(null)}
+                  className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                    profileRole === null
+                      ? 'bg-slate-200 dark:bg-dark-800 text-slate-800 dark:text-white border-slate-300 dark:border-white/20'
+                      : 'bg-slate-50 dark:bg-dark-950 text-slate-500 dark:text-dark-400 border-slate-200 dark:border-white/10'
+                  }`}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Skip</span>
                 </button>
               </div>
             </div>
           )}
 
+          {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || (isRegister && !name.trim())}
             className="w-full py-3 rounded-xl bg-gradient-to-r from-crimson-600 to-crimson-700 hover:from-crimson-500 hover:to-crimson-600 text-white font-extrabold text-xs shadow-glow-red transition-all disabled:opacity-50 touch-target flex items-center justify-center gap-2"
           >
             {loading ? (
@@ -351,9 +461,36 @@ export const LoginPage: React.FC = () => {
           <span>Continue with Google</span>
         </button>
 
-        {/* Footer */}
-        <p className="text-center text-[11px] text-slate-500 dark:text-dark-400 pt-1">
-          By signing in, you agree to CodeVault's{' '}
+        {/* Switch mode footer */}
+        <div className="text-center pt-2 border-t border-slate-100 dark:border-white/5">
+          {isRegister ? (
+            <p className="text-xs text-slate-600 dark:text-dark-400">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={() => handleTabSwitch(false)}
+                className="text-crimson-600 dark:text-crimson-400 font-bold hover:underline"
+              >
+                Sign In
+              </button>
+            </p>
+          ) : (
+            <p className="text-xs text-slate-600 dark:text-dark-400">
+              Don't have an account?{' '}
+              <button
+                type="button"
+                onClick={() => handleTabSwitch(true)}
+                className="text-crimson-600 dark:text-crimson-400 font-bold hover:underline"
+              >
+                Create Account
+              </button>
+            </p>
+          )}
+        </div>
+
+        {/* Terms */}
+        <p className="text-center text-[11px] text-slate-500 dark:text-dark-500">
+          By continuing, you agree to CodeVault's{' '}
           <Link to="/about" className="text-crimson-500 hover:underline">Terms</Link> &{' '}
           <Link to="/about" className="text-crimson-500 hover:underline">Privacy Policy</Link>.
         </p>

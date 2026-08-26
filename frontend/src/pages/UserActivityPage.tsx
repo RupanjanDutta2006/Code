@@ -20,10 +20,13 @@ import {
   Folder,
   Layers,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  Edit3,
+  Phone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getUserActivity, ActivityEvent } from '../services/activity';
+import { ProfileEditModal } from '../components/ProfileEditModal';
 
 const CATEGORY_TABS = [
   { id: 'all', label: 'All', icon: Layers },
@@ -46,6 +49,7 @@ export const UserActivityPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
 
   const fetchActivity = async () => {
     if (!user) return;
@@ -237,6 +241,14 @@ export const UserActivityPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowProfileEdit(true)}
+              className="px-3.5 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-glow-red-sm hover:scale-105 active:scale-95"
+              title="Edit Profile"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit Profile</span>
+            </button>
+            <button
               onClick={fetchActivity}
               disabled={loading}
               className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
@@ -249,18 +261,24 @@ export const UserActivityPage: React.FC = () => {
         </div>
 
         {/* User Stats Quick Pills */}
-        <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
-            <span className="text-[11px] text-slate-400 block font-medium">Logged in User</span>
-            <span className="text-xs font-bold text-white truncate block mt-0.5">{user.username} ({user.email})</span>
+            <span className="text-[11px] text-slate-400 block font-medium">Display Name</span>
+            <span className="text-xs font-bold text-white truncate block mt-0.5">{user.full_name || user.displayName || user.username}</span>
           </div>
           <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
-            <span className="text-[11px] text-slate-400 block font-medium">Total Recorded Events</span>
-            <span className="text-xs font-bold text-crimson-400 block mt-0.5">{totalCount} Actions</span>
+            <span className="text-[11px] text-slate-400 block font-medium">Email Account</span>
+            <span className="text-xs font-bold text-white truncate block mt-0.5">{user.email}</span>
           </div>
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/5 col-span-2 sm:col-span-1">
-            <span className="text-[11px] text-slate-400 block font-medium">Time Zone</span>
-            <span className="text-xs font-bold text-emerald-400 block mt-0.5">Asia/Kolkata (IST)</span>
+          <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
+            <span className="text-[11px] text-slate-400 block font-medium">Phone Number</span>
+            <span className="text-xs font-bold text-emerald-400 truncate block mt-0.5">{user.phoneNumber || user.phone_number || 'Not provided'}</span>
+          </div>
+          <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
+            <span className="text-[11px] text-slate-400 block font-medium">Profile Role</span>
+            <span className="text-xs font-bold text-crimson-400 block mt-0.5">
+              {user.profileRole === 'professor' || user.profile_role === 'professor' ? 'Professor / Teacher' : user.profileRole === 'student' || user.profile_role === 'student' ? 'Student' : 'Not specified'}
+            </span>
           </div>
         </div>
       </div>
@@ -472,6 +490,11 @@ export const UserActivityPage: React.FC = () => {
         </div>
       )}
 
+      {/* Profile Edit Modal */}
+      <ProfileEditModal
+        isOpen={showProfileEdit}
+        onClose={() => setShowProfileEdit(false)}
+      />
     </div>
   );
 };

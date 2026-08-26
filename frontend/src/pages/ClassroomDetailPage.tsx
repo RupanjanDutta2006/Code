@@ -125,7 +125,7 @@ export const ClassroomDetailPage: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState(false);
 
   const uid = firebaseUser?.uid || user?.uid || '';
-  const currentUserName = user?.full_name || firebaseUser?.displayName || user?.username || 'Member';
+  const currentUserName = user?.full_name || user?.displayName || firebaseUser?.displayName || user?.username || 'Member';
   const currentUserEmail = user?.email || firebaseUser?.email || '';
 
   const fetchClassroomData = async () => {

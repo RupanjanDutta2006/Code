@@ -214,7 +214,7 @@ export const Navbar: React.FC = () => {
                 title="View Activity History"
               >
                 <Activity className="w-4 h-4 text-crimson-500" />
-                <span className="hidden sm:inline text-xs font-bold">{user.username}</span>
+                <span className="hidden sm:inline text-xs font-bold max-w-[120px] truncate">{user.full_name || user.displayName || user.username}</span>
               </Link>
               {user.role === 'ADMIN' && (
                 <Link

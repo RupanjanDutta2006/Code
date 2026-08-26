@@ -130,7 +130,7 @@ export const MyClassPage: React.FC = () => {
     setActionLoading(true);
     setActionError(null);
     try {
-      const ownerName = user?.full_name || firebaseUser?.displayName || user?.username || 'Instructor';
+      const ownerName = user?.full_name || user?.displayName || firebaseUser?.displayName || user?.username || 'Instructor';
       const ownerEmail = user?.email || firebaseUser?.email || '';
 
       const created = await createClass(ownerName, ownerEmail, {
@@ -167,7 +167,7 @@ export const MyClassPage: React.FC = () => {
     setActionLoading(true);
     setActionError(null);
     try {
-      const studentName = user?.full_name || firebaseUser?.displayName || user?.username || 'Student';
+      const studentName = user?.full_name || user?.displayName || firebaseUser?.displayName || user?.username || 'Student';
       const studentEmail = user?.email || firebaseUser?.email || '';
 
       await joinClass(studentName, studentEmail, cleanKey);

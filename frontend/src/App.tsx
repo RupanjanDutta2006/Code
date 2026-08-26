@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { OfflineProvider } from './context/OfflineContext';
@@ -7,6 +7,7 @@ import { AIChatProvider } from './context/AIChatContext';
 import { Navbar } from './components/Navbar';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { CodeVaultAIChat } from './components/CodeVaultAIChat';
+import { OnboardingModal } from './components/OnboardingModal';
 import { AnimatedRedBlackBackground } from './components/AnimatedRedBlackBackground';
 import { forceUnlockBodyScroll } from './hooks/useBodyScrollLock';
 import { HomePage } from './pages/HomePage';
@@ -92,6 +93,9 @@ export const App: React.FC = () => {
 
                   {/* Global Unified CodeVault AI Chat Drawer: z-[900] */}
                   <CodeVaultAIChat />
+
+                  {/* First-time User Profile Onboarding Modal */}
+                  <OnboardingModal />
 
                   {/* Footer: z-10 in normal document flow */}
                   <footer className="border-t border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-[#08080c]/80 py-8 px-4 text-center text-xs text-slate-500 dark:text-dark-400 backdrop-blur-xl transition-colors duration-200 mb-14 md:mb-0 relative z-10">
