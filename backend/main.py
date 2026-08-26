@@ -57,11 +57,10 @@ async def normalize_vercel_api_paths(request, call_next):
         clean_path = matched.split("?")[0]
         request.scope["path"] = clean_path
     else:
-        # Check query string for :match param e.g. ?match=classrooms or ?0=classrooms
         match_param = request.query_params.get("match") or request.query_params.get("0") or request.query_params.get("1")
-        if match_param:
-            clean_match = match_param.lstrip("/")
-            request.scope["path"] = f"/api/{clean_match}"
+        if match_param is not None:
+            clean_match = str(match_param).strip().lstrip("/")
+            request.scope["path"] = f"/api/{clean_match}" if clean_match else "/api"
         else:
             raw_path = request.scope.get("path", "")
             for prefix in ["/api/index.py", "/index.py", "/api/index"]:
