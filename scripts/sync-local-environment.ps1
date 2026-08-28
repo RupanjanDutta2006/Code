@@ -43,8 +43,8 @@ for ($i = 0; $i -lt 5; $i++) {
 }
 
 if (!$ProjectRoot) {
-    if (Test-Path "E:\Code Vault pro\Cache") {
-        $ProjectRoot = "E:\Code Vault pro"
+    if (Test-Path "D:\My Created Projects\Code Vault Pro") {
+        $ProjectRoot = "D:\My Created Projects\Code Vault Pro"
     } else {
         $ProjectRoot = (Get-Location).Path
     }

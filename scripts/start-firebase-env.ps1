@@ -11,17 +11,22 @@ param(
     [string[]]$CommandArgs
 )
 
-$ErrorActionPreference = "Stop"
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$CodeRoot = Split-Path -Parent $ScriptDir
+$ProjectRoot = Split-Path -Parent $CodeRoot
+$CentralCacheRoot = "D:\My Created Projects\Cache"
+$CacheRoot = Join-Path $ProjectRoot "Cache"
 
-$ProjectRoot = "E:\Code Vault pro\Code"
-$CacheRoot = "E:\Code Vault pro\Cache"
-
-$FirebaseCliDir = Join-Path $CacheRoot "firebase-cli"
+$FirebaseCliDir = Join-Path $CentralCacheRoot "tools\firebase"
 $FirebaseBin = Join-Path $FirebaseCliDir "node_modules\.bin\firebase.cmd"
-$NpmCacheDir = Join-Path $CacheRoot "node\npm-cache"
-$DownloadsDir = Join-Path $CacheRoot "downloads"
-$TempDir = Join-Path $CacheRoot "temp"
-$LogsDir = Join-Path $CacheRoot "logs"
+if (!(Test-Path $FirebaseBin)) {
+    $FirebaseCliDir = Join-Path $CacheRoot "firebase-cli"
+    $FirebaseBin = Join-Path $FirebaseCliDir "node_modules\.bin\firebase.cmd"
+}
+$NpmCacheDir = Join-Path $CentralCacheRoot "npm"
+$DownloadsDir = Join-Path $CentralCacheRoot "downloads"
+$TempDir = Join-Path $CentralCacheRoot "temp"
+$LogsDir = Join-Path $CentralCacheRoot "temp"
 $StateDir = Join-Path $CacheRoot "state"
 
 # Ensure all cache directories exist
